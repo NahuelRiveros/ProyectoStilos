@@ -3,35 +3,15 @@ import {
   Auth02Usuario,
   Auth03ResetToken,
   Auth04LogSesion,
-  pers_01_persona,
-  pers_02_tipo_documento,
-  pers_03_sexo,
-  pers_04_estado_civil,
-  pers_05_provincia,
-  pers_06_localidad,
-  Prod01Categoria,
-  Prod02Genero,
-  Prod03Producto,
-  Prod04Talle,
-  Prod05Stock,
-  Prod06Color,
-  Prod07Marca,
-  Prod08CategoriaGenero,
-  Carr01Carrito,
-  Carr02Item,
-  Ord01Estado,
-  Ord02CondicionIva,
-  Ord03Orden,
-  Ord04Item,
-  Fact01TipoComp,
-  Fact02PuntoVenta,
-  Fact03Comprobante,
-  Envio01Opcion,
-  Envio02Envio,
-  Cli01Perfil,
-  Cli02Direccion,
-  Home01Config,
+  Auth05UsuarioRol,
+  Auth06Suscripcion,
 } from "../models/index.js";
+import { pers_01_persona } from "../models/personas/pers_01_persona.js";
+import { pers_02_tipo_documento } from "../models/personas/pers_02_tipo_documento.js";
+import { pers_03_sexo } from "../models/Personas/pers_03_sexo.js";
+import { pers_04_estado_civil } from "../models/Personas/pers_04_estado_civil.js";
+import { pers_05_provincia } from "../models/personas/pers_05_provincia.js";
+import { pers_06_localidad } from "../models/personas/pers_06_localidad.js";
 
 import { run_basic_seeds } from "./inserts/index.js";
 import { seed_localidades_geo } from "./inserts/insert_pers_05_localidades.js";
@@ -48,49 +28,21 @@ export async function bootstrap_database() {
 }
 
 async function sincronizar_modelos() {
-  // Orden: primero tablas sin FK, luego las dependientes
+  // Orden: primero las tablas sin FK, luego las dependientes
   const modelos_en_orden = [
-    // ── Auth ────────────────────────────────────
-    Auth01Rol,          // sin dependencias
-    Auth02Usuario,      // → Auth01Rol
-    Auth03ResetToken,   // → Auth02Usuario
-    Auth04LogSesion,    // → Auth02Usuario
-    // ── Personas ────────────────────────────────
+    Auth01Rol,        // sin dependencias
+    Auth02Usuario,    // depende de Auth01Rol (col RELA_AUTH01 deprecada pero se mantiene)
+    Auth03ResetToken, // depende de Auth02Usuario
+    Auth04LogSesion,  // depende de Auth02Usuario
+    Auth05UsuarioRol,   // junction N:N: depende de Auth01Rol y Auth02Usuario
+    Auth06Suscripcion,  // tabla independiente — estado de suscripción del sistema
+    ////////
     pers_03_sexo,
     pers_02_tipo_documento,
     pers_04_estado_civil,
     pers_05_provincia,
     pers_06_localidad,
-    pers_01_persona,
-    // ── Productos ───────────────────────────────
-    Prod01Categoria,        // sin dependencias (self-ref RELA_PARENT deferido)
-    Prod02Genero,           // sin dependencias
-    Prod06Color,            // sin dependencias
-    Prod07Marca,            // sin dependencias
-    Prod08CategoriaGenero,  // → Prod01Categoria, Prod02Genero
-    Prod03Producto,         // → Prod01Categoria, Prod02Genero, Prod07Marca
-    Prod04Talle,            // sin dependencias
-    Prod05Stock,            // → Prod03Producto, Prod04Talle, Prod06Color
-    // ── Carrito ─────────────────────────────────
-    Carr01Carrito,      // → Auth02Usuario
-    Carr02Item,         // → Carr01Carrito, Prod03Producto, Prod04Talle
-    // ── Órdenes ─────────────────────────────────
-    Ord01Estado,        // sin dependencias
-    Ord02CondicionIva,  // sin dependencias
-    Ord03Orden,         // → Auth02Usuario, Ord01Estado
-    Ord04Item,          // → Ord03Orden, Prod03Producto
-    // ── Facturación ─────────────────────────────
-    Fact01TipoComp,     // sin dependencias
-    Fact02PuntoVenta,   // sin dependencias
-    Fact03Comprobante,  // → Ord03Orden, Fact01TipoComp, Fact02PuntoVenta
-    // ── Envíos ──────────────────────────────────
-    Envio01Opcion,      // sin dependencias
-    Envio02Envio,       // → Ord03Orden, Envio01Opcion
-    // ── Clientes ────────────────────────────────
-    Cli01Perfil,        // → Auth02Usuario, Ord02CondicionIva
-    Cli02Direccion,     // → Cli01Perfil
-    // ── Home ────────────────────────────────────
-    Home01Config,       // sin dependencias (fila única JSON)
+    pers_01_persona
   ];
 
   for (const model of modelos_en_orden) {

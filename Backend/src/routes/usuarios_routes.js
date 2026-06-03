@@ -1,15 +1,17 @@
 // =============================================================
 // routes/usuarios_routes.js
-// Gestión de usuarios del sistema (requiere auth en todas las rutas).
 //
-// Rutas:
-//   GET    /api/usuarios              → listar usuarios (GESTION)
-//   GET    /api/usuarios/:id          → obtener uno (GESTION)
-//   POST   /api/usuarios              → crear usuario desde admin (GESTION)
-//   PUT    /api/usuarios/:id          → actualizar datos (GESTION)
-//   DELETE /api/usuarios/:id          → baja lógica (SOLO_ADMIN)
-//   PUT    /api/usuarios/:id/reactivar → reactivar (SOLO_ADMIN)
-//   PUT    /api/usuarios/:id/rol      → cambiar rol (SOLO_ADMIN)
+// GET    /api/usuarios                        → listar todos
+// GET    /api/usuarios/:id                    → obtener uno
+// POST   /api/usuarios                        → crear desde admin
+// PUT    /api/usuarios/:id                    → actualizar datos
+// DELETE /api/usuarios/:id                    → baja lógica
+// PUT    /api/usuarios/:id/reactivar          → reactivar
+//
+// Gestión de roles (N:N):
+// PUT    /api/usuarios/:id/roles              → reemplazar todos los roles
+// POST   /api/usuarios/:id/roles/:abreviatura → agregar un rol
+// DELETE /api/usuarios/:id/roles/:abreviatura → quitar un rol
 // =============================================================
 
 import { Router } from "express";
@@ -21,74 +23,81 @@ import {
   actualizarUsuarioController,
   eliminarUsuarioController,
   reactivarUsuarioController,
-  cambiarRolController,
+  asignarRolesController,
+  agregarRolController,
+  quitarRolController,
+  resetearPasswordController,
+  perfilController,
 } from "../controllers/usuarios_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
+import { requireAuth, requireAccess } from "../middleware/auth_middleware.js";
 import { ACCESS } from "./access_roles.js";
+import { Auth02Usuario } from "../models/index.js";
+import { env } from "../configuracion_servidor/env.js";
 
 export const usuariosRouter = Router();
 
-// Todas las rutas de usuarios requieren estar autenticado
+// Todas las rutas requieren auth
 usuariosRouter.use(requireAuth);
+
+// =============================================================
+// GUARDIA: bloquea operaciones destructivas sobre el super admin.
+// El super admin (SUPER_ADMIN_EMAIL) no puede eliminarse, desactivarse
+// ni perder sus roles desde la API — debe modificarse directamente en DB.
+// =============================================================
+
+async function protegerSuperAdmin(req, res, next) {
+  const usuario = await Auth02Usuario.findByPk(req.params.id, {
+    attributes: ["AUTH02_EMAIL"],
+  });
+  if (!usuario) return next(); // 404 lo maneja el controller
+
+  if (usuario.AUTH02_EMAIL === env.SUPER_ADMIN_EMAIL) {
+    return res.status(403).json({
+      ok: false,
+      codigo: "USUARIO_PROTEGIDO",
+      mensaje: "El usuario super administrador del sistema no puede modificarse desde la API",
+    });
+  }
+  next();
+}
 
 // =============================================================
 // LECTURA
 // =============================================================
 
-usuariosRouter.get(
-  "/",
-  requireRole(...ACCESS.USUARIOS_GET),
-  listarUsuariosController
-);
+// ⚠️ /perfil va ANTES de /:id para que "perfil" no sea capturado como un :id
+usuariosRouter.get("/perfil", perfilController); // propio perfil — cualquier usuario autenticado
 
-usuariosRouter.get(
-  "/:id",
-  requireRole(...ACCESS.USUARIOS_GET),
-  obtenerUsuarioController
-);
+usuariosRouter.get("/",    requireAccess(ACCESS.USUARIOS_GET), listarUsuariosController);
+usuariosRouter.get("/:id", requireAccess(ACCESS.USUARIOS_GET), obtenerUsuarioController);
 
 // =============================================================
 // ESCRITURA
 // =============================================================
 
-// Crear usuario desde panel de administración
-usuariosRouter.post(
-  "/",
-  requireRole(...ACCESS.USUARIOS_CREATE),
-  crearUsuarioController
-);
-
-usuariosRouter.put(
-  "/:id",
-  requireRole(...ACCESS.USUARIOS_UPDATE),
-  actualizarUsuarioController
-);
+usuariosRouter.post("/",    requireAccess(ACCESS.USUARIOS_CREATE), crearUsuarioController);
+usuariosRouter.put("/:id",  requireAccess(ACCESS.USUARIOS_UPDATE), actualizarUsuarioController);
 
 // =============================================================
 // BAJA / REACTIVAR
+// ⚠️  reactivar va ANTES de /:id para no ser capturado como :id
 // =============================================================
 
-usuariosRouter.delete(
-  "/:id",
-  requireRole(...ACCESS.USUARIOS_DELETE),
-  eliminarUsuarioController
-);
+usuariosRouter.put("/:id/reactivar", requireAccess(ACCESS.USUARIOS_DELETE), protegerSuperAdmin, reactivarUsuarioController);
+usuariosRouter.delete("/:id",        requireAccess(ACCESS.USUARIOS_DELETE), protegerSuperAdmin, eliminarUsuarioController);
 
-// ⚠️  Reactivar va ANTES de /:id para evitar que Express capture
-//     "reactivar" como un parámetro :id
-usuariosRouter.put(
-  "/:id/reactivar",
-  requireRole(...ACCESS.USUARIOS_DELETE),
-  reactivarUsuarioController
-);
+// Reset de contraseña por admin (sin conocer la actual)
+usuariosRouter.put("/:id/password",  requireAccess(ACCESS.USUARIOS_UPDATE), protegerSuperAdmin, resetearPasswordController);
 
 // =============================================================
-// CAMBIAR ROL
+// GESTIÓN DE ROLES (N:N)
+// ⚠️  Las rutas con subrutas van antes que /:id genérico
 // =============================================================
 
-usuariosRouter.put(
-  "/:id/rol",
-  requireRole(...ACCESS.ROLES_UPDATE),
-  cambiarRolController
-);
+// Reemplaza todos los roles activos del usuario
+usuariosRouter.put("/:id/roles", requireAccess(ACCESS.USUARIOS_ROLES), protegerSuperAdmin, asignarRolesController);
+
+// Agrega o quita un rol específico por su abreviatura
+usuariosRouter.post(  "/:id/roles/:abreviatura", requireAccess(ACCESS.USUARIOS_ROLES), protegerSuperAdmin, agregarRolController);
+usuariosRouter.delete("/:id/roles/:abreviatura", requireAccess(ACCESS.USUARIOS_ROLES), protegerSuperAdmin, quitarRolController);

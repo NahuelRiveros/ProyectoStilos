@@ -11,10 +11,11 @@ export const Auth02Usuario = sequelize.define(
       autoIncrement: true,
     },
 
-    // FK → AUTH_01_ROL
+    // Deprecated: la asignación de roles se hace via AUTH_05_USUARIO_ROL (N:N).
+    // Se mantiene nullable para compatibilidad con alter:true en DBs existentes.
     RELA_AUTH01: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
 
     AUTH02_NOMBRE: {

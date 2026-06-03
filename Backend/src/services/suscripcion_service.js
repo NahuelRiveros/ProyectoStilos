@@ -1,0 +1,149 @@
+import { Auth06Suscripcion } from "../models/index.js";
+
+// ==========================================================
+// ESTADOS DE SUSCRIPCIÓN
+// ==========================================================
+
+export const ESTADO_SUSCRIPCION = {
+  ACTIVO:           "ACTIVO",
+  GRACIA:           "GRACIA",   // fecha vencida pero dentro del período de gracia mensual
+  VENCIDO:          "VENCIDO",  // fecha vencida y fuera del período de gracia
+  SIN_SUSCRIPCION:  "SIN_SUSCRIPCION", // nunca se activó
+};
+
+// ==========================================================
+// CALCULAR ESTADO (lógica pura, sin DB)
+//
+// Regla del período de gracia:
+//   Cada mes, del día 1 al AUTH06_DIAS_GRACIA, el sistema está en
+//   modo GRACIA (lectura habilitada, escritura bloqueada).
+//   Pasado ese día, queda en VENCIDO hasta el 1 del siguiente mes.
+// ==========================================================
+
+export function calcularEstado(suscripcion) {
+  if (!suscripcion) return ESTADO_SUSCRIPCION.SIN_SUSCRIPCION;
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const fechaFin = new Date(suscripcion.AUTH06_FECHA_FIN);
+  fechaFin.setHours(0, 0, 0, 0);
+
+  if (fechaFin >= hoy) return ESTADO_SUSCRIPCION.ACTIVO;
+
+  const diaDelMes   = hoy.getDate();
+  const diasGracia  = suscripcion.AUTH06_DIAS_GRACIA ?? 10;
+
+  return diaDelMes <= diasGracia
+    ? ESTADO_SUSCRIPCION.GRACIA
+    : ESTADO_SUSCRIPCION.VENCIDO;
+}
+
+// ==========================================================
+// CALCULAR DÍAS RESTANTES EN PERÍODO DE GRACIA
+// ==========================================================
+
+export function diasRestantesGracia(suscripcion) {
+  if (!suscripcion) return 0;
+  const hoy        = new Date();
+  const diasGracia = suscripcion.AUTH06_DIAS_GRACIA ?? 10;
+  const diaDelMes  = hoy.getDate();
+  return Math.max(0, diasGracia - diaDelMes);
+}
+
+// ==========================================================
+// OBTENER SUSCRIPCIÓN ACTUAL (única fila en la tabla)
+// ==========================================================
+
+export async function getSuscripcion() {
+  return await Auth06Suscripcion.findOne({
+    order: [["ID_AUTH06", "DESC"]],
+  });
+}
+
+// ==========================================================
+// OBTENER ESTADO ACTUAL (para el middleware)
+// Devuelve { estado, suscripcion, diasRestantesGracia }
+// ==========================================================
+
+export async function getSuscripcionEstado() {
+  const suscripcion = await getSuscripcion();
+  const estado      = calcularEstado(suscripcion);
+  const gracia      = diasRestantesGracia(suscripcion);
+
+  return { estado, suscripcion, diasRestantesGracia: gracia };
+}
+
+// ==========================================================
+// ACTIVAR / RENOVAR SUSCRIPCIÓN
+//
+// Si ya existe un registro:
+//   - Extiende desde max(fecha_fin_actual, hoy) + dias
+//   - Incrementa el contador de renovaciones
+// Si no existe: crea el primer registro desde hoy.
+//
+// Body esperado: { dias: 30, notas?: "Pagó el 5 vía transferencia" }
+// ==========================================================
+
+export async function activarSuscripcion({ dias, notas }) {
+  const cantDias = Number(dias);
+
+  if (!cantDias || cantDias < 1 || cantDias > 365) {
+    return { ok: false, mensaje: "El campo dias debe ser un número entre 1 y 365" };
+  }
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const existente = await getSuscripcion();
+
+  if (existente) {
+    const fechaFinActual = new Date(existente.AUTH06_FECHA_FIN);
+    fechaFinActual.setHours(0, 0, 0, 0);
+
+    // Extender desde la fecha fin actual o desde hoy, la que sea mayor
+    const base    = fechaFinActual >= hoy ? fechaFinActual : hoy;
+    const nuevaFin = new Date(base);
+    nuevaFin.setDate(nuevaFin.getDate() + cantDias);
+
+    await existente.update({
+      AUTH06_FECHA_FIN:    nuevaFin.toISOString().split("T")[0],
+      AUTH06_RENOVACIONES: (existente.AUTH06_RENOVACIONES ?? 0) + 1,
+      AUTH06_NOTAS:        notas ?? existente.AUTH06_NOTAS,
+    });
+
+    return {
+      ok: true,
+      mensaje: `Suscripción renovada por ${cantDias} días`,
+      data: {
+        fecha_inicio:  existente.AUTH06_FECHA_INICIO,
+        fecha_fin:     nuevaFin.toISOString().split("T")[0],
+        renovaciones:  existente.AUTH06_RENOVACIONES,
+        estado:        ESTADO_SUSCRIPCION.ACTIVO,
+      },
+    };
+  }
+
+  // Primera activación
+  const fechaFin = new Date(hoy);
+  fechaFin.setDate(fechaFin.getDate() + cantDias);
+
+  const nueva = await Auth06Suscripcion.create({
+    AUTH06_FECHA_INICIO:  hoy.toISOString().split("T")[0],
+    AUTH06_FECHA_FIN:     fechaFin.toISOString().split("T")[0],
+    AUTH06_DIAS_GRACIA:   10,
+    AUTH06_RENOVACIONES:  1,
+    AUTH06_NOTAS:         notas ?? null,
+  });
+
+  return {
+    ok: true,
+    mensaje: `Suscripción activada por ${cantDias} días`,
+    data: {
+      fecha_inicio: nueva.AUTH06_FECHA_INICIO,
+      fecha_fin:    nueva.AUTH06_FECHA_FIN,
+      renovaciones: nueva.AUTH06_RENOVACIONES,
+      estado:       ESTADO_SUSCRIPCION.ACTIVO,
+    },
+  };
+}

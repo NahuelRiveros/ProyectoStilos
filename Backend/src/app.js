@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -9,6 +10,11 @@ import { fileURLToPath } from "url";
 
 import routes from "./routes/index.js";
 import { env } from "./configuracion_servidor/env.js";
+
+const CORS_DEV = ["http://localhost:5173", "http://localhost:3001"];
+const corsOrigins = env.CORS_ORIGIN
+  ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
+  : CORS_DEV;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +37,12 @@ export function createApp() {
       contentSecurityPolicy: false,
     })
   );
+
+  // ==========================================================
+  // COMPRESIÓN GZIP
+  // ==========================================================
+
+  app.use(compression());
 
   // ==========================================================
   // LOGS HTTP
@@ -60,7 +72,11 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: env.CORS_ORIGIN || true,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // Postman / curl
+        if (corsOrigins.includes(origin)) return callback(null, true);
+        callback(new Error(`CORS: origen no permitido — ${origin}`));
+      },
       credentials: true,
     })
   );

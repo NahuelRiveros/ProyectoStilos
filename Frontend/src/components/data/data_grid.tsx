@@ -32,6 +32,8 @@ interface Action<T extends Record<string, unknown> = Record<string, unknown>> {
 interface DataGridProps<T extends Record<string, unknown> = Record<string, unknown>> {
   title?: string;
   subtitle?: string;
+  /** Extra JSX rendered in the header row, next to the search bar (e.g. filter toggles). */
+  headerExtra?: ReactNode;
   columns?: Column<T>[];
   rows?: T[];
   keyField?: string;
@@ -177,6 +179,7 @@ function getValue<T extends Record<string, unknown>>(row: T, key: string): strin
 export default function DataGrid<T extends Record<string, unknown> = Record<string, unknown>>({
   title,
   subtitle,
+  headerExtra,
   columns = [],
   rows = [],
   keyField = "id",
@@ -281,25 +284,30 @@ export default function DataGrid<T extends Record<string, unknown> = Record<stri
 
   return (
     <section className={[UI_TABLE.wrap, className].join(" ")}>
-      {(title || subtitle || searchable) && (
+      {(title || subtitle || searchable || headerExtra) && (
         <div className={UI_TABLE.header}>
           <div className={UI_TABLE.titleBox}>
             {title && <h3 className={UI_TABLE.title}>{title}</h3>}
             {subtitle && <p className={UI_TABLE.subtitle}>{subtitle}</p>}
           </div>
 
-          {searchable && (
-            <div className={UI_TABLE.searchWrap}>
-              <Search size={16} className="text-slate-400" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={searchPlaceholder}
-                className={UI_TABLE.searchInput}
-              />
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {headerExtra}
+
+            {searchable && (
+              <div className={UI_TABLE.searchWrap}>
+                <Search size={16} className="text-slate-400" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  autoComplete="off"
+                  className={UI_TABLE.searchInput}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 

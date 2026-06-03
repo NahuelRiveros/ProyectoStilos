@@ -1,4 +1,10 @@
-import { login, forgotPasswordService, resetPasswordService } from "../services/auth_service.js";
+import {
+  login,
+  forgotPasswordService,
+  resetPasswordService,
+  verificarResetTokenService,
+  cambiarPasswordService,
+} from "../services/auth_service.js";
 import { crearUsuario } from "../services/usuarios_service.js";
 
 // ==========================================================
@@ -55,8 +61,8 @@ export async function logoutController(_req, res) {
 
 export async function registerController(req, res) {
   try {
-    console.log("Llego: ",req.body)
-    const result = await crearUsuario(req.body);
+    // forzarRol: USR siempre — el registro público nunca puede elegir su propio rol
+    const result = await crearUsuario(req.body, { forzarRol: "USR" });
 
     if (!result.ok) {
       return res.status(400).json(result);
@@ -71,6 +77,28 @@ export async function registerController(req, res) {
       codigo: "ERROR_REGISTER",
       mensaje: "Error al crear usuario",
     });
+  }
+}
+
+// ==========================================================
+// CAMBIAR CONTRASEÑA PROPIA (requiere auth)
+// Body: { password_actual, password_nuevo }
+// ==========================================================
+
+export async function cambiarPasswordController(req, res) {
+  try {
+    const { password_actual, password_nuevo } = req.body ?? {};
+    const result = await cambiarPasswordService({
+      usuario_id:    req.user.usuario_id,
+      password_actual,
+      password_nuevo,
+    });
+
+    if (!result.ok) return res.status(400).json(result);
+    return res.json(result);
+  } catch (error) {
+    console.error("❌ cambiarPasswordController:", error);
+    return res.status(500).json({ ok: false, codigo: "ERROR", mensaje: "No se pudo cambiar la contraseña" });
   }
 }
 
@@ -96,6 +124,25 @@ export async function forgotPasswordController(req, res) {
       codigo: "ERROR_FORGOT_PASSWORD",
       mensaje: "No se pudo procesar la solicitud",
     });
+  }
+}
+
+// ==========================================================
+// VERIFICAR TOKEN DE RESET (sin consumirlo)
+// El frontend llama esto al cargar la página de reset-password
+// para saber si el link sigue siendo válido antes de mostrar el form.
+// ==========================================================
+
+export async function verificarResetTokenController(req, res) {
+  try {
+    const { token } = req.params;
+    const result = await verificarResetTokenService({ token });
+
+    if (!result.ok) return res.status(400).json(result);
+    return res.json(result);
+  } catch (error) {
+    console.error("❌ verificarResetTokenController:", error);
+    return res.status(500).json({ ok: false, codigo: "ERROR", mensaje: "No se pudo verificar el token" });
   }
 }
 

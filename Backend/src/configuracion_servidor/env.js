@@ -28,8 +28,8 @@ export const env = {
 
   // ─── IDENTIFICACIÓN DE LA APP ─────────────────────────────────────────────
   // Usados en emails, logs y respuestas de la API para identificar el sistema.
-  APP_NAME: process.env.APP_NAME || "GYMNASIO",
-  APP_FULL_NAME: process.env.APP_FULL_NAME || "Sistema Gymnasio",
+  APP_NAME: process.env.APP_NAME || "MiApp",
+  APP_FULL_NAME: process.env.APP_FULL_NAME || "Mi Aplicación",
 
   // ─── BASE DE DATOS (PostgreSQL) ───────────────────────────────────────────
   // DATABASE_URL: cadena de conexión completa (alternativa a las variables individuales).
@@ -45,15 +45,13 @@ export const env = {
   DB_PORT: getNumber(process.env.DB_PORT, 5432),
 
   // ★ NOMBRE DE LA BASE DE DATOS ★
-  // Creá esta base en PostgreSQL antes de correr el servidor.
-  // Comando: CREATE DATABASE "NAME";
-  DB_NAME: process.env.DB_NAME || "Stylos-ecomerce",
+  // Se crea automáticamente si no existe.
+  DB_NAME: process.env.DB_NAME || "mi_db",
 
   // ★ ESQUEMA DE POSTGRESQL ★
   // Todos los modelos/tablas se crearán dentro de este esquema.
-  // Crealo con: CREATE SCHEMA IF NOT EXISTS "Dynamic";
-  // Cambiarlo aquí y en .env si querés usar otro nombre (ej: "public", "gym", etc.).
-  DB_SCHEMA: process.env.DB_SCHEMA || "Stilos",
+  // Se crea automáticamente si no existe. Cambiarlo por el nombre del proyecto.
+  DB_SCHEMA: process.env.DB_SCHEMA || "public",
 
   // Usuario de PostgreSQL con permisos sobre DB_NAME y DB_SCHEMA.
   DB_USER: process.env.DB_USER || "postgres",
@@ -109,26 +107,17 @@ export const env = {
   // En producción cambiar a la URL real del frontend.
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
 
+  // ─── SUPER ADMINISTRADOR ─────────────────────────────────────────────────────
+  // Email del usuario super admin creado automáticamente en el arranque.
+  // Se usa para protegerlo de eliminación accidental desde la API.
+  SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || "admin@sistema.com",
+
+  // Token secreto para el endpoint POST /api/auth/seed-admin
+  // Enviarlo como header: x-seed-token: <valor>
+  SEED_SECRET: process.env.SEED_SECRET || "",
+
   // ─── ZONA HORARIA ─────────────────────────────────────────────────────────
   // Afecta logs, timestamps y cálculos de fechas en Node.
   // Ver zonas válidas en: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   TZ: process.env.TZ || "America/Argentina/Cordoba",
-
-  // ─── CLOUDINARY (storage de imágenes) ────────────────────────────────────
-  // Obtener en: https://cloudinary.com → Dashboard y Settings > API Keys
-  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "",
-  CLOUDINARY_API_KEY:    process.env.CLOUDINARY_API_KEY    || "",
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
-
-  // ─── MERCADOPAGO ──────────────────────────────────────────────────────────
-  // Access token de la cuenta MP (producción o sandbox).
-  // Producción:  APP_USR-...
-  // Sandbox:     TEST-...
-  // Obtenerlo en: https://www.mercadopago.com.ar/developers/panel/app
-  MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN || "",
-
-  // URL pública del backend — la usa MP para enviar notificaciones de pago.
-  // En desarrollo usar ngrok o similar para exponer localhost.
-  // Ejemplo: "https://mi-api.ngrok.io"
-  BACKEND_URL: process.env.BACKEND_URL || "http://localhost:3001",
 };

@@ -22,9 +22,19 @@ export const Auth01Rol = sequelize.define(
       unique: true,
     },
 
+    // Nivel de privilegio del rol (0-100).
+    // Permite requireNivel(min) sin listar cada abreviatura individualmente.
+    // Convención: ADMIN=100, STAFF=50, USR=10. Cada proyecto define los suyos.
+    AUTH01_NIVEL: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 10,
+    },
+
     AUTH01_FECHAALTA: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
 
     AUTH01_FECHABAJA: {

@@ -11,7 +11,7 @@
 //   catalogosRouter.delete("/estados-civiles/:id", crearSoftDeleteController(ESTADOS_CIVILES_CONFIG));
 // =============================================================
 
-import { Op } from "sequelize";
+import { Op, UniqueConstraintError, ValidationError } from "sequelize";
 
 import {
   listarGenerico,
@@ -279,6 +279,17 @@ export function crearCreateController(config) {
         mensaje: `${config.nombre} creado correctamente`,
       });
     } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        const campo = error.errors?.[0]?.path ?? "campo";
+        return badRequestResponse(res, {
+          mensaje: `Ya existe un registro de ${config.nombre} con ese valor en "${campo}"`,
+        });
+      }
+      if (error instanceof ValidationError) {
+        return badRequestResponse(res, {
+          mensaje: error.errors?.[0]?.message ?? `Datos inválidos para ${config.nombre}`,
+        });
+      }
       return errorResponse(res, {
         mensaje: `No se pudo crear el registro de ${config.nombre}`,
         error,
@@ -327,6 +338,17 @@ export function crearUpdateController(config) {
         mensaje: `${config.nombre} actualizado correctamente`,
       });
     } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        const campo = error.errors?.[0]?.path ?? "campo";
+        return badRequestResponse(res, {
+          mensaje: `Ya existe un registro de ${config.nombre} con ese valor en "${campo}"`,
+        });
+      }
+      if (error instanceof ValidationError) {
+        return badRequestResponse(res, {
+          mensaje: error.errors?.[0]?.message ?? `Datos inválidos para ${config.nombre}`,
+        });
+      }
       return errorResponse(res, {
         mensaje: `No se pudo actualizar el registro de ${config.nombre}`,
         error,

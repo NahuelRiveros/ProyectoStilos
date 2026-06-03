@@ -1,152 +1,81 @@
 // ==========================================================
-// ROLES DEL SISTEMA
-// Deben coincidir con AUTH_01_ROL.AUTH01_NOMBRE
+// NIVELES DE PRIVILEGIO (convención del sistema)
+//
+// Cada rol en la DB tiene AUTH01_NIVEL (0-100).
+// requireNivel(N) → pasa cualquier rol con nivel >= N.
+// Esto hace que STF1, STF2, STF3... todos con nivel 50
+// pasen requireNivel(50) sin listarse individualmente.
+//
+// Convención estándar:
+//   100 → Administrador total
+//    50 → Staff (nivel intermedio — cada proyecto define sus roles)
+//    10 → Usuario básico
+//     0 → Sin rol (bloqueado)
 // ==========================================================
 
-export const ROLES = {
-  ADMIN: "Administrador",
-  USR:   "Usuario",
+export const NIVELES = {
+  ADMIN: 100,
+  STAFF: 50,
+  USR:   10,
 };
 
 // ==========================================================
-// GRUPOS DE ACCESO
+// ROLES FIJOS DEL SISTEMA (abreviaturas)
+//
+// Solo ADM y USR son universales. Los roles de "staff" los
+// define cada proyecto en seed_auth_roles.js o vía API.
+//
+// Para agregar un rol del proyecto:
+//   export const ROLES = { ..., CAJA: "CAJ", RECEP: "RCP" };
 // ==========================================================
 
-const AUTENTICADO = [ROLES.ADMIN, ROLES.USR];
-const SOLO_ADMIN  = [ROLES.ADMIN];
+export const ROLES = {
+  ADMIN: "ADM",
+  USR:   "USR",
+};
 
 // ==========================================================
 // MATRIZ DE PERMISOS
+//
+// Cada entrada acepta:
+//   { nivel: N }              → requireNivel internamente
+//   { roles: ["ADM", "CAJ"] } → requireRole internamente
+//   { nivel: N, roles: [...] } → pasa si cumple CUALQUIERA
+//
+// Uso en rutas:
+//   router.get("/ruta", requireAuth, requireAccess(ACCESS.X), handler)
+//
+// CÓMO AGREGAR UN MÓDULO NUEVO:
+//   1. Crear el rol en DB si hace falta (POST /api/catalogos/roles con AUTH01_NIVEL)
+//   2. Declarar la abreviatura en ROLES si lo usarás con exactitud
+//   3. Agregar las claves en ACCESS usando { nivel } o { roles }
+//   4. Usar requireAccess(ACCESS.TU_MODULO_ACCION) en la ruta
+//
+// EJEMPLOS para un proyecto con "Recepcionista (RCP)" y "Cajero (CAJ)":
+//   RESERVAS_GET:    { nivel: NIVELES.STAFF }       // cualquier staff
+//   RESERVAS_CREATE: { roles: [ROLES.ADMIN, "RCP"] } // solo admin o recepcionista
+//   CAJA_GET:        { roles: [ROLES.ADMIN, "CAJ"] } // solo admin o cajero
+//   REPORTES:        { nivel: NIVELES.ADMIN }        // solo admin (nivel 100)
 // ==========================================================
 
 export const ACCESS = {
-  // =====================
-  // USUARIOS
-  // =====================
-  USUARIOS_GET:    SOLO_ADMIN,
-  USUARIOS_CREATE: SOLO_ADMIN,
-  USUARIOS_UPDATE: SOLO_ADMIN,
-  USUARIOS_DELETE: SOLO_ADMIN,
+  // ─── USUARIOS ──────────────────────────────────────────
+  USUARIOS_GET:    { roles: [ROLES.ADMIN] },
+  USUARIOS_CREATE: { roles: [ROLES.ADMIN] },
+  USUARIOS_UPDATE: { roles: [ROLES.ADMIN] },
+  USUARIOS_DELETE: { roles: [ROLES.ADMIN] },
+  USUARIOS_ROLES:  { roles: [ROLES.ADMIN] },
 
-  // =====================
-  // ROLES
-  // =====================
-  ROLES_GET:    AUTENTICADO,
-  ROLES_CREATE: SOLO_ADMIN,
-  ROLES_UPDATE: SOLO_ADMIN,
-  ROLES_DELETE: SOLO_ADMIN,
+  // ─── ROLES (catálogo) ──────────────────────────────────
+  // Solo ADM gestiona roles — lectura y escritura.
+  ROLES_GET:    { roles: [ROLES.ADMIN] },
+  ROLES_CREATE: { roles: [ROLES.ADMIN] },
+  ROLES_UPDATE: { roles: [ROLES.ADMIN] },
+  ROLES_DELETE: { roles: [ROLES.ADMIN] },
 
-  // =====================
-  // CATÁLOGOS GENÉRICOS
-  // =====================
-  CATALOGOS_GET:    AUTENTICADO,
-  CATALOGOS_CREATE: SOLO_ADMIN,
-  CATALOGOS_UPDATE: SOLO_ADMIN,
-  CATALOGOS_DELETE: SOLO_ADMIN,
-
-  // =====================
-  // CARRITO
-  // Todo autenticado — cada usuario opera su propio carrito
-  // =====================
-  CARRITO: AUTENTICADO,
-
-  // =====================
-  // ÓRDENES
-  // Crear y consultar: cualquier usuario autenticado
-  // Admin: solo administradores
-  // =====================
-  ORDENES_CREATE: AUTENTICADO,
-  ORDENES_READ:   AUTENTICADO,
-  ORDENES_ADMIN:  SOLO_ADMIN,
-
-  // =====================
-  // PAGOS
-  // Verificar estado: cualquier usuario autenticado
-  // Webhook: sin auth (middleware omitido en la ruta)
-  // =====================
-  PAGOS_VERIFICAR: AUTENTICADO,
-
-  // =====================
-  // PRODUCTOS
-  // GET sin auth → frontend público (catálogo de ropa)
-  // CRUD y gestión de stock: solo admin
-  // =====================
-  PRODUCTOS_CREATE: SOLO_ADMIN,
-  PRODUCTOS_UPDATE: SOLO_ADMIN,
-  PRODUCTOS_DELETE: SOLO_ADMIN,
-  PRODUCTOS_STOCK:  SOLO_ADMIN,
-
-  // catálogos de soporte de producto
-  CATEGORIAS_CREATE: SOLO_ADMIN,
-  CATEGORIAS_UPDATE: SOLO_ADMIN,
-  CATEGORIAS_DELETE: SOLO_ADMIN,
-
-  GENEROS_CREATE: SOLO_ADMIN,
-  GENEROS_UPDATE: SOLO_ADMIN,
-  GENEROS_DELETE: SOLO_ADMIN,
-
-  TALLES_CREATE: SOLO_ADMIN,
-  TALLES_UPDATE: SOLO_ADMIN,
-  TALLES_DELETE: SOLO_ADMIN,
-
-  COLORES_CREATE: SOLO_ADMIN,
-  COLORES_UPDATE: SOLO_ADMIN,
-  COLORES_DELETE: SOLO_ADMIN,
-
-  MARCAS_CREATE: SOLO_ADMIN,
-  MARCAS_UPDATE: SOLO_ADMIN,
-  MARCAS_DELETE: SOLO_ADMIN,
-
-  // =====================
-  // UPLOAD DE IMÁGENES
-  // =====================
-  UPLOAD: SOLO_ADMIN,
-
-  // =====================
-  // ÓRDENES (catálogos de soporte)
-  // GET autenticado → usuario lo ve al hacer checkout / historial
-  // CRUD solo admin
-  // =====================
-  ESTADOS_ORDEN_GET:    AUTENTICADO,
-  ESTADOS_ORDEN_CREATE: SOLO_ADMIN,
-  ESTADOS_ORDEN_UPDATE: SOLO_ADMIN,
-  ESTADOS_ORDEN_DELETE: SOLO_ADMIN,
-
-  CONDICION_IVA_GET: AUTENTICADO,
-
-  // =====================
-  // FACTURACIÓN
-  // GET autenticado → usuario lo elige en checkout
-  // Puntos de venta solo admin
-  // =====================
-  TIPO_COMP_GET: AUTENTICADO,
-
-  PUNTO_VENTA_GET:    SOLO_ADMIN,
-  PUNTO_VENTA_CREATE: SOLO_ADMIN,
-  PUNTO_VENTA_UPDATE: SOLO_ADMIN,
-  PUNTO_VENTA_DELETE: SOLO_ADMIN,
-
-  // =====================
-  // ENVÍOS
-  // GET autenticado → usuario elige en checkout
-  // CRUD solo admin
-  // =====================
-  ENVIO_OPCION_GET:    AUTENTICADO,
-  ENVIO_OPCION_CREATE: SOLO_ADMIN,
-  ENVIO_OPCION_UPDATE: SOLO_ADMIN,
-  ENVIO_OPCION_DELETE: SOLO_ADMIN,
-
-  // =====================
-  // COMPROBANTES AFIP
-  // Leer el propio comprobante: cualquier usuario autenticado
-  // Emitir y ver todos: solo admin
-  // =====================
-  COMPROBANTES_READ:   AUTENTICADO,
-  COMPROBANTES_EMITIR: SOLO_ADMIN,
-
-  // =====================
-  // PERFIL DE CLIENTE
-  // Perfil y direcciones: cualquier usuario autenticado
-  // =====================
-  CLIENTES_PERFIL: AUTENTICADO,
+  // ─── CATÁLOGOS GENÉRICOS ───────────────────────────────
+  CATALOGOS_GET:    { nivel: NIVELES.USR   }, // cualquier usuario autenticado
+  CATALOGOS_CREATE: { nivel: NIVELES.STAFF }, // cualquier staff (nivel >= 50)
+  CATALOGOS_UPDATE: { nivel: NIVELES.STAFF },
+  CATALOGOS_DELETE: { roles: [ROLES.ADMIN] }, // solo admin exacto
 };
