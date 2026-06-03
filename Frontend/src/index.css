@@ -1,0 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  /* ── Paleta de marca Stilo's ─────────────────────── */
+  --color-navy:           #2C3750;
+  --color-navy-dark:      #35415E;
+
+  --color-champagne:      #C7A98B;
+  --color-champagne-light: #E8D9C8;
+
+  /* ── Superficies ─────────────────────────────────── */
+  --color-surface:        #F7F7F7;
+  --color-card:           #FFFFFF;
+
+  /* ── Texto ───────────────────────────────────────── */
+  --color-ink:            #1F2937;
+  --color-muted:          #6B7280;
+
+  /* ── Bordes ──────────────────────────────────────── */
+  --color-line:           #E5E7EB;
+
+  /* ── Tipografías ─────────────────────────────────── */
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-ui:      "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Utilidades de formulario ─────────────────────────────── */
+.label-form {
+  @apply block mb-1 text-xs font-semibold text-muted;
+}
+
+.input-form {
+  @apply w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink
+         placeholder:text-muted/60
+         focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/20
+         transition;
+}
+
+.error-form {
+  @apply mt-1 text-xs text-rose-500;
+}

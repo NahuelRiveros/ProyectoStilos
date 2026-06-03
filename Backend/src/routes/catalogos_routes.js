@@ -1,0 +1,431 @@
+// =============================================================
+// routes/catalogos_routes.js
+//
+// Catálogos base del sistema usando el CRUD genérico.
+// Para agregar un catálogo nuevo:
+//   1. Crear el modelo en models/
+//   2. Agregarlo a models/index.js y database/bootstrap.js
+//   3. Definir su CONFIG acá y registrar las rutas
+//
+// NOTA de auth:
+//   - GET de catálogos de productos (categorías, géneros, talles,
+//     opciones de envío) son PÚBLICOS → sin requireAuth (los usa el
+//     frontend sin que el usuario esté logueado).
+//   - GET de catálogos internos (estados de orden, condición IVA,
+//     tipos de comprobante, puntos de venta) requieren estar autenticado.
+//   - Todo CREATE / PUT / DELETE requiere rol Administrador.
+// =============================================================
+
+import { Router } from "express";
+
+import {
+  Auth01Rol,
+  Prod01Categoria,
+  Prod02Genero,
+  Prod03Producto,
+  Prod04Talle,
+  Prod06Color,
+  Ord01Estado,
+  Ord02CondicionIva,
+  Fact01TipoComp,
+  Fact02PuntoVenta,
+  Envio01Opcion,
+  Prod07Marca,
+  Prod08CategoriaGenero,
+} from "../models/index.js";
+
+import {
+  crearListController,
+  crearListPaginadoController,
+  crearGetByIdController,
+  crearCreateController,
+  crearUpdateController,
+  crearSoftDeleteController,
+  crearReactivarController,
+} from "../controllers/generic_controller.js";
+
+import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
+import { ACCESS } from "./access_roles.js";
+
+export const catalogosRouter = Router();
+
+// =============================================================
+// ROLES  [auth requerido]
+// GET    /catalogos/roles
+// GET    /catalogos/roles/paginado
+// GET    /catalogos/roles/:id
+// POST   /catalogos/roles             [ADMIN]
+// PUT    /catalogos/roles/:id         [ADMIN]
+// DELETE /catalogos/roles/:id         [ADMIN]
+// PUT    /catalogos/roles/:id/reactivar [ADMIN]
+// =============================================================
+
+const ROLES_CONFIG = {
+  model:           Auth01Rol,
+  nombre:          "roles",
+  where:           { AUTH01_FECHABAJA: null },
+  attributes:      ["ID_AUTH01", "AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
+  order:           [["AUTH01_NOMBRE", "ASC"]],
+  campoBusqueda:   "AUTH01_NOMBRE",
+  campoFechaBaja:  "AUTH01_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
+  updateFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
+};
+
+catalogosRouter.get(   "/roles",               requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListController(ROLES_CONFIG));
+catalogosRouter.get(   "/roles/paginado",      requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListPaginadoController(ROLES_CONFIG));
+catalogosRouter.get(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_GET),    crearGetByIdController(ROLES_CONFIG));
+catalogosRouter.post(  "/roles",               requireAuth, requireRole(...ACCESS.ROLES_CREATE), crearCreateController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_UPDATE), crearUpdateController(ROLES_CONFIG));
+catalogosRouter.delete("/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_DELETE), crearSoftDeleteController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireRole(...ACCESS.ROLES_DELETE), crearReactivarController(ROLES_CONFIG));
+
+// =============================================================
+// CATEGORÍAS DE PRODUCTO  [GET público — lo usa el catálogo]
+// GET    /catalogos/categorias
+// GET    /catalogos/categorias/paginado
+// GET    /catalogos/categorias/:id
+// POST   /catalogos/categorias        [ADMIN]
+// PUT    /catalogos/categorias/:id    [ADMIN]
+// DELETE /catalogos/categorias/:id    [ADMIN]
+// PUT    /catalogos/categorias/:id/reactivar [ADMIN]
+// =============================================================
+
+const CATEGORIAS_CONFIG = {
+  model:        Prod01Categoria,
+  nombre:       "categorías",
+  where:        { PROD01_FECHABAJA: null },
+  attributes:   ["ID_PROD01", "PROD01_NOMBRE", "PROD01_SLUG", "RELA_PARENT"],
+  order:        [["PROD01_NOMBRE", "ASC"]],
+  campoBusqueda:"PROD01_NOMBRE",
+  createFields: ["PROD01_NOMBRE", "PROD01_SLUG", "RELA_PARENT", "PROD01_FECHAALTA"],
+  updateFields: ["PROD01_NOMBRE", "PROD01_SLUG", "RELA_PARENT"],
+};
+
+catalogosRouter.get(  "/categorias",          crearListController(CATEGORIAS_CONFIG));
+catalogosRouter.get(  "/categorias/paginado", crearListPaginadoController(CATEGORIAS_CONFIG));
+catalogosRouter.get(  "/categorias/:id",      crearGetByIdController(CATEGORIAS_CONFIG));
+catalogosRouter.post( "/categorias",          requireAuth, requireRole(...ACCESS.CATEGORIAS_CREATE), crearCreateController(CATEGORIAS_CONFIG));
+catalogosRouter.put(  "/categorias/:id",      requireAuth, requireRole(...ACCESS.CATEGORIAS_UPDATE), crearUpdateController(CATEGORIAS_CONFIG));
+
+// DELETE /catalogos/categorias/:id [ADMIN] — eliminación definitiva
+catalogosRouter.delete("/categorias/:id", requireAuth, requireRole(...ACCESS.CATEGORIAS_DELETE), async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ ok: false, mensaje: "El parámetro id es requerido" });
+
+    const cat = await Prod01Categoria.findByPk(id);
+    if (!cat) return res.status(404).json({ ok: false, mensaje: `No se encontró la categoría con id ${id}` });
+
+    // Bloquear si hay productos que la usan directamente
+    const tieneProductos = await Prod03Producto.count({ where: { RELA_PROD01: id } });
+    if (tieneProductos > 0) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: `No se puede eliminar: hay ${tieneProductos} producto(s) asignado(s) a esta categoría. Reasignálos primero.`,
+      });
+    }
+
+    // Desasignar subcategorías (las promueve a raíz, no las borra)
+    await Prod01Categoria.update({ RELA_PARENT: null }, { where: { RELA_PARENT: id } });
+
+    // Eliminar asignaciones de género
+    await Prod08CategoriaGenero.destroy({ where: { RELA_PROD01: id } });
+
+    await cat.destroy();
+
+    return res.json({ ok: true, mensaje: "Categoría eliminada definitivamente", data: null });
+  } catch (err) { next(err); }
+});
+
+// GET  /catalogos/categorias/:id/generos  — géneros asignados a esa categoría
+catalogosRouter.get("/categorias/:id/generos", async (req, res, next) => {
+  try {
+    const rows = await Prod08CategoriaGenero.findAll({
+      where:      { RELA_PROD01: req.params.id },
+      attributes: ["RELA_PROD02"],
+      order:      [["PROD08_ORDEN", "ASC"]],
+    });
+    return res.json({ ok: true, mensaje: "Géneros de la categoría", data: rows.map((r) => r.RELA_PROD02) });
+  } catch (err) { next(err); }
+});
+
+// PUT  /catalogos/categorias/:id/generos  [ADMIN] — reemplaza géneros asignados
+catalogosRouter.put("/categorias/:id/generos", requireAuth, requireRole(...ACCESS.CATEGORIAS_UPDATE), async (req, res, next) => {
+  try {
+    const { genero_ids = [] } = req.body;
+    await Prod08CategoriaGenero.destroy({ where: { RELA_PROD01: req.params.id } });
+    if (genero_ids.length > 0) {
+      await Prod08CategoriaGenero.bulkCreate(
+        genero_ids.map((gid, i) => ({
+          RELA_PROD01:  Number(req.params.id),
+          RELA_PROD02:  gid,
+          PROD08_ORDEN: i * 10,
+        }))
+      );
+    }
+    return res.json({ ok: true, mensaje: "Géneros actualizados", data: null });
+  } catch (err) { next(err); }
+});
+
+// =============================================================
+// GÉNEROS  [GET público]
+// GET    /catalogos/generos
+// GET    /catalogos/generos/paginado
+// GET    /catalogos/generos/:id
+// POST   /catalogos/generos           [ADMIN]
+// PUT    /catalogos/generos/:id       [ADMIN]
+// DELETE /catalogos/generos/:id       [ADMIN]
+// PUT    /catalogos/generos/:id/reactivar [ADMIN]
+// =============================================================
+
+const GENEROS_CONFIG = {
+  model:           Prod02Genero,
+  nombre:          "géneros",
+  where:           { PROD02_FECHABAJA: null },
+  attributes:      ["ID_PROD02", "PROD02_NOMBRE", "PROD02_SLUG"],
+  order:           [["PROD02_NOMBRE", "ASC"]],
+  campoBusqueda:   "PROD02_NOMBRE",
+  campoFechaBaja:  "PROD02_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    ["PROD02_NOMBRE", "PROD02_SLUG", "PROD02_FECHAALTA"],
+  updateFields:    ["PROD02_NOMBRE", "PROD02_SLUG"],
+};
+
+catalogosRouter.get(   "/generos",               crearListController(GENEROS_CONFIG));
+catalogosRouter.get(   "/generos/paginado",      crearListPaginadoController(GENEROS_CONFIG));
+catalogosRouter.get(   "/generos/:id",           crearGetByIdController(GENEROS_CONFIG));
+catalogosRouter.post(  "/generos",               requireAuth, requireRole(...ACCESS.GENEROS_CREATE), crearCreateController(GENEROS_CONFIG));
+catalogosRouter.put(   "/generos/:id",           requireAuth, requireRole(...ACCESS.GENEROS_UPDATE), crearUpdateController(GENEROS_CONFIG));
+catalogosRouter.delete("/generos/:id",           requireAuth, requireRole(...ACCESS.GENEROS_DELETE), crearSoftDeleteController(GENEROS_CONFIG));
+catalogosRouter.put(   "/generos/:id/reactivar", requireAuth, requireRole(...ACCESS.GENEROS_DELETE), crearReactivarController(GENEROS_CONFIG));
+
+// =============================================================
+// TALLES  [GET público]
+// GET    /catalogos/talles
+// GET    /catalogos/talles/paginado
+// GET    /catalogos/talles/:id
+// POST   /catalogos/talles            [ADMIN]
+// PUT    /catalogos/talles/:id        [ADMIN]
+// DELETE /catalogos/talles/:id        [ADMIN]
+// PUT    /catalogos/talles/:id/reactivar [ADMIN]
+// =============================================================
+
+const TALLES_CONFIG = {
+  model:           Prod04Talle,
+  nombre:          "talles",
+  where:           { PROD04_FECHABAJA: null },
+  attributes:      ["ID_PROD04", "PROD04_NOMBRE", "PROD04_ORDEN"],
+  order:           [["PROD04_ORDEN", "ASC"]],
+  campoBusqueda:   "PROD04_NOMBRE",
+  campoFechaBaja:  "PROD04_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    ["PROD04_NOMBRE", "PROD04_ORDEN", "PROD04_FECHAALTA"],
+  updateFields:    ["PROD04_NOMBRE", "PROD04_ORDEN"],
+};
+
+catalogosRouter.get(   "/talles",               crearListController(TALLES_CONFIG));
+catalogosRouter.get(   "/talles/paginado",      crearListPaginadoController(TALLES_CONFIG));
+catalogosRouter.get(   "/talles/:id",           crearGetByIdController(TALLES_CONFIG));
+catalogosRouter.post(  "/talles",               requireAuth, requireRole(...ACCESS.TALLES_CREATE), crearCreateController(TALLES_CONFIG));
+catalogosRouter.put(   "/talles/:id",           requireAuth, requireRole(...ACCESS.TALLES_UPDATE), crearUpdateController(TALLES_CONFIG));
+catalogosRouter.delete("/talles/:id",           requireAuth, requireRole(...ACCESS.TALLES_DELETE), crearSoftDeleteController(TALLES_CONFIG));
+catalogosRouter.put(   "/talles/:id/reactivar", requireAuth, requireRole(...ACCESS.TALLES_DELETE), crearReactivarController(TALLES_CONFIG));
+
+// =============================================================
+// COLORES  [GET público — el formulario de producto los usa sin login]
+// GET    /catalogos/colores
+// GET    /catalogos/colores/paginado
+// GET    /catalogos/colores/:id
+// POST   /catalogos/colores           [ADMIN]
+// PUT    /catalogos/colores/:id       [ADMIN]
+// DELETE /catalogos/colores/:id       [ADMIN]
+// PUT    /catalogos/colores/:id/reactivar [ADMIN]
+// =============================================================
+
+const COLORES_CONFIG = {
+  model:           Prod06Color,
+  nombre:          "colores",
+  where:           { PROD06_FECHABAJA: null },
+  attributes:      ["ID_PROD06", "PROD06_NOMBRE", "PROD06_HEX", "PROD06_ORDEN"],
+  order:           [["PROD06_ORDEN", "ASC"], ["PROD06_NOMBRE", "ASC"]],
+  campoBusqueda:   "PROD06_NOMBRE",
+  campoFechaBaja:  "PROD06_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    ["PROD06_NOMBRE", "PROD06_HEX", "PROD06_ORDEN", "PROD06_FECHAALTA"],
+  updateFields:    ["PROD06_NOMBRE", "PROD06_HEX", "PROD06_ORDEN"],
+};
+
+catalogosRouter.get(   "/colores",               crearListController(COLORES_CONFIG));
+catalogosRouter.get(   "/colores/paginado",      crearListPaginadoController(COLORES_CONFIG));
+catalogosRouter.get(   "/colores/:id",           crearGetByIdController(COLORES_CONFIG));
+catalogosRouter.post(  "/colores",               requireAuth, requireRole(...ACCESS.COLORES_CREATE), crearCreateController(COLORES_CONFIG));
+catalogosRouter.put(   "/colores/:id",           requireAuth, requireRole(...ACCESS.COLORES_UPDATE), crearUpdateController(COLORES_CONFIG));
+catalogosRouter.delete("/colores/:id",           requireAuth, requireRole(...ACCESS.COLORES_DELETE), crearSoftDeleteController(COLORES_CONFIG));
+catalogosRouter.put(   "/colores/:id/reactivar", requireAuth, requireRole(...ACCESS.COLORES_DELETE), crearReactivarController(COLORES_CONFIG));
+
+// =============================================================
+// ESTADOS DE ORDEN  [auth requerido]
+// GET    /catalogos/estados-orden
+// GET    /catalogos/estados-orden/:id
+// POST   /catalogos/estados-orden     [ADMIN]
+// PUT    /catalogos/estados-orden/:id [ADMIN]
+// =============================================================
+
+const ESTADOS_ORDEN_CONFIG = {
+  model:       Ord01Estado,
+  nombre:      "estados de orden",
+  attributes:  ["ID_ORD01", "ORD01_CODIGO", "ORD01_ETIQUETA"],
+  order:       [["ID_ORD01", "ASC"]],
+  createFields:["ORD01_CODIGO", "ORD01_ETIQUETA", "ORD01_FECHAALTA"],
+  updateFields:["ORD01_ETIQUETA"],
+};
+
+catalogosRouter.get(  "/estados-orden",      requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_GET),    crearListController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.get(  "/estados-orden/:id",  requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_GET),    crearGetByIdController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.post( "/estados-orden",      requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_CREATE), crearCreateController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.put(  "/estados-orden/:id",  requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_UPDATE), crearUpdateController(ESTADOS_ORDEN_CONFIG));
+
+// =============================================================
+// CONDICIONES IVA  [auth requerido — se usa en checkout]
+// GET    /catalogos/condiciones-iva
+// GET    /catalogos/condiciones-iva/:id
+// =============================================================
+
+const CONDICION_IVA_CONFIG = {
+  model:      Ord02CondicionIva,
+  nombre:     "condiciones IVA",
+  attributes: ["ID_ORD02", "ORD02_CODIGO", "ORD02_NOMBRE"],
+  order:      [["ORD02_NOMBRE", "ASC"]],
+};
+
+catalogosRouter.get("/condiciones-iva",     requireAuth, requireRole(...ACCESS.CONDICION_IVA_GET), crearListController(CONDICION_IVA_CONFIG));
+catalogosRouter.get("/condiciones-iva/:id", requireAuth, requireRole(...ACCESS.CONDICION_IVA_GET), crearGetByIdController(CONDICION_IVA_CONFIG));
+
+// =============================================================
+// TIPOS DE COMPROBANTE AFIP  [auth requerido]
+// GET    /catalogos/tipos-comprobante
+// GET    /catalogos/tipos-comprobante/:id
+// =============================================================
+
+const TIPO_COMP_CONFIG = {
+  model:      Fact01TipoComp,
+  nombre:     "tipos de comprobante",
+  attributes: ["ID_FACT01", "FACT01_LETRA", "FACT01_NOMBRE", "FACT01_CONDICION_RECEPTOR"],
+  order:      [["FACT01_LETRA", "ASC"]],
+};
+
+catalogosRouter.get("/tipos-comprobante",     requireAuth, requireRole(...ACCESS.TIPO_COMP_GET), crearListController(TIPO_COMP_CONFIG));
+catalogosRouter.get("/tipos-comprobante/:id", requireAuth, requireRole(...ACCESS.TIPO_COMP_GET), crearGetByIdController(TIPO_COMP_CONFIG));
+
+// =============================================================
+// PUNTOS DE VENTA  [solo admin]
+// GET    /catalogos/puntos-venta
+// GET    /catalogos/puntos-venta/paginado
+// GET    /catalogos/puntos-venta/:id
+// POST   /catalogos/puntos-venta      [ADMIN]
+// PUT    /catalogos/puntos-venta/:id  [ADMIN]
+// DELETE /catalogos/puntos-venta/:id  [ADMIN]
+// =============================================================
+
+const PUNTO_VENTA_CONFIG = {
+  model:           Fact02PuntoVenta,
+  nombre:          "puntos de venta",
+  where:           { FACT02_ACTIVO: true },
+  attributes:      ["ID_FACT02", "FACT02_NUMERO", "FACT02_NOMBRE", "FACT02_ACTIVO"],
+  order:           [["FACT02_NUMERO", "ASC"]],
+  allowHardDelete: false,
+  createFields:    ["FACT02_NUMERO", "FACT02_NOMBRE", "FACT02_ACTIVO", "FACT02_FECHAALTA"],
+  updateFields:    ["FACT02_NOMBRE", "FACT02_ACTIVO"],
+};
+
+catalogosRouter.get(   "/puntos-venta",          requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearListController(PUNTO_VENTA_CONFIG));
+catalogosRouter.get(   "/puntos-venta/paginado", requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearListPaginadoController(PUNTO_VENTA_CONFIG));
+catalogosRouter.get(   "/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearGetByIdController(PUNTO_VENTA_CONFIG));
+catalogosRouter.post(  "/puntos-venta",          requireAuth, requireRole(...ACCESS.PUNTO_VENTA_CREATE), crearCreateController(PUNTO_VENTA_CONFIG));
+catalogosRouter.put(   "/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_UPDATE), crearUpdateController(PUNTO_VENTA_CONFIG));
+catalogosRouter.delete("/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_DELETE), crearSoftDeleteController(PUNTO_VENTA_CONFIG));
+
+// =============================================================
+// OPCIONES DE ENVÍO  [GET autenticado — se elige en checkout]
+// GET    /catalogos/opciones-envio
+// GET    /catalogos/opciones-envio/:id
+// POST   /catalogos/opciones-envio    [ADMIN]
+// PUT    /catalogos/opciones-envio/:id [ADMIN]
+// DELETE /catalogos/opciones-envio/:id [ADMIN]
+// PUT    /catalogos/opciones-envio/:id/reactivar [ADMIN]
+// =============================================================
+
+const OPCIONES_ENVIO_CONFIG = {
+  model:           Envio01Opcion,
+  nombre:          "opciones de envío",
+  where:           { ENVIO01_ACTIVO: true, ENVIO01_FECHABAJA: null },
+  attributes:      [
+    "ID_ENVIO01",
+    "ENVIO01_NOMBRE",
+    "ENVIO01_DESCRIPCION",
+    "ENVIO01_PRECIO",
+    "ENVIO01_TIEMPO_ESTIMADO",
+    "ENVIO01_GRATIS_DESDE",
+  ],
+  order:           [["ENVIO01_PRECIO", "ASC"]],
+  campoFechaBaja:  "ENVIO01_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    [
+    "ENVIO01_NOMBRE",
+    "ENVIO01_DESCRIPCION",
+    "ENVIO01_PRECIO",
+    "ENVIO01_TIEMPO_ESTIMADO",
+    "ENVIO01_GRATIS_DESDE",
+    "ENVIO01_ACTIVO",
+    "ENVIO01_FECHAALTA",
+  ],
+  updateFields:    [
+    "ENVIO01_NOMBRE",
+    "ENVIO01_DESCRIPCION",
+    "ENVIO01_PRECIO",
+    "ENVIO01_TIEMPO_ESTIMADO",
+    "ENVIO01_GRATIS_DESDE",
+    "ENVIO01_ACTIVO",
+  ],
+};
+
+catalogosRouter.get(   "/opciones-envio",               requireAuth, requireRole(...ACCESS.ENVIO_OPCION_GET),    crearListController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.get(   "/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_GET),    crearGetByIdController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.post(  "/opciones-envio",               requireAuth, requireRole(...ACCESS.ENVIO_OPCION_CREATE), crearCreateController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.put(   "/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_UPDATE), crearUpdateController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.delete("/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_DELETE), crearSoftDeleteController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.put(   "/opciones-envio/:id/reactivar", requireAuth, requireRole(...ACCESS.ENVIO_OPCION_DELETE), crearReactivarController(OPCIONES_ENVIO_CONFIG));
+
+// =============================================================
+// MARCAS  [GET público — el catálogo las necesita sin login]
+// GET    /catalogos/marcas
+// GET    /catalogos/marcas/paginado
+// GET    /catalogos/marcas/:id
+// POST   /catalogos/marcas             [ADMIN]
+// PUT    /catalogos/marcas/:id         [ADMIN]
+// DELETE /catalogos/marcas/:id         [ADMIN]
+// PUT    /catalogos/marcas/:id/reactivar [ADMIN]
+// =============================================================
+
+const MARCAS_CONFIG = {
+  model:           Prod07Marca,
+  nombre:          "marcas",
+  where:           { PROD07_FECHABAJA: null },
+  attributes:      ["ID_PROD07", "PROD07_NOMBRE", "PROD07_SLUG", "PROD07_LOGO", "PROD07_DESCRIPCION", "PROD07_ORDEN", "PROD07_ACTIVO"],
+  order:           [["PROD07_ORDEN", "ASC"], ["PROD07_NOMBRE", "ASC"]],
+  campoBusqueda:   "PROD07_NOMBRE",
+  campoFechaBaja:  "PROD07_FECHABAJA",
+  allowHardDelete: false,
+  createFields:    ["PROD07_NOMBRE", "PROD07_SLUG", "PROD07_LOGO", "PROD07_DESCRIPCION", "PROD07_ORDEN", "PROD07_ACTIVO", "PROD07_FECHAALTA"],
+  updateFields:    ["PROD07_NOMBRE", "PROD07_SLUG", "PROD07_LOGO", "PROD07_DESCRIPCION", "PROD07_ORDEN", "PROD07_ACTIVO"],
+};
+
+catalogosRouter.get(   "/marcas",               crearListController(MARCAS_CONFIG));
+catalogosRouter.get(   "/marcas/paginado",      crearListPaginadoController(MARCAS_CONFIG));
+catalogosRouter.get(   "/marcas/:id",           crearGetByIdController(MARCAS_CONFIG));
+catalogosRouter.post(  "/marcas",               requireAuth, requireRole(...ACCESS.MARCAS_CREATE), crearCreateController(MARCAS_CONFIG));
+catalogosRouter.put(   "/marcas/:id",           requireAuth, requireRole(...ACCESS.MARCAS_UPDATE), crearUpdateController(MARCAS_CONFIG));
+catalogosRouter.delete("/marcas/:id",           requireAuth, requireRole(...ACCESS.MARCAS_DELETE), crearSoftDeleteController(MARCAS_CONFIG));
+catalogosRouter.put(   "/marcas/:id/reactivar", requireAuth, requireRole(...ACCESS.MARCAS_DELETE), crearReactivarController(MARCAS_CONFIG));
