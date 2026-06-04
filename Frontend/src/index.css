@@ -1,5 +1,91 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-display: "Outfit", system-ui, sans-serif;
+
+  /* ─────────────────────────────────────────────────────────────
+   * TEMA DE CONTENIDO (página, formularios, cards)
+   * ──────────────────────────────────────────────────────────── */
+  --color-navy:   #060d1f;   /* texto navy / botón principal */
+  --color-ink:    #111827;
+  --color-muted:  #64748b;
+  --color-surface: #f8fafc;
+  --color-card:   #ffffff;
+  --color-line:   #e2e8f0;
+
+  /* ─────────────────────────────────────────────────────────────
+   * ACENTO DE MARCA  ← cambiar aquí afecta botones, actives, hovers
+   * ──────────────────────────────────────────────────────────── */
+  --color-accent:       #fbbf24;   /* champagne · color principal de acento */
+  --color-accent-on:    #0a0f1a;   /* texto legible sobre el acento */
+
+  /* alias champagne → accent (retrocompatibilidad) */
+  --color-champagne:       var(--color-accent);
+  --color-champagne-light: #fef3c7;
+  --color-champagne-dark:  #b45309;
+
+  /* ─────────────────────────────────────────────────────────────
+   * SHELL  ← bg + texto del navbar · footer · sidebar · mega-menu
+   *
+   *  Cambiar SOLO este bloque para cambiar el tema completo del shell.
+   *
+   *  ┌─ TEMA OSCURO navy (original) ───────────────────────────┐
+   *  │  --color-shell:           #060d1f;                      │
+   *  │  --color-shell-raised:    #0a1528;                      │
+   *  │  --color-shell-float:     #0d1525;                      │
+   *  │  --color-shell-text:      #ffffff;                      │
+   *  │  --color-shell-text-dim:  #94a3b8;  ← slate-400        │
+   *  └─────────────────────────────────────────────────────────┘
+   *
+   *  ┌─ TEMA CHAMPAGNE cálido ──────────────────────────────────┐
+   *  │  --color-shell:           #fef3c7;                      │
+   *  │  --color-shell-raised:    #fde68a;                      │
+   *  │  --color-shell-float:     #ffffff;                      │
+   *  │  --color-shell-text:      #1c0f00;                      │
+   *  │  --color-shell-text-dim:  #78593a;                      │
+   *  └─────────────────────────────────────────────────────────┘
+   *
+   *  ┌─ TEMA SLATE medio ──────────────────────────────────────┐
+   *  │  --color-shell:           #0f172a;                      │
+   *  │  --color-shell-raised:    #1e293b;                      │
+   *  │  --color-shell-float:     #1a2332;                      │
+   *  │  --color-shell-text:      #f1f5f9;                      │
+   *  │  --color-shell-text-dim:  #64748b;                      │
+   *  └─────────────────────────────────────────────────────────┘
+   * ──────────────────────────────────────────────────────────── */
+  --color-shell:           #fef3c7;   /* bg navbar · footer · mobile-nav · brand-strip */
+  --color-shell-raised:    #fef3c7;   /* bg mega-menu (panel desplegable) */
+  --color-shell-float:     #ffffff;   /* bg dropdown userbox / elementos flotantes */
+  --color-shell-text:      #1c0f00;   /* texto principal: links nav, nombre de marca */
+  --color-shell-text-dim:  #78593a;   /* texto secundario: links inactivos, labels, íconos */
+
+  /* ─────────────────────────────────────────────────────────────
+   * ADMIN PANEL  ← sidebar · barra mobile · fondo del panel
+   *
+   *  Independiente del shell público — podés tener navbar champagne
+   *  y sidebar admin oscuro al mismo tiempo.
+   *
+   *  ┌─ TEMA OSCURO navy (default) ────────────────────────────┐
+   *  │  --color-admin:          #060d1f;                       │
+   *  │  --color-admin-raised:   #0a1528;                       │
+   *  │  --color-admin-text:     #f1f5f9;                       │
+   *  │  --color-admin-text-dim: #64748b;                       │
+   *  └─────────────────────────────────────────────────────────┘
+   *
+   *  ┌─ TEMA SLATE MEDIO ──────────────────────────────────────┐
+   *  │  --color-admin:          #1e293b;                       │
+   *  │  --color-admin-raised:   #334155;                       │
+   *  │  --color-admin-text:     #f8fafc;                       │
+   *  │  --color-admin-text-dim: #94a3b8;                       │
+   *  └─────────────────────────────────────────────────────────┘
+   * ──────────────────────────────────────────────────────────── */
+  --color-admin:          #060d1f;   /* bg sidebar · barra mobile admin */
+  --color-admin-raised:   #0a1528;   /* bg tope gradiente sidebar */
+  --color-admin-text:     #f1f5f9;   /* texto activo y hover en sidebar */
+  --color-admin-text-dim: #64748b;   /* texto inactivo, labels, íconos */
+}
+
 html,
 body,
 #root {
@@ -10,4 +96,89 @@ body {
   margin: 0;
   font-family: 'Outfit', system-ui, sans-serif;
   background: #f8fafc;
+}
+
+@layer components {
+  /* ── Input / Select base ─────────────────────────────── */
+  .input-form {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-line);
+    background-color: var(--color-surface);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-ink);
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+
+  .input-form::placeholder {
+    color: rgba(100, 116, 139, 0.5);
+  }
+
+  .input-form:focus {
+    border-color: var(--color-navy);
+    box-shadow: 0 0 0 3px rgba(6, 13, 31, 0.1);
+  }
+
+  /* ── Select — flecha personalizada ──────────────────── */
+  select.input-form {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  select.input-form:focus {
+    border-color: var(--color-navy);
+    box-shadow: 0 0 0 3px rgba(6, 13, 31, 0.1);
+  }
+
+  /* ── Label ───────────────────────────────────────────── */
+  .label-form {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    line-height: 1.5;
+  }
+
+  /* ── Error ───────────────────────────────────────────── */
+  .error-form {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #ef4444;
+  }
+}
+
+/* ── Shell nav: hover y active centralizados ─────────────────
+   Usar en todos los links / botones del navbar, mega-menu y
+   mobile-nav. Cambiar solo estos dos bloques si se quiere
+   modificar el feedback visual de todos los ítems de navegación.
+   ──────────────────────────────────────────────────────────── */
+.shell-hover:hover {
+  background-color: color-mix(in srgb, var(--color-shell-text) 8%, transparent);
+  color: var(--color-shell-text);
+}
+
+.shell-active {
+  background-color: color-mix(in srgb, var(--color-shell-text) 12%, transparent);
+  color: var(--color-shell-text);
+  font-weight: 600;
+}
+
+/* ── Ticker de anuncios ──────────────────────────────────────
+   Los ítems se duplican en el componente ([...items, ...items])
+   así que desplazar al -50% reinicia el loop de forma seamless.
+   ──────────────────────────────────────────────────────────── */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }

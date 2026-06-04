@@ -1,5 +1,3 @@
-import { navbar_config } from "./navbar_config";
-
 function puedeVerItem(item, usuario) {
   const estaAutenticado = Boolean(usuario);
 

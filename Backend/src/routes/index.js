@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { sequelize } from "../database/sequelize.js";
 
-import { authRouter }      from "./auth_routes.js";
-import { usuariosRouter }  from "./usuarios_routes.js";
-import { catalogosRouter } from "./catalogos_routes.js";
-import { adminRouter }     from "./admin_routes.js";
+import { authRouter }       from "./auth_routes.js";
+import { usuariosRouter }   from "./usuarios_routes.js";
+import { catalogosRouter }  from "./catalogos_routes.js";
+import { adminRouter }      from "./admin_routes.js";
+import { productosRouter }  from "./productos_routes.js";
+import { carritoRouter }    from "./carrito_routes.js";
+import { ordenesRouter }    from "./ordenes_routes.js";
+import { uploadRouter }     from "./upload_routes.js";
+import { homeConfigRouter } from "./home_config_routes.js";
 
 import { verificarSuscripcion } from "../middleware/suscripcion_middleware.js";
 
@@ -54,11 +59,14 @@ router.use("/usuarios",  usuariosRouter);
 router.use("/catalogos", catalogosRouter);
 
 // ==========================================================
-// ROUTERS DE DOMINIO DEL PROYECTO
-// Agregar acá los módulos específicos de cada proyecto.
-// Todos heredan automáticamente el middleware de suscripción.
-// Patrón: router.use("/entidad", requireAuth, entidadRouter);
+// ROUTERS DEL PROYECTO ANGAR
 // ==========================================================
+
+router.use("/productos",   productosRouter);
+router.use("/carrito",    carritoRouter);
+router.use("/ordenes",    ordenesRouter);
+router.use("/upload",     uploadRouter);
+router.use("/home-config", homeConfigRouter);
 
 // router.use("/personas", personasRouter);
 

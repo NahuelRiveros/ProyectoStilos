@@ -1,0 +1,69 @@
+import { http } from "./http";
+
+// GET /api/productos
+// params: { genero, categoria, marca, precio_max, solo_ofertas, solo_stock, orden, pagina, por_pagina }
+export async function getProductos(params = {}) {
+  const normalizedParams = { ...params };
+  if (normalizedParams.limit != null && normalizedParams.por_pagina == null) {
+    normalizedParams.por_pagina = normalizedParams.limit;
+    delete normalizedParams.limit;
+  }
+
+  const { data } = await http.get("/productos", { params: normalizedParams });
+  return {
+    productos:  data.data,
+    pagination: {
+      total:        data.total,
+      pagina:       data.pagina,
+      total_paginas: data.total_paginas,
+    },
+  };
+}
+
+// GET /api/productos/:id
+export async function getProducto(id) {
+  const { data } = await http.get(`/productos/${id}`);
+  return data.data;
+}
+
+// GET /api/productos/ofertas/destacadas
+export async function getOfertasDestacadas() {
+  const { data } = await http.get("/productos/ofertas/destacadas");
+  return data.data;
+}
+
+// POST /api/productos
+export async function crearProducto(payload) {
+  const { data } = await http.post("/productos", payload);
+  return data.data;
+}
+
+// PUT /api/productos/:id
+export async function actualizarProducto(id, payload) {
+  const { data } = await http.put(`/productos/${id}`, payload);
+  return data.data;
+}
+
+// GET /api/productos/:id/stock
+export async function getProductoStock(id) {
+  const { data } = await http.get(`/productos/${id}/stock`);
+  return data.data.map((s) => ({
+    id: s.ID_PROD05,
+    producto_id: s.RELA_PROD03,
+    talle_id: s.RELA_PROD04,
+    talle: s.talle?.PROD04_NOMBRE ?? null,
+    stock: s.PROD05_STOCK,
+  }));
+}
+
+// PUT /api/productos/:id/stock
+export async function updateProductoStock(id, entries) {
+  const { data } = await http.put(`/productos/${id}/stock`, entries);
+  return data.data;
+}
+
+// GET /api/productos/stock-bajo
+export async function getStockBajo(umbral = 1) {
+  const { data } = await http.get("/productos/stock-bajo", { params: { umbral } });
+  return data.data;
+}

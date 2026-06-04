@@ -1,60 +1,12 @@
 import { useMemo, useState } from "react";
 import { Eye, Pencil, Search, Trash2 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
 import Button from "../ui/button";
-import type { ButtonVariant } from "../styles/ui_buttons_style";
 import { UI_TABLE } from "../styles/ui_table_style";
 
-type SortDirection = "asc" | "desc" | null;
-
-interface Column<T extends Record<string, unknown> = Record<string, unknown>> {
-  key: string;
-  label: string;
-  sortable?: boolean;
-  searchable?: boolean;
-  headerClassName?: string;
-  className?: string;
-  render?: (row: T, value: string) => ReactNode;
-}
-
-interface Action<T extends Record<string, unknown> = Record<string, unknown>> {
-  key?: string;
-  label: string;
-  icon?: ComponentType<{ className?: string }>;
-  variant?: ButtonVariant;
-  iconOnly?: boolean;
-  className?: string;
-  onClick?: (row: T) => void;
-  hidden?: (row: T) => boolean;
-  disabled?: (row: T) => boolean;
-}
-
-interface DataGridProps<T extends Record<string, unknown> = Record<string, unknown>> {
-  title?: string;
-  subtitle?: string;
-  /** Extra JSX rendered in the header row, next to the search bar (e.g. filter toggles). */
-  headerExtra?: ReactNode;
-  columns?: Column<T>[];
-  rows?: T[];
-  keyField?: string;
-  loading?: boolean;
-  emptyMessage?: string;
-  searchable?: boolean;
-  searchPlaceholder?: string;
-  searchColumns?: string[];
-  actions?: Action<T>[];
-  actionsPosition?: "start" | "end";
-  showDefaultActions?: boolean;
-  onView?: (row: T) => void;
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
-  className?: string;
-}
-
-function getValue<T extends Record<string, unknown>>(row: T, key: string): string {
+function getValue(row, key) {
   if (!key) return "";
   return String(
-    key.split(".").reduce<unknown>((acc, part) => (acc as Record<string, unknown>)?.[part], row) ?? ""
+    key.split(".").reduce((acc, part) => acc?.[part], row) ?? ""
   );
 }
 
@@ -176,7 +128,7 @@ function getValue<T extends Record<string, unknown>>(row: T, key: string): strin
  *
  * ═══════════════════════════════════════════════════════════════
  */
-export default function DataGrid<T extends Record<string, unknown> = Record<string, unknown>>({
+export default function DataGrid({
   title,
   subtitle,
   headerExtra,
@@ -195,20 +147,20 @@ export default function DataGrid<T extends Record<string, unknown> = Record<stri
   onEdit,
   onDelete,
   className = "",
-}: DataGridProps<T>) {
+}) {
   const [query, setQuery] = useState("");
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<SortDirection>(null);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState(null);
 
-  const finalActions = useMemo<Action<T>[]>(() => {
+  const finalActions = useMemo(() => {
     if (actions.length > 0) return actions;
     if (!showDefaultActions) return [];
 
-    return ([
+    return [
       onView && { key: "view", label: "Ver", icon: Eye, variant: UI_TABLE.actionVariants.view.variant, onClick: onView },
       onEdit && { key: "edit", label: "Editar", icon: Pencil, variant: UI_TABLE.actionVariants.edit.variant, onClick: onEdit },
       onDelete && { key: "delete", label: "Eliminar", icon: Trash2, variant: UI_TABLE.actionVariants.delete.variant, onClick: onDelete },
-    ] as const).filter(Boolean) as Action<T>[];
+    ].filter(Boolean);
   }, [actions, showDefaultActions, onView, onEdit, onDelete]);
 
   const activeSearchColumns = useMemo(() => {
@@ -238,7 +190,7 @@ export default function DataGrid<T extends Record<string, unknown> = Record<stri
     return result;
   }, [rows, query, activeSearchColumns, sortKey, sortDir]);
 
-  function handleSort(key: string) {
+  function handleSort(key) {
     if (sortKey !== key) {
       setSortKey(key);
       setSortDir("asc");
@@ -250,7 +202,7 @@ export default function DataGrid<T extends Record<string, unknown> = Record<stri
     }
   }
 
-  function renderActions(row: T) {
+  function renderActions(row) {
     if (finalActions.length === 0) return null;
 
     return (

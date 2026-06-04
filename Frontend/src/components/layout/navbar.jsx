@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { getCatalogoNavegacion } from "../../api/catalogo_api";
 import { useAuth } from "../../auth/auth_context";
 import { filtrarNavbarPorRol } from "./navbar_permissions";
 import { navbar_config } from "./navbar_config";
@@ -11,14 +12,59 @@ import NavbarMegaMenu from "./navbar_mega_menu";
 import NavbarMobile from "./navbar_mobile";
 import NavbarUserBox from "./navbar_userbox";
 
+function mapNavItem(item) {
+  return {
+    label:    item.label,
+    to:       item.to,
+    children: item.children?.length ? item.children.map(mapNavItem) : undefined,
+  };
+}
+
+function buildNavbarConfig(catalogos) {
+  // Excluir el ítem "catalogo" (agrupador de todo) — solo usar los géneros reales.
+  // "Productos" queda como link simple en navbar_config.links apuntando a /catalogo.
+  const generoItems = catalogos.filter((item) => item.slug !== "catalogo");
+
+  const publicLinks  = navbar_config.links.filter((link) => !link.requiereAuth);
+  const privateLinks = navbar_config.links.filter((link) =>  link.requiereAuth);
+
+  // Géneros sin categorías asignadas → link simple
+  const genreLinks = generoItems
+    .filter((genero) => (genero.items?.length ?? 0) === 0)
+    .map((genero) => ({
+      label: genero.label,
+      to:    genero.to,
+      icon:  ShoppingBag,
+    }));
+
+  // Géneros con categorías → dropdown automático
+  const dropdowns = generoItems
+    .filter((genero) => (genero.items?.length ?? 0) > 0)
+    .map((genero) => ({
+      id:    `genero-${genero.id}`,
+      label: genero.label,
+      to:    genero.to,
+      icon:  ShoppingBag,
+      items: genero.items.map(mapNavItem),
+    }));
+
+  return {
+    ...navbar_config,
+    links: [...publicLinks, ...genreLinks, ...privateLinks],
+    dropdowns,
+  };
+}
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen]             = useState(false);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [scrolled, setScrolled]                 = useState(false);
+  const [catalogos, setCatalogos]               = useState([]);
   const closeTimer                              = useRef(null);
   const { usuario }                             = useAuth();
 
-  const config         = filtrarNavbarPorRol(navbar_config, usuario);
+  const dynamicConfig  = useMemo(() => buildNavbarConfig(catalogos), [catalogos]);
+  const config         = filtrarNavbarPorRol(dynamicConfig, usuario);
   const activeDropdown = config.dropdowns?.find(d => d.id === activeDropdownId) ?? null;
 
   function openDropdown(id) {
@@ -38,6 +84,20 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCatalogoNavegacion()
+      .then((data) => {
+        if (!cancelled) setCatalogos(data);
+      })
+      .catch(() => {
+        if (!cancelled) setCatalogos([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -61,10 +121,10 @@ export default function Navbar() {
       <header
         onMouseLeave={scheduleClose}
         className={[
-          "fixed inset-x-0 top-0 z-50 bg-[#060d1f] transition-all duration-300",
+          "fixed inset-x-0 top-0 z-50 bg-shell transition-all duration-300",
           scrolled
-            ? "border-b border-white/[0.05] shadow-[0_1px_0_rgba(255,255,255,0.04),0_8px_40px_-4px_rgba(0,0,0,0.7)]"
-            : "border-b border-white/[0.07]",
+            ? "border-b border-shell-text/10 shadow-lg"
+            : "border-b border-shell-text/5",
         ].join(" ")}
       >
         <div className="mx-auto flex h-[60px] max-w-[1440px] items-center justify-between px-6 lg:px-10">
@@ -75,13 +135,13 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
             className="flex shrink-0 items-center gap-2.5 outline-none"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400 text-[11px] font-black text-slate-950 shadow-sm shadow-amber-400/30">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-[11px] font-black text-accent-on shadow-sm shadow-accent/30">
               {navbar_config.brand.fallbackLetter}
             </div>
             {navbar_config.brand.logoUrl ? (
               <img src={navbar_config.brand.logoUrl} alt={navbar_config.brand.titulo} className="h-7 w-auto" />
             ) : (
-              <span className="select-none text-[15px] font-bold tracking-tight text-white/90">
+              <span className="select-none text-[15px] font-bold tracking-tight text-shell-text/90">
                 {navbar_config.brand.titulo}
               </span>
             )}
@@ -104,7 +164,7 @@ export default function Navbar() {
               ) : (
                 <NavLink
                   to="/login"
-                  className="inline-flex h-8 items-center rounded-full bg-amber-400 px-4 text-[13px] font-semibold text-slate-950 transition-all hover:bg-amber-300 active:scale-95"
+                  className="inline-flex h-8 items-center rounded-full bg-accent px-4 text-[13px] font-semibold text-accent-on transition-all hover:opacity-90 active:scale-95"
                 >
                   Iniciar sesión
                 </NavLink>

@@ -4,10 +4,10 @@ const year = new Date().getFullYear();
 
 export default function Footer() {
   return (
-    <footer className="relative w-full overflow-hidden bg-[#060d1f]">
+    <footer className="relative w-full overflow-hidden bg-shell">
 
       {/* Amber hairline gradient */}
-      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-amber-400/35 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-shell-text/20 to-transparent" />
 
       {/* Dot grid atmosphere */}
       <div
@@ -27,23 +27,23 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-[11px] font-black text-slate-950 shadow-sm shadow-amber-400/30">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-black text-accent-on shadow-sm shadow-accent/30">
               NR
             </div>
             <div className="leading-tight">
-              <p className="text-[14px] font-bold tracking-tight text-white/85">
+              <p className="text-[14px] font-bold tracking-tight text-shell-text/85">
                 Proyectos Nahuel Riveros
               </p>
-              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-600">
+              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-shell-text-dim">
                 Base · Arquitectura modular
               </p>
             </div>
           </div>
 
           {/* License */}
-          <div className="inline-flex items-center gap-1.5 rounded-lg border border-white/6 bg-white/2 px-3 py-1.5">
-            <Code2 size={11} className="shrink-0 text-amber-400/50" />
-            <span className="text-[11px] font-medium text-slate-500">
+          <div className="inline-flex items-center gap-1.5 rounded-lg border border-shell-text/10 bg-shell-text/5 px-3 py-1.5">
+            <Code2 size={11} className="shrink-0 text-shell-text-dim/60" />
+            <span className="text-[11px] font-medium text-shell-text-dim">
               MIT License © {year} Nahuel Riveros
             </span>
           </div>
@@ -55,17 +55,17 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition-all duration-150 hover:bg-white/5 hover:text-amber-400"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-shell-text-dim transition-all duration-150 hover:bg-shell-text/8 hover:text-shell-text"
             >
               <Linkedin size={14} />
             </a>
-            <div className="h-3 w-px bg-white/10" />
+            <div className="h-3 w-px bg-shell-text/10" />
             <a
               href="https://github.com/nahuelriveros"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition-all duration-150 hover:bg-white/5 hover:text-amber-400"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-shell-text-dim transition-all duration-150 hover:bg-shell-text/8 hover:text-shell-text"
             >
               <Github size={14} />
             </a>

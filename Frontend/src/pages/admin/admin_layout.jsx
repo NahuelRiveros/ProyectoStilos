@@ -1,12 +1,27 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, CreditCard, ChevronRight, AlertTriangle } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  CreditCard,
+  ChevronRight,
+  AlertTriangle,
+  Package,
+  Tags,
+  Boxes,
+  Home,
+  ShieldCheck,
+} from "lucide-react";
 import { getSuscripcion } from "../../api/admin_api";
 
 const NAV = [
-  { to: "/admin",            label: "Dashboard",   icon: LayoutDashboard, end: true },
-  { to: "/admin/usuarios",   label: "Usuarios",    icon: Users },
-  { to: "/admin/suscripcion",label: "Suscripción", icon: CreditCard },
+  { to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true },
+  { to: "/admin/productos",     label: "Productos",   icon: Package },
+  { to: "/admin/catalogos",     label: "Catalogos",   icon: Tags },
+  { to: "/admin/stock-alertas", label: "Stock",       icon: Boxes },
+  { to: "/admin/home",          label: "Home",        icon: Home },
+  { to: "/admin/usuarios",      label: "Usuarios",    icon: Users },
+  { to: "/admin/suscripcion",   label: "Suscripción", icon: CreditCard },
 ];
 
 const ESTADOS_BLOQUEADOS = ["VENCIDO", "SIN_SUSCRIPCION"];
@@ -26,7 +41,7 @@ function SuscripcionBanner({ estado }) {
       </div>
       <Link
         to="/admin/suscripcion"
-        className="shrink-0 rounded-lg bg-amber-400 px-3 py-1 text-xs font-bold text-slate-950 transition hover:bg-amber-300"
+        className="shrink-0 rounded-lg bg-accent px-3 py-1 text-xs font-bold text-accent-on transition hover:opacity-90"
       >
         Activar suscripción →
       </Link>
@@ -50,14 +65,28 @@ export default function AdminLayout() {
     <div className="flex min-h-[calc(100vh-60px)]">
 
       {/* Sidebar */}
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/6 bg-[#060d1f] lg:flex">
-        <div className="px-4 py-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-400/60">
-            Panel de administración
-          </p>
+      <aside
+        className="hidden w-60 shrink-0 flex-col border-r border-admin-text/5 lg:flex"
+        style={{ background: "linear-gradient(175deg, var(--color-admin-raised) 0%, var(--color-admin) 55%, var(--color-admin) 100%)" }}
+      >
+        {/* Header */}
+        <div className="px-5 py-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 ring-1 ring-accent/20">
+              <ShieldCheck size={13} className="text-accent" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/80">
+                Panel Admin
+              </p>
+              <p className="text-[9px] leading-tight text-admin-text-dim">Angar · Backoffice</p>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex-1 space-y-0.5 px-2">
+        <div className="mx-4 mb-3 h-px bg-linear-to-r from-transparent via-admin-text/8 to-transparent" />
+
+        <nav className="flex-1 space-y-0.5 px-3 pb-2">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -65,27 +94,33 @@ export default function AdminLayout() {
               end={end}
               className={({ isActive }) =>
                 [
-                  "group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+                  "group relative flex items-center gap-3 rounded-xl border-l-2 px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
                   isActive
-                    ? "bg-amber-400/10 text-amber-400"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-transparent text-admin-text-dim hover:bg-admin-text/5 hover:text-admin-text",
                 ].join(" ")
               }
             >
-              <Icon size={15} className="shrink-0 opacity-75" />
+              <Icon size={15} className="shrink-0 opacity-80" />
               <span className="flex-1">{label}</span>
-              <ChevronRight size={11} className="shrink-0 opacity-0 transition-opacity group-hover:opacity-40" />
+              <ChevronRight size={11} className="shrink-0 opacity-0 transition-opacity group-hover:opacity-30" />
             </NavLink>
           ))}
         </nav>
 
-        <div className="border-t border-white/6 px-4 py-4">
-          <p className="text-[10px] text-slate-600">Área restringida · Solo ADM</p>
+        <div className="mx-4 h-px bg-linear-to-r from-transparent via-admin-text/5 to-transparent" />
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] text-admin-text-dim">Área restringida</p>
+            <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-accent/70">
+              ADM
+            </span>
+          </div>
         </div>
       </aside>
 
       {/* Mobile top nav */}
-      <div className="fixed inset-x-0 top-[60px] z-30 flex gap-1 border-b border-white/6 bg-[#060d1f] px-4 py-2 lg:hidden">
+      <div className="fixed inset-x-0 top-[60px] z-30 flex gap-1 overflow-x-auto border-b border-admin-text/8 bg-admin px-3 py-2 lg:hidden">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -93,8 +128,10 @@ export default function AdminLayout() {
             end={end}
             className={({ isActive }) =>
               [
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                isActive ? "bg-amber-400/10 text-amber-400" : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+                isActive
+                  ? "bg-accent/10 text-accent"
+                  : "text-admin-text-dim hover:bg-admin-text/5 hover:text-admin-text",
               ].join(" ")
             }
           >
@@ -105,7 +142,7 @@ export default function AdminLayout() {
       </div>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
+      <div className="flex min-w-0 flex-1 flex-col bg-surface">
         <div className="h-10 lg:hidden" />
         <SuscripcionBanner estado={estadoSus} />
         <div className="flex-1">

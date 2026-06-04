@@ -12,21 +12,21 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
       transition={{ duration: 0.15, ease: "easeOut" }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="border-t border-white/6 bg-[#0a1528] shadow-2xl shadow-black/60"
+      className="border-t border-shell-text/10 bg-shell-raised shadow-2xl shadow-black/20"
     >
       <div className="mx-auto max-w-[1440px] px-6 py-5 lg:px-10">
 
         {/* Section label */}
         <div className="mb-4 flex items-center gap-2.5">
           {Icon && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-400/10 text-amber-400">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-shell-text/10 text-shell-text">
               <Icon size={11} />
             </span>
           )}
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400/60">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-shell-text">
             {dropdown.label}
           </span>
-          <div className="h-px flex-1 bg-gradient-to-r from-amber-400/15 to-transparent" />
+          <div className="h-px flex-1 bg-linear-to-r from-shell-text/20 to-transparent" />
         </div>
 
         {dropdown.wide ? (
@@ -37,8 +37,8 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
               return (
                 <div key={group.label}>
                   <div className="mb-2 flex items-center gap-1.5">
-                    {GroupIcon && <GroupIcon size={11} className="text-slate-600" />}
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                    {GroupIcon && <GroupIcon size={11} className="text-shell-text-dim" />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-shell-text-dim">
                       {group.label}
                     </span>
                   </div>
@@ -53,8 +53,8 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                             [
                               "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-100",
                               isActive
-                                ? "bg-amber-400/10 text-amber-400"
-                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                                ? "shell-active"
+                                : "text-shell-text-dim shell-hover",
                             ].join(" ")
                           }
                         >
@@ -77,12 +77,15 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                 const GroupIcon = item.icon;
                 return (
                   <div key={item.label} className="min-w-[160px]">
-                    <div className="mb-1.5 flex items-center gap-1.5">
-                      {GroupIcon && <GroupIcon size={11} className="text-slate-600" />}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                    <NavLink
+                      to={item.to}
+                      className="mb-1.5 flex items-center gap-1.5 rounded-lg px-2 py-1 transition shell-hover"
+                    >
+                      {GroupIcon && <GroupIcon size={11} className="text-shell-text-dim" />}
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-shell-text-dim">
                         {item.label}
                       </span>
-                    </div>
+                    </NavLink>
                     <div className="space-y-0.5">
                       {item.children.map((child) => {
                         const ChildIcon = child.icon;
@@ -93,7 +96,9 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                             className={({ isActive }) =>
                               [
                                 "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-100",
-                                isActive ? "bg-amber-400/10 text-amber-400" : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                                isActive
+                                  ? "bg-shell-text/12 text-shell-text font-semibold"
+                                  : "text-shell-text-dim hover:bg-shell-text/8 hover:text-shell-text",
                               ].join(" ")
                             }
                           >
@@ -114,7 +119,9 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                   className={({ isActive }) =>
                     [
                       "flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-100",
-                      isActive ? "bg-amber-400/10 text-amber-400" : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                      isActive
+                        ? "shell-active"
+                        : "text-shell-text-dim shell-hover",
                     ].join(" ")
                   }
                 >

@@ -26,7 +26,7 @@ export default function NavbarMobile({ config, open, onClose }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
-          className="fixed inset-x-0 top-15 z-50 max-h-[calc(100vh-60px)] overflow-y-auto border-t border-white/6 bg-[#060d1f] lg:hidden"
+          className="fixed inset-x-0 top-15 z-50 max-h-[calc(100vh-60px)] overflow-y-auto border-t border-white/6 bg-shell lg:hidden"
         >
           <div className="px-4 pb-6 pt-3">
 
@@ -108,18 +108,36 @@ export default function NavbarMobile({ config, open, onClose }) {
                             className="overflow-hidden"
                           >
                             <div className="border-t border-white/[0.05] px-2 pb-2 pt-1.5">
+                              {dropdown.to && (
+                                <NavLink
+                                  to={dropdown.to}
+                                  onClick={handleNavigate}
+                                  className={({ isActive }) =>
+                                    [
+                                      "mb-1 flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold transition-all duration-100",
+                                      isActive ? "bg-amber-400/10 text-amber-400" : "text-slate-300 hover:bg-white/5 hover:text-slate-100",
+                                    ].join(" ")
+                                  }
+                                >
+                                  Ver todo {dropdown.label}
+                                </NavLink>
+                              )}
                               {dropdown.items?.map((item) => {
                                 const ItemIcon = item.icon;
 
                                 if ("children" in item && item.children?.length) {
                                   return (
                                     <div key={item.label} className="mb-2 last:mb-0">
-                                      <div className="flex items-center gap-2 px-2 py-1">
+                                      <NavLink
+                                        to={item.to}
+                                        onClick={handleNavigate}
+                                        className="flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-white/5"
+                                      >
                                         {ItemIcon && <ItemIcon size={10} className="text-slate-600" />}
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
                                           {item.label}
                                         </span>
-                                      </div>
+                                      </NavLink>
                                       <div className="space-y-0.5">
                                         {item.children.map((child) => {
                                           const ChildIcon = child.icon;

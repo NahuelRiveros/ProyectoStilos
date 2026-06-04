@@ -116,6 +116,16 @@ export const env = {
   // Enviarlo como header: x-seed-token: <valor>
   SEED_SECRET: process.env.SEED_SECRET || "",
 
+  // ─── CLOUDINARY ───────────────────────────────────────────────────────────
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "",
+  CLOUDINARY_API_KEY:    process.env.CLOUDINARY_API_KEY    || "",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
+
+  // ─── MERCADOPAGO ──────────────────────────────────────────────────────────
+  MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN || "",
+  // URL pública del backend (necesaria para el webhook de MP). En dev usar ngrok.
+  BACKEND_URL: process.env.BACKEND_URL || "http://localhost:3001",
+
   // ─── ZONA HORARIA ─────────────────────────────────────────────────────────
   // Afecta logs, timestamps y cálculos de fechas en Node.
   // Ver zonas válidas en: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones

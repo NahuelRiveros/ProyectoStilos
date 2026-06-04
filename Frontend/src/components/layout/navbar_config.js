@@ -1,35 +1,22 @@
 import {
-  Users,
-  FileText,
-  HelpCircle,
-  Shield,
-  ClipboardList,
-  History,
-  LayoutDashboard,
   Settings2,
+  ShoppingBag,
 } from "lucide-react";
 
 export const navbar_config = {
   brand: {
-    titulo: "Base Proyecto",
-    subtitulo: "Proyectos Nahuel Riveros",
+    titulo: "Angar",
+    subtitulo: "Catalogo de productos",
     logoUrl: null,
     linkTo: "/",
-    fallbackLetter: "SC",
+    fallbackLetter: "A",
   },
 
   links: [
     {
-      label: "Dashboard",
-      to: "/dashboard",
-      icon: LayoutDashboard,
-      requiereAuth: true,
-      roles: [],
-    },
-    {
-      label: "Guías/Dudas",
-      to: "/guias",
-      icon: HelpCircle,
+      label: "Productos",
+      to: "/catalogo",
+      icon: ShoppingBag,
     },
     {
       label: "Admin",
@@ -39,27 +26,5 @@ export const navbar_config = {
       roles: ["ADM"],
     },
   ],
-
-  dropdowns: [
-    {
-      id: "visitantes",
-      label: "Visitantes",
-      icon: Users,
-      items: [
-        { label: "Visitantes", to: "/visitantes", icon: Users },
-        { label: "Reporte visitantes", to: "/visitantes/reporte", icon: ClipboardList },
-        { label: "Histórico visitantes", to: "/visitantes/historico", icon: History },
-      ],
-    },
-    {
-      id: "notas",
-      label: "Notas",
-      icon: FileText,
-      items: [
-        { label: "Notas", to: "/notas", icon: FileText },
-        { label: "Reporte notas", to: "/notas/reporte", icon: ClipboardList },
-        { label: "Histórico notas", to: "/notas/historico", icon: History },
-      ],
-    },
-  ],
+  dropdowns: [],
 };
