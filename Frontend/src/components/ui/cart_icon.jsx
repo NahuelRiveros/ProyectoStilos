@@ -1,8 +1,12 @@
 import { ShoppingBag } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCart } from "../../context/cart_context";
+import { storeConfig } from "../../config/app_config";
+
 function CartIcon() {
   const { cantidadItems } = useCart();
+  if (!storeConfig.enableCart) return null;
+
   return <NavLink
     to="/carrito"
     aria-label="Ver carrito"

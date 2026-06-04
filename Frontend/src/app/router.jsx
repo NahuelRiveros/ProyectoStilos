@@ -23,6 +23,9 @@ import AdminHomeConfigPage from "../pages/admin/admin_home_config_page";
 
 import CatalogPage from "../pages/productos/catalog_page";
 import ProductDetailPage from "../pages/productos/product_detail_page";
+import CartPage from "../pages/productos/cart_page";
+import CheckoutPage from "../pages/productos/checkout_page";
+import { adminConfig, storeConfig } from "../config/app_config";
 
 export const router = createBrowserRouter([
   {
@@ -62,7 +65,7 @@ export const router = createBrowserRouter([
       { path: "calzado/:categoria", element: <CatalogPage /> },
       { path: "producto/:id", element: <ProductDetailPage /> },
 
-      {
+      ...(adminConfig.enabled ? [{
         path: "admin",
         element: (
           <ProtectedRoute roles={["ADM"]}>
@@ -71,19 +74,31 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <AdminDashboardPage /> },
-          { path: "usuarios", element: <AdminUsuariosPage /> },
-          { path: "suscripcion", element: <AdminSuscripcionPage /> },
-          { path: "productos", element: <AdminProductsPage /> },
-          { path: "productos/nuevo", element: <AdminProductFormPage /> },
-          { path: "productos/:id/editar", element: <AdminProductFormPage /> },
-          { path: "catalogos", element: <AdminCatalogsPage /> },
-          { path: "stock-alertas", element: <AdminStockAlertsPage /> },
-          { path: "home", element: <AdminHomeConfigPage /> },
+          ...(adminConfig.modules.users ? [{ path: "usuarios", element: <AdminUsuariosPage /> }] : []),
+          ...(adminConfig.modules.subscription ? [{ path: "suscripcion", element: <AdminSuscripcionPage /> }] : []),
+          ...(adminConfig.modules.products ? [
+            { path: "productos", element: <AdminProductsPage /> },
+            { path: "productos/nuevo", element: <AdminProductFormPage /> },
+            { path: "productos/:id/editar", element: <AdminProductFormPage /> },
+          ] : []),
+          ...(adminConfig.modules.catalogs ? [{ path: "catalogos", element: <AdminCatalogsPage /> }] : []),
+          ...(adminConfig.modules.stockAlerts ? [{ path: "stock-alertas", element: <AdminStockAlertsPage /> }] : []),
+          ...(adminConfig.modules.home ? [{ path: "home", element: <AdminHomeConfigPage /> }] : []),
         ],
-      },
+      }] : []),
 
-      { path: "carrito", element: <Navigate to="/catalogo" replace /> },
-      { path: "checkout", element: <Navigate to="/catalogo" replace /> },
+      {
+        path: "carrito",
+        element: storeConfig.enableCart
+          ? <CartPage />
+          : <Navigate to="/catalogo" replace />,
+      },
+      {
+        path: "checkout",
+        element: storeConfig.enableCheckout
+          ? <CheckoutPage />
+          : <Navigate to="/catalogo" replace />,
+      },
       { path: "test", element: <Navigate to="/catalogo" replace /> },
       { path: "test2", element: <Navigate to="/catalogo" replace /> },
       { path: ":genero", element: <CatalogPage /> },

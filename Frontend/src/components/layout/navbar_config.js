@@ -4,33 +4,35 @@ import {
   HomeIcon
 } from "lucide-react";
 
+import { adminConfig, brandConfig, catalogConfig } from "../../config/app_config";
+
 export const navbar_config = {
   brand: {
-    titulo: "Angar",
-    subtitulo: "Catalogo de productos",
-    logoUrl: null,
-    linkTo: "/",
-    fallbackLetter: "A",
+    titulo: brandConfig.name,
+    subtitulo: brandConfig.tagline,
+    logoUrl: brandConfig.logoUrl,
+    linkTo: brandConfig.homePath,
+    fallbackLetter: brandConfig.shortName,
   },
 
   links: [
-    {
-      label: "Home",
-      to: "/",
+    ...(catalogConfig.showHomeLink ? [{
+      label: catalogConfig.navHomeLabel,
+      to: brandConfig.homePath,
       icon: HomeIcon,
-    },
-    {
-      label: "Productos",
-      to: "/catalogo",
+    }] : []),
+    ...(catalogConfig.showProductsLink ? [{
+      label: catalogConfig.navProductsLabel,
+      to: catalogConfig.basePath,
       icon: ShoppingBag,
-    },
-    {
-      label: "Admin",
+    }] : []),
+    ...(adminConfig.enabled ? [{
+      label: adminConfig.navLabel,
       to: "/admin",
       icon: Settings2,
       requiereAuth: true,
       roles: ["ADM"],
-    },
+    }] : []),
   ],
   dropdowns: [],
 };

@@ -8,6 +8,7 @@ import Form from "../components/form/form";
 import Button from "../components/ui/button";
 import GlobalModal from "../components/ui/global_modal";
 import { useAuth } from "../auth/auth_context";
+import { brandConfig } from "../config/app_config";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -47,8 +48,8 @@ export default function LoginPage() {
     <>
       <Container
         layout="single"
-        badge="Base Proyecto"
-        accent="Nahuel Riveros"
+        badge={brandConfig.footerLicense}
+        accent={brandConfig.name}
         title="Acceso al sistema"
         subtitle="Ingrese tus credenciales."
       >

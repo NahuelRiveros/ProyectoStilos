@@ -12,26 +12,29 @@ import {
   Home,
   ShieldCheck,
 } from "lucide-react";
-import { getSuscripcion } from "../../api/admin_api";
 
-const NAV = [
-  { to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true },
-  { to: "/admin/productos",     label: "Productos",   icon: Package },
-  { to: "/admin/catalogos",     label: "Catalogos",   icon: Tags },
-  { to: "/admin/stock-alertas", label: "Stock",       icon: Boxes },
-  { to: "/admin/home",          label: "Home",        icon: Home },
-  { to: "/admin/usuarios",      label: "Usuarios",    icon: Users },
-  { to: "/admin/suscripcion",   label: "Suscripción", icon: CreditCard },
+import { getSuscripcion } from "../../api/admin_api";
+import { adminConfig, brandConfig } from "../../config/app_config";
+
+const NAV_ITEMS = [
+  { module: "dashboard", to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { module: "products", to: "/admin/productos", label: "Productos", icon: Package },
+  { module: "catalogs", to: "/admin/catalogos", label: "Catalogos", icon: Tags },
+  { module: "stockAlerts", to: "/admin/stock-alertas", label: "Stock", icon: Boxes },
+  { module: "home", to: "/admin/home", label: "Home", icon: Home },
+  { module: "users", to: "/admin/usuarios", label: "Usuarios", icon: Users },
+  { module: "subscription", to: "/admin/suscripcion", label: "Suscripcion", icon: CreditCard },
 ];
 
+const NAV = NAV_ITEMS.filter((item) => adminConfig.modules[item.module]);
 const ESTADOS_BLOQUEADOS = ["VENCIDO", "SIN_SUSCRIPCION"];
 
 function SuscripcionBanner({ estado }) {
   if (!ESTADOS_BLOQUEADOS.includes(estado)) return null;
 
   const msg = estado === "SIN_SUSCRIPCION"
-    ? "El sistema no tiene suscripción activa. Las operaciones de escritura están bloqueadas."
-    : "La suscripción ha vencido. Las operaciones de escritura están bloqueadas.";
+    ? "El sistema no tiene suscripcion activa. Las operaciones de escritura estan bloqueadas."
+    : "La suscripcion ha vencido. Las operaciones de escritura estan bloqueadas.";
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm">
@@ -39,12 +42,14 @@ function SuscripcionBanner({ estado }) {
         <AlertTriangle size={15} className="shrink-0 text-amber-500" />
         <span className="font-medium">{msg}</span>
       </div>
-      <Link
-        to="/admin/suscripcion"
-        className="shrink-0 rounded-lg bg-accent px-3 py-1 text-xs font-bold text-accent-on transition hover:opacity-90"
-      >
-        Activar suscripción →
-      </Link>
+      {adminConfig.modules.subscription && (
+        <Link
+          to="/admin/suscripcion"
+          className="shrink-0 rounded-lg bg-accent px-3 py-1 text-xs font-bold text-accent-on transition hover:opacity-90"
+        >
+          Activar suscripcion
+        </Link>
+      )}
     </div>
   );
 }
@@ -63,13 +68,10 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-[calc(100vh-60px)]">
-
-      {/* Sidebar */}
       <aside
         className="hidden w-60 shrink-0 flex-col border-r border-admin-text/5 lg:flex"
         style={{ background: "linear-gradient(175deg, var(--color-admin-raised) 0%, var(--color-admin) 55%, var(--color-admin) 100%)" }}
       >
-        {/* Header */}
         <div className="px-5 py-5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 ring-1 ring-accent/20">
@@ -79,7 +81,7 @@ export default function AdminLayout() {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/80">
                 Panel Admin
               </p>
-              <p className="text-[9px] leading-tight text-admin-text-dim">Angar · Backoffice</p>
+              <p className="text-[9px] leading-tight text-admin-text-dim">{brandConfig.adminName}</p>
             </div>
           </div>
         </div>
@@ -111,7 +113,7 @@ export default function AdminLayout() {
         <div className="mx-4 h-px bg-linear-to-r from-transparent via-admin-text/5 to-transparent" />
         <div className="px-5 py-4">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] text-admin-text-dim">Área restringida</p>
+            <p className="text-[10px] text-admin-text-dim">{adminConfig.restrictedLabel}</p>
             <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-accent/70">
               ADM
             </span>
@@ -119,7 +121,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Mobile top nav */}
       <div className="fixed inset-x-0 top-[60px] z-30 flex gap-1 overflow-x-auto border-b border-admin-text/8 bg-admin px-3 py-2 lg:hidden">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -141,7 +142,6 @@ export default function AdminLayout() {
         ))}
       </div>
 
-      {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col bg-surface">
         <div className="h-10 lg:hidden" />
         <SuscripcionBanner estado={estadoSus} />

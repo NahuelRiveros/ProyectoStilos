@@ -1,4 +1,5 @@
 import { http } from "./http";
+import { brandConfig } from "../config/app_config";
 
 export const DEFAULT_HOME_CONFIG = {
   carousel_activo: true,
@@ -79,7 +80,7 @@ export const DEFAULT_HOME_CONFIG = {
   },
   brand_banner: {
     activo: true,
-    eyebrow: "Angar",
+    eyebrow: brandConfig.name,
     title: "Productos para",
     titleAccent: "ver y elegir.",
     description: "Una tienda enfocada en visualizacion de productos, imagenes y precios.",

@@ -1,6 +1,7 @@
 import { X, Trash2, MessageCircle, ShoppingBag } from "lucide-react";
 import { useWhatsAppCart } from "../../context/whatsapp_cart_context";
 import { abrirWhatsApp, buildWhatsAppMessage } from "../../config/whatsapp_config";
+import { isWhatsAppMode } from "../../config/app_config";
 
 const fmt = (n) => `$${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
 
@@ -13,7 +14,7 @@ function getImgSrc(img) {
 export default function WhatsAppFloatingButton() {
   const { items, total, panelOpen, setPanelOpen, removeItem, clearCart } = useWhatsAppCart();
 
-  if (items.length === 0) return null;
+  if (!isWhatsAppMode() || items.length === 0) return null;
 
   function enviar() {
     const mensaje = buildWhatsAppMessage(items);

@@ -9,6 +9,7 @@ import Button from "../components/ui/button";
 import SelectField from "../components/form/select_field";
 import { useAuth } from "../auth/auth_context";
 import { getEstadosCiviles } from "../api/estado_civil_api.js";
+import { brandConfig } from "../config/app_config";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -70,8 +71,8 @@ export default function RegisterPage() {
   return (
     <Container
       layout="single"
-      badge="Base Proyecto"
-      accent="Nahuel Riveros"
+      badge={brandConfig.footerLicense}
+      accent={brandConfig.name}
       title="Registro de usuario"
       subtitle="Completá los datos necesarios para solicitar acceso al sistema."
     >

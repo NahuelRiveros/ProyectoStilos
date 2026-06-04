@@ -7,6 +7,7 @@ import {
 import { getProducto } from "../../api/producto_api";
 import { useWhatsAppCart } from "../../context/whatsapp_cart_context";
 import { abrirWhatsApp, buildWhatsAppMessage } from "../../config/whatsapp_config";
+import { isWhatsAppMode, storeConfig } from "../../config/app_config";
 
 const fmt = (n) =>
   `$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
@@ -106,7 +107,7 @@ export default function ProductDetailPage() {
     : null;
 
   const stockTalleSeleccionado = talle?.stock ?? (hasTalles ? null : producto.stock);
-  const stockBajo = stockTalleSeleccionado !== null && stockTalleSeleccionado > 0 && stockTalleSeleccionado <= 5;
+  const stockBajo = storeConfig.enableStockVisibility && stockTalleSeleccionado !== null && stockTalleSeleccionado > 0 && stockTalleSeleccionado <= 5;
 
   function prev() { setImgIdx((i) => (i === 0 ? images.length - 1 : i - 1)); }
   function next() { setImgIdx((i) => (i === images.length - 1 ? 0 : i + 1)); }
@@ -255,7 +256,7 @@ export default function ProductDetailPage() {
           </h1>
 
           {/* Precio */}
-          <div>
+          {storeConfig.enablePrices && <div>
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-black tracking-tight text-ink">{fmt(producto.precio)}</span>
               {producto.precio_anterior && (
@@ -272,7 +273,7 @@ export default function ProductDetailPage() {
                 Ahorrás {fmt(ahorro)}
               </p>
             )}
-          </div>
+          </div>}
 
           <div className="border-t border-line" />
 
@@ -358,7 +359,7 @@ export default function ProductDetailPage() {
           )}
 
           {/* ── BOTONES WHATSAPP ─────────────────────────────────────────── */}
-          {!isSoldOut ? (
+          {isWhatsAppMode() && !isSoldOut ? (
             <div className="space-y-3 pt-1">
               <button
                 onClick={handleConsultarAhora}
@@ -390,13 +391,13 @@ export default function ProductDetailPage() {
                 Los pedidos se coordinan por WhatsApp · Envío o retiro en tienda
               </p>
             </div>
-          ) : (
+          ) : isWhatsAppMode() ? (
             <div className="rounded-2xl border border-line bg-surface px-5 py-4 text-center">
               <ShoppingBag size={22} className="mx-auto mb-2 text-muted/30" />
               <p className="text-sm font-bold text-ink">Producto agotado</p>
               <p className="mt-0.5 text-xs text-muted">Por el momento no tenemos stock disponible.</p>
             </div>
-          )}
+          ) : null}
 
           {/* Volver */}
           <button
