@@ -12,9 +12,9 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
       transition={{ duration: 0.15, ease: "easeOut" }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="border-t border-shell-text/10 bg-shell-raised shadow-2xl shadow-black/20"
+      className="nav-mega"
     >
-      <div className="mx-auto max-w-[1440px] px-6 py-5 lg:px-10">
+      <div className="nav-mega-inner">
 
         {/* Section label */}
         <div className="mb-4 flex items-center gap-2.5">
@@ -51,10 +51,10 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                           to={child.to}
                           className={({ isActive }) =>
                             [
-                              "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-100",
+                              "nav-mega-item",
                               isActive
-                                ? "shell-active"
-                                : "text-shell-text-dim shell-hover",
+                                ? "nav-mega-item-active"
+                                : "",
                             ].join(" ")
                           }
                         >
@@ -79,7 +79,7 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                   <div key={item.label} className="min-w-[160px]">
                     <NavLink
                       to={item.to}
-                      className="mb-1.5 flex items-center gap-1.5 rounded-lg px-2 py-1 transition shell-hover"
+                      className="mb-1.5 flex items-center gap-1.5 rounded-lg px-2 py-1 transition nav-mega-item"
                     >
                       {GroupIcon && <GroupIcon size={11} className="text-shell-text-dim" />}
                       <span className="text-[10px] font-bold uppercase tracking-widest text-shell-text-dim">
@@ -95,10 +95,10 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                             to={child.to}
                             className={({ isActive }) =>
                               [
-                                "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-100",
+                                "nav-mega-item",
                                 isActive
-                                  ? "bg-shell-text/12 text-shell-text font-semibold"
-                                  : "text-shell-text-dim hover:bg-shell-text/8 hover:text-shell-text",
+                                  ? "nav-mega-item-active"
+                                  : "",
                               ].join(" ")
                             }
                           >
@@ -118,10 +118,10 @@ export default function NavbarMegaMenu({ dropdown, onMouseEnter, onMouseLeave })
                   to={item.to}
                   className={({ isActive }) =>
                     [
-                      "flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-100",
+                      "nav-mega-item",
                       isActive
-                        ? "shell-active"
-                        : "text-shell-text-dim shell-hover",
+                        ? "nav-mega-item-active"
+                        : "",
                     ].join(" ")
                   }
                 >

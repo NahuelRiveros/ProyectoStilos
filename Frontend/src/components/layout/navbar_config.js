@@ -1,6 +1,7 @@
 import {
   Settings2,
   ShoppingBag,
+  HomeIcon
 } from "lucide-react";
 
 export const navbar_config = {
@@ -13,6 +14,11 @@ export const navbar_config = {
   },
 
   links: [
+    {
+      label: "Home",
+      to: "/",
+      icon: HomeIcon,
+    },
     {
       label: "Productos",
       to: "/catalogo",

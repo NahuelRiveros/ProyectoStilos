@@ -120,28 +120,23 @@ export default function Navbar() {
     <>
       <header
         onMouseLeave={scheduleClose}
-        className={[
-          "fixed inset-x-0 top-0 z-50 bg-shell transition-all duration-300",
-          scrolled
-            ? "border-b border-shell-text/10 shadow-lg"
-            : "border-b border-shell-text/5",
-        ].join(" ")}
+        className={["nav-header", scrolled ? "nav-header-scrolled" : "nav-header-idle"].join(" ")}
       >
-        <div className="mx-auto flex h-[60px] max-w-[1440px] items-center justify-between px-6 lg:px-10">
+        <div className="nav-inner">
 
           {/* Brand */}
           <NavLink
             to={navbar_config.brand.linkTo}
             onClick={() => setMobileOpen(false)}
-            className="flex shrink-0 items-center gap-2.5 outline-none"
+            className="nav-brand"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-[11px] font-black text-accent-on shadow-sm shadow-accent/30">
+            <div className="nav-brand-mark">
               {navbar_config.brand.fallbackLetter}
             </div>
             {navbar_config.brand.logoUrl ? (
               <img src={navbar_config.brand.logoUrl} alt={navbar_config.brand.titulo} className="h-7 w-auto" />
             ) : (
-              <span className="select-none text-[15px] font-bold tracking-tight text-shell-text/90">
+              <span className="nav-brand-text">
                 {navbar_config.brand.titulo}
               </span>
             )}
@@ -164,7 +159,7 @@ export default function Navbar() {
               ) : (
                 <NavLink
                   to="/login"
-                  className="inline-flex h-8 items-center rounded-full bg-accent px-4 text-[13px] font-semibold text-accent-on transition-all hover:opacity-90 active:scale-95"
+                  className="btn btn-accent btn-sm"
                 >
                   Iniciar sesión
                 </NavLink>
@@ -174,7 +169,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setMobileOpen(prev => !prev)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-100 lg:hidden"
+              className="nav-mobile-toggle"
               aria-label="Menú"
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -213,7 +208,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 top-[60px] z-40 bg-black/50 backdrop-blur-[2px]"
+            className="nav-backdrop"
             onClick={() => setActiveDropdownId(null)}
           />
         )}
@@ -233,7 +228,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 top-[60px] z-40 bg-black/60 lg:hidden"
+            className="nav-backdrop lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
         )}

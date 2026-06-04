@@ -20,7 +20,7 @@ export default function Footer() {
       />
 
       {/* Ambient left glow */}
-      <div aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-40 w-72 rounded-full bg-amber-400/6 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-40 w-72 rounded-full bg-accent/6 blur-3xl" />
 
       <div className="relative mx-auto max-w-360 px-6 py-8 lg:px-10">
         <div className="flex flex-col items-center justify-between gap-5 sm:flex-row sm:items-center">

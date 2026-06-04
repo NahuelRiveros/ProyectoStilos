@@ -5,6 +5,16 @@ import {
   Auth04LogSesion,
   Auth05UsuarioRol,
   Auth06Suscripcion,
+  Prod01Categoria,
+  Prod02Genero,
+  Prod03Producto,
+  Prod04Talle,
+  Prod05Stock,
+  Prod06Color,
+  Prod07Marca,
+  Prod08CategoriaGenero,
+  Envio01Opcion,
+  Home01Config,
 } from "../models/index.js";
 import { pers_01_persona } from "../models/personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "../models/personas/pers_02_tipo_documento.js";
@@ -42,7 +52,19 @@ async function sincronizar_modelos() {
     pers_04_estado_civil,
     pers_05_provincia,
     pers_06_localidad,
-    pers_01_persona
+    pers_01_persona,
+    ////////
+    Prod01Categoria,
+    Prod02Genero,
+    Prod04Talle,
+    Prod06Color,
+    Prod07Marca,
+    Prod08CategoriaGenero,
+    Prod03Producto,
+    Prod05Stock,
+    ////////
+    Envio01Opcion,
+    Home01Config,
   ];
 
   for (const model of modelos_en_orden) {

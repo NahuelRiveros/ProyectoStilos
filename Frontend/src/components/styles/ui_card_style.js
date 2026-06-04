@@ -1,8 +1,8 @@
 const UI_CARD = {
-  base: "rounded-2xl border border-line bg-card",
+  base: "card-ui",
   variants: {
     default: "shadow-sm",
-    elevated: "shadow-md shadow-navy/5",
+    elevated: "card-hover",
     flat: "shadow-none",
     outline: "border-2 border-navy/10 shadow-none"
   },

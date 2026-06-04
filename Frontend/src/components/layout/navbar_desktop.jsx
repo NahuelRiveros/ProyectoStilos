@@ -5,7 +5,7 @@ export default function NavbarDesktop({ config, activeId, onOpen, onScheduleClos
   const navigate = useNavigate();
 
   return (
-    <div className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex">
+    <div className="nav-list">
       {config.links?.map((link) => {
         const Icon = link.icon;
         return (
@@ -15,8 +15,8 @@ export default function NavbarDesktop({ config, activeId, onOpen, onScheduleClos
             onMouseEnter={onScheduleClose}
             className={({ isActive }) =>
               [
-                "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13.5px] font-medium tracking-wide transition-all duration-150",
-                isActive ? "shell-active" : "text-shell-text-dim shell-hover",
+                "nav-link",
+                isActive ? "nav-link-active" : "",
               ].join(" ")
             }
           >
@@ -38,8 +38,8 @@ export default function NavbarDesktop({ config, activeId, onOpen, onScheduleClos
             onMouseLeave={onScheduleClose}
             aria-expanded={isOpen}
             className={[
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13.5px] font-medium tracking-wide transition-all duration-150 focus:outline-none",
-              isOpen ? "shell-active" : "text-shell-text-dim shell-hover",
+              "nav-trigger",
+              isOpen ? "nav-trigger-active" : "",
             ].join(" ")}
           >
             {Icon && <Icon size={14} className="shrink-0 opacity-70" />}

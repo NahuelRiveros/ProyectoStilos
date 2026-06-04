@@ -2,7 +2,7 @@
 // Cambiar WHATSAPP_NUMBER por el número de la tienda (con código de país, sin +).
 // Ejemplo Argentina: "5493704123456"  →  +54 9 370 412-3456
 
-export const WHATSAPP_NUMBER = "5493704000000";   // ← CAMBIAR POR EL NÚMERO REAL
+export const WHATSAPP_NUMBER = "5493704081082";   // ← CAMBIAR POR EL NÚMERO REAL
 
 export const WHATSAPP_GREETING =
   "Hola! Me interesan estos productos de Angar:";

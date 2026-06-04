@@ -91,7 +91,7 @@ export default function CartPage() {
         </div>
         <Link
           to="/catalogo"
-          className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-bold text-white hover:bg-navy/90"
+          className="btn btn-primary"
         >
           Ver catálogo <ArrowRight size={16} />
         </Link>
@@ -109,7 +109,7 @@ export default function CartPage() {
           {items.map((item) => (
             <div
               key={item.key}
-              className="flex gap-4 rounded-2xl bg-card p-4 shadow-sm"
+              className="card-ui flex gap-4 p-4"
             >
               {/* imagen */}
               <div className="h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-surface">
@@ -153,7 +153,7 @@ export default function CartPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleCantidad(item, -1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-ink transition hover:border-navy hover:text-navy"
+                    className="icon-btn h-7 w-7 rounded-lg shadow-none"
                   >
                     <Minus size={12} />
                   </button>
@@ -162,7 +162,7 @@ export default function CartPage() {
                   </span>
                   <button
                     onClick={() => handleCantidad(item, +1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-ink transition hover:border-navy hover:text-navy"
+                    className="icon-btn h-7 w-7 rounded-lg shadow-none"
                   >
                     <Plus size={12} />
                   </button>
@@ -184,7 +184,7 @@ export default function CartPage() {
         </div>
 
         {/* ── RESUMEN ───────────────────────────────────────────────── */}
-        <div className="h-fit rounded-2xl bg-card p-6 shadow-sm">
+        <div className="card-ui h-fit p-6">
           <p className="text-sm font-black uppercase tracking-widest text-muted">
             Resumen
           </p>
@@ -208,7 +208,7 @@ export default function CartPage() {
           {isAuth ? (
             <button
               onClick={() => navigate("/checkout")}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-bold text-white transition hover:bg-navy/90"
+              className="btn btn-primary mt-6 w-full"
             >
               Ir al checkout <ArrowRight size={16} />
             </button>
@@ -216,7 +216,7 @@ export default function CartPage() {
             <div className="mt-6 space-y-2">
               <Link
                 to="/login"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-bold text-white"
+                className="btn btn-primary w-full"
               >
                 Iniciar sesión para comprar
               </Link>

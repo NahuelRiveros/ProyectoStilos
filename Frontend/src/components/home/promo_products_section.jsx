@@ -10,8 +10,8 @@ function PromoProductsSection({
 }) {
   const [hoveredId, setHoveredId] = useState(null);
   if (loading) {
-    return <section className="border-t border-line bg-surface py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    return <section className="section-muted border-t border-line">
+        <div className="section-inner">
           <div className="animate-pulse">
             <div className="mb-10 h-8 w-48 rounded bg-navy/10" />
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -22,24 +22,24 @@ function PromoProductsSection({
       </section>;
   }
   if (!productos || productos.length === 0) return null;
-  return <section className="border-t border-line bg-surface py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  return <section className="section-muted border-t border-line">
+      <div className="section-inner">
 
         {
     /* Header */
   }
         <div className="mb-10 flex items-end justify-between">
           <div>
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-champagne">
+            <p className="eyebrow">
               {eyebrow}
             </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            <h2 className="section-title">
               {title}
             </h2>
           </div>
           <NavLink
     to="/catalogo?solo_ofertas=true"
-    className="hidden items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-navy underline-offset-2 transition-colors hover:underline sm:flex"
+    className="text-link hidden sm:flex"
   >
             {linkText} <ArrowRight size={13} />
           </NavLink>
@@ -58,7 +58,7 @@ function PromoProductsSection({
       to={`/producto/${producto.id}`}
       onMouseEnter={() => setHoveredId(producto.id)}
       onMouseLeave={() => setHoveredId(null)}
-      className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-navy/15"
+      className="card-ui card-hover group relative overflow-hidden"
     >
                 {
       /* Image container */
@@ -93,7 +93,7 @@ function PromoProductsSection({
                   {
       /* Badge "nuevo" si aplica */
     }
-                  {producto.badge === "nuevo" && <div className="absolute left-3 top-3 bg-navy px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.08em] text-white">
+                  {producto.badge === "nuevo" && <div className="badge-ui badge-primary absolute left-3 top-3 uppercase tracking-[0.08em]">
                       Nuevo
                     </div>}
                 </div>
@@ -140,8 +140,8 @@ function PromoProductsSection({
         e.preventDefault();
       }}
       className={[
-        "w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold uppercase tracking-widest transition-all duration-200",
-        isHovered ? "bg-navy text-white shadow-md" : "border border-navy text-navy hover:bg-navy/5"
+        "btn w-full text-xs uppercase tracking-widest",
+        isHovered ? "btn-primary" : "btn-secondary"
       ].join(" ")}
     >
                     <ShoppingBag size={13} />

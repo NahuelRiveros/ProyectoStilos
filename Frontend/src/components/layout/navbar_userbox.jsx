@@ -36,7 +36,7 @@ export default function NavbarUserBox({ mobile = false, onLogout }) {
     return (
       <div className="overflow-hidden rounded-2xl border border-shell-text/10 bg-shell-text/5">
         <div className="flex items-center gap-3 p-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy text-sm font-black text-white shadow-md shadow-navy/20">
+          <div className="avatar-brand h-11 w-11 text-sm">
             {initials || <User size={18} />}
           </div>
           <div className="min-w-0 flex-1">
@@ -81,7 +81,7 @@ export default function NavbarUserBox({ mobile = false, onLogout }) {
             : "bg-shell-text/6 ring-shell-text/10 hover:bg-shell-text/12 hover:ring-shell-text/20",
         ].join(" ")}
       >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy text-xs font-black text-white shadow-sm shadow-navy/30">
+        <div className="avatar-brand h-7 w-7 rounded-lg text-xs">
           {initials || <User size={13} />}
         </div>
 
@@ -107,7 +107,7 @@ export default function NavbarUserBox({ mobile = false, onLogout }) {
 
           {/* Header usuario */}
           <div className="flex items-center gap-3 border-b border-shell-text/10 p-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy text-sm font-black text-white shadow-md shadow-navy/20">
+            <div className="avatar-brand h-11 w-11 text-sm">
               {initials || <User size={18} />}
             </div>
             <div className="min-w-0">

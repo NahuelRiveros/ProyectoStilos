@@ -3,27 +3,27 @@ import { NavLink } from "react-router-dom";
 import { Heart, ShoppingBag, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 const S = {
-  wrap: "group relative flex flex-col overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-xl hover:shadow-navy/10 hover:-translate-y-0.5",
+  wrap: "card-ui card-hover group relative flex flex-col overflow-hidden",
   imgFrame: "relative aspect-[3/4] overflow-hidden bg-surface",
   imgItem: "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
   placeholder: "flex h-full items-center justify-center",
-  arrowBtn: "absolute top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink opacity-0 shadow-md backdrop-blur-sm transition-all duration-200 group-hover:opacity-100 hover:bg-white hover:scale-105",
+  arrowBtn: "icon-btn absolute top-1/2 z-10 -translate-y-1/2 opacity-0 backdrop-blur-sm group-hover:opacity-100",
   dotsWrap: "absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100",
-  wishBtn: "absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-105",
-  quickView: "absolute left-3 bottom-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-white",
+  wishBtn: "icon-btn absolute right-3 top-3 z-10 backdrop-blur-sm",
+  quickView: "icon-btn absolute left-3 bottom-3 z-10 opacity-0 backdrop-blur-sm group-hover:opacity-100",
   overlay: "absolute inset-0 bg-navy/0 transition-colors duration-300 group-hover:bg-navy/[0.03] pointer-events-none",
   badgeWrap: "absolute left-3 top-3 z-10 flex flex-col gap-1",
-  badgeNew: "bg-navy px-2.5 py-[5px] text-[9px] font-black uppercase tracking-[0.14em] text-white",
-  badgeBack: "bg-ink px-2.5 py-[5px] text-[9px] font-black uppercase tracking-[0.14em] text-white",
-  badgeSoldOut: "bg-line px-2.5 py-[5px] text-[9px] font-black uppercase tracking-[0.14em] text-muted",
-  badgeDiscount: "bg-rose-500 px-2.5 py-[5px] text-[9px] font-black text-white",
+  badgeNew: "badge-ui badge-primary uppercase tracking-[0.14em]",
+  badgeBack: "badge-ui badge-primary uppercase tracking-[0.14em]",
+  badgeSoldOut: "badge-ui bg-line text-muted uppercase tracking-[0.14em]",
+  badgeDiscount: "badge-ui badge-danger",
   body: "flex flex-1 flex-col px-4 pb-4 pt-3",
   catLabel: "text-[10px] font-bold uppercase tracking-[0.14em] text-muted",
   nameLabel: "mt-1 text-sm font-semibold leading-snug text-ink line-clamp-2",
   priceRow: "mt-auto flex items-baseline gap-2 pt-3",
   priceMain: "text-sm font-bold text-ink",
   priceOld: "text-xs text-muted line-through",
-  detailBtn: "mt-3 w-full border border-navy py-2.5 text-center text-[10px] font-black uppercase tracking-[0.14em] text-navy transition-all duration-200 group-hover:bg-navy group-hover:text-white",
+  detailBtn: "btn btn-secondary mt-3 w-full text-[10px] uppercase tracking-[0.14em]",
 };
 
 export default function ProductCard({

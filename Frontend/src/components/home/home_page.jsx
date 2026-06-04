@@ -115,20 +115,20 @@ function CategorySection({ config, catalogos }) {
   if (!categories.length) return null;
 
   return (
-    <section className="bg-card py-14 sm:py-18">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-end justify-between gap-4">
+    <section className="section-ui">
+      <div className="section-inner">
+        <div className="section-head">
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-champagne">
+            <p className="eyebrow">
               {section.eyebrow ?? "Categorias"}
             </p>
-            <h2 className="font-display text-3xl font-black text-ink sm:text-4xl">
+            <h2 className="section-title">
               {section.title ?? "Explora la tienda"}
             </h2>
           </div>
           <Link
             to="/catalogo"
-            className="hidden items-center gap-1.5 text-xs font-black uppercase tracking-widest text-navy underline-offset-2 hover:underline sm:flex"
+            className="text-link hidden sm:flex"
           >
             {section.linkText ?? "Ver catalogo"} <ArrowRight size={13} />
           </Link>
@@ -138,22 +138,25 @@ function CategorySection({ config, catalogos }) {
           {categories.map((cat, index) => (
             <div
               key={`${cat.slug}-${index}`}
-              className="group relative min-h-64 overflow-hidden rounded-xl bg-navy text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="category-tile group"
             >
               <Link to={cat.to || "/catalogo"} className="absolute inset-0 z-0" aria-label={cat.name || "Categoria"} />
               {cat.image ? (
-                <img src={cat.image} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <img src={cat.image} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
               ) : (
                 <div className="absolute inset-0 bg-linear-to-br from-navy via-slate-800 to-ink" />
               )}
-              <div className="absolute inset-0 bg-linear-to-t from-navy/95 via-navy/55 to-navy/10" />
-              <div className="absolute inset-x-0 bottom-0 z-10 p-5">
-                <Link to={cat.to || "/catalogo"} className="relative inline-flex items-center gap-1.5 font-display text-2xl font-black hover:text-champagne">
-                  {cat.name || "Categoria"} <ArrowRight size={16} />
-                </Link>
-                <p className="relative mt-1 text-xs font-bold uppercase tracking-widest text-champagne">
+              <div className="absolute inset-0 bg-linear-to-t from-navy via-navy/60 to-navy/5 transition-opacity duration-300 group-hover:opacity-90" />
+              {/* Accent line top on hover */}
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-transparent via-champagne/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-x-0 bottom-0 z-10 p-6">
+                <p className="relative mb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-champagne/70 transition-colors duration-300 group-hover:text-champagne">
                   {cat.caption || "Ver mas"}
                 </p>
+                <Link to={cat.to || "/catalogo"} className="relative inline-flex items-center gap-2 font-display text-2xl font-black transition-all duration-300 hover:text-champagne sm:text-3xl">
+                  {cat.name || "Categoria"}
+                  <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
                 {cat.items?.length > 0 && (
                   <div className="relative mt-4 flex flex-wrap gap-2">
                     {cat.items.slice(0, 5).map((item) => (
@@ -178,20 +181,20 @@ function CategorySection({ config, catalogos }) {
 
 function ProductsSection({ productos, loading, section, fallbackTitle }) {
   return (
-    <section className="bg-card py-14 sm:py-18">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-end justify-between gap-4">
+    <section className="section-ui">
+      <div className="section-inner">
+        <div className="section-head">
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-champagne">
+            <p className="eyebrow">
               {section?.eyebrow ?? "Productos"}
             </p>
-            <h2 className="font-display text-3xl font-black text-ink sm:text-4xl">
+            <h2 className="section-title">
               {section?.title ?? fallbackTitle}
             </h2>
           </div>
           <Link
             to="/catalogo"
-            className="hidden items-center gap-1.5 text-xs font-black uppercase tracking-widest text-navy underline-offset-2 hover:underline sm:flex"
+            className="text-link hidden sm:flex"
           >
             {section?.linkText ?? "Ver catalogo"} <ArrowRight size={13} />
           </Link>
@@ -210,7 +213,7 @@ function ProductsSection({ productos, loading, section, fallbackTitle }) {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-surface px-5 py-10 text-center">
+          <div className="empty-state">
             <ShoppingBag size={32} className="mx-auto mb-3 text-muted/40" />
             <p className="text-sm font-semibold text-muted">Todavia no hay productos para mostrar en esta seccion.</p>
           </div>
@@ -224,18 +227,18 @@ function PerksSection({ perks }) {
   if (!perks?.length) return null;
 
   return (
-    <section className="border-y border-line bg-surface py-6">
-      <div className="mx-auto grid max-w-7xl gap-3 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <section className="section-ui py-8 sm:py-10">
+      <div className="section-inner grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {perks.slice(0, 4).map((perk, index) => {
           const Icon = PERK_ICONS[perk.icon] ?? Sparkles;
           return (
-            <div key={`${perk.title}-${index}`} className="flex items-start gap-3 rounded-xl bg-card px-4 py-4 shadow-sm">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-champagne-light text-champagne-dark">
-                <Icon size={17} />
+            <div key={`${perk.title}-${index}`} className="card-ui card-hover group flex items-start gap-4 p-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-champagne-light text-champagne-dark ring-1 ring-champagne/20 transition-all duration-200 group-hover:bg-champagne/20 group-hover:ring-champagne/40">
+                <Icon size={20} />
               </div>
               <div>
                 <p className="text-sm font-black text-ink">{perk.title}</p>
-                <p className="mt-0.5 text-xs leading-5 text-muted">{perk.text}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{perk.text}</p>
               </div>
             </div>
           );
@@ -250,23 +253,46 @@ function BrandBanner({ config }) {
   if (!banner) return null;
 
   return (
-    <section className="bg-navy py-16 text-white sm:py-20">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+    <section className="relative overflow-hidden bg-navy py-20 text-white sm:py-24">
+      {/* Ambient glows */}
+      <div aria-hidden="true" className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-champagne/5 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-champagne/4 blur-3xl" />
+      {/* Dot grid texture */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage: "radial-gradient(circle, #fbbf24 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-8">
         <div className="max-w-2xl">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-champagne">{banner.eyebrow}</p>
-          <h2 className="font-display text-3xl font-black sm:text-5xl">
-            {banner.title} <span className="text-champagne">{banner.titleAccent}</span>
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-champagne/20 bg-champagne/10 px-3.5 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-champagne" />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-champagne">{banner.eyebrow}</p>
+          </div>
+          <h2 className="font-display text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+            {banner.title}{" "}
+            <span className="text-champagne">{banner.titleAccent}</span>
           </h2>
-          <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">{banner.description}</p>
+          <p className="mt-5 max-w-lg text-sm leading-7 text-slate-400 sm:text-base">{banner.description}</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:min-w-52">
           {banner.primaryCta && (
-            <Link to={banner.primaryCta.to} className="rounded-xl bg-champagne px-5 py-3 text-sm font-black text-navy transition hover:bg-champagne-light">
+            <Link
+              to={banner.primaryCta.to}
+              className="btn btn-accent btn-lg group"
+            >
               {banner.primaryCta.label}
+              <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
           )}
           {banner.secondaryCta && (
-            <Link to={banner.secondaryCta.to} className="rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">
+            <Link
+              to={banner.secondaryCta.to}
+              className="btn btn-outline btn-lg border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            >
               {banner.secondaryCta.label}
             </Link>
           )}
@@ -352,7 +378,7 @@ export default function HomePage() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center bg-surface px-4 text-center">
         <ShoppingBag size={42} className="mb-3 text-muted/40" />
         <p className="text-lg font-black text-ink">No se pudo cargar el home</p>
-        <Link to="/catalogo" className="mt-4 rounded-xl bg-champagne px-5 py-2.5 text-sm font-black text-navy">
+        <Link to="/catalogo" className="btn btn-accent mt-4">
           Ir al catalogo
         </Link>
       </div>
@@ -366,8 +392,8 @@ export default function HomePage() {
       )}
 
       {config.carousel_activo !== false && (
-        <section className="bg-surface py-6 sm:py-8">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="section-muted">
+          <div className="section-inner">
             <HomeCarousel slides={slides} autoPlay intervalMs={6000} />
           </div>
         </section>
