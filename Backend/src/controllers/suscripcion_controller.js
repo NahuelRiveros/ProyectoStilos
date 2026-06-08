@@ -1,4 +1,4 @@
-import { getSuscripcionEstado, activarSuscripcion, calcularEstado } from "../services/suscripcion_service.js";
+import { getSuscripcionEstado, activarSuscripcion, calcularEstado, eliminarSuscripcion } from "../services/suscripcion_service.js";
 import { invalidarCacheSuscripcion } from "../middleware/suscripcion_middleware.js";
 
 // GET /api/admin/suscripcion
@@ -40,6 +40,18 @@ export async function activarSuscripcionController(req, res) {
   } catch (error) {
     console.error("activarSuscripcionController:", error);
     return res.status(500).json({ ok: false, mensaje: "Error al activar la suscripción" });
+  }
+}
+
+// DELETE /api/admin/suscripcion
+export async function eliminarSuscripcionController(_req, res) {
+  try {
+    const result = await eliminarSuscripcion();
+    invalidarCacheSuscripcion();
+    return res.json(result);
+  } catch (error) {
+    console.error("eliminarSuscripcionController:", error);
+    return res.status(500).json({ ok: false, mensaje: "Error al eliminar la suscripción" });
   }
 }
 

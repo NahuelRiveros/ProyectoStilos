@@ -85,6 +85,16 @@ export async function getSuscripcionEstado() {
 // Body esperado: { dias: 30, notas?: "Pagó el 5 vía transferencia" }
 // ==========================================================
 
+// ==========================================================
+// ELIMINAR SUSCRIPCIÓN (borra todos los registros de la tabla)
+// Deja el sistema en estado SIN_SUSCRIPCION.
+// ==========================================================
+
+export async function eliminarSuscripcion() {
+  const eliminados = await Auth06Suscripcion.destroy({ where: {}, truncate: true });
+  return { ok: true, mensaje: "Suscripción eliminada. El sistema queda sin suscripción activa.", eliminados };
+}
+
 export async function activarSuscripcion({ dias, notas }) {
   const cantDias = Number(dias);
 

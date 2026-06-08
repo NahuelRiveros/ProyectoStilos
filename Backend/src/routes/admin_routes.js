@@ -18,6 +18,7 @@ import {
   estadoSuscripcionController,
   activarSuscripcionController,
   actualizarGraciaController,
+  eliminarSuscripcionController,
 } from "../controllers/suscripcion_controller.js";
 
 import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
@@ -97,6 +98,7 @@ adminRouter.get("/roles/jerarquia", requireAuth, requireNivel(NIVELES.ADMIN), (_
 });
 
 // ── Suscripción — exclusivo del Super Admin (SADM) ──────────
-adminRouter.get( "/suscripcion",         requireAuth, requireRole(ROLES.SUPER_ADMIN), estadoSuscripcionController);
-adminRouter.post("/suscripcion/activar", requireAuth, requireRole(ROLES.SUPER_ADMIN), activarSuscripcionController);
-adminRouter.put( "/suscripcion/gracia",  requireAuth, requireRole(ROLES.SUPER_ADMIN), actualizarGraciaController);
+adminRouter.get(   "/suscripcion",         requireAuth, requireRole(ROLES.SUPER_ADMIN), estadoSuscripcionController);
+adminRouter.post(  "/suscripcion/activar", requireAuth, requireRole(ROLES.SUPER_ADMIN), activarSuscripcionController);
+adminRouter.put(   "/suscripcion/gracia",  requireAuth, requireRole(ROLES.SUPER_ADMIN), actualizarGraciaController);
+adminRouter.delete("/suscripcion",         requireAuth, requireRole(ROLES.SUPER_ADMIN), eliminarSuscripcionController);
