@@ -23,9 +23,9 @@ export async function crearUsuarioController(req, res) {
   }
 }
 
-export async function listarUsuariosController(_req, res) {
+export async function listarUsuariosController(req, res) {
   try {
-    const data = await listarUsuarios();
+    const data = await listarUsuarios(req.user.email);
     return res.json({ ok: true, data });
   } catch (error) {
     console.error("listarUsuariosController:", error);

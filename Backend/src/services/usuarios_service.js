@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs";
 import { Op } from "sequelize";
 import { Auth01Rol, Auth02Usuario, Auth05UsuarioRol } from "../models/index.js";
 import { sequelize } from "../database/sequelize.js";
+import { env } from "../configuracion_servidor/env.js";
+
+// Rol exclusivo del sistema — nadie puede asignarlo vía API
+const ROL_SISTEMA_EXCLUSIVO = "SADM";
 
 // ==========================================================
 // HELPERS
@@ -42,6 +46,10 @@ export async function crearUsuario(data, { forzarRol } = {}) {
   const rolAbr    = forzarRol
     ? String(forzarRol).toUpperCase()
     : (normalizarTexto(data?.rol_abreviatura).toUpperCase() || "USR");
+
+  if (rolAbr === ROL_SISTEMA_EXCLUSIVO) {
+    return { ok: false, mensaje: `El rol "${ROL_SISTEMA_EXCLUSIVO}" es exclusivo del sistema y no puede asignarse manualmente` };
+  }
 
   if (!nombre || !apellido || !email || !password) {
     return { ok: false, mensaje: "Faltan datos obligatorios: nombre, apellido, email, password" };
@@ -101,8 +109,17 @@ export async function crearUsuario(data, { forzarRol } = {}) {
 // LISTAR USUARIOS
 // ==========================================================
 
-export async function listarUsuarios() {
+// callerEmail: email del usuario que hace el request.
+// Si es el super admin, ve a todos. Si es ADM normal, el super admin queda oculto.
+export async function listarUsuarios(callerEmail) {
+  const esSuperAdmin = callerEmail === env.SUPER_ADMIN_EMAIL;
+
+  const where = esSuperAdmin
+    ? {}
+    : { AUTH02_EMAIL: { [Op.ne]: env.SUPER_ADMIN_EMAIL } };
+
   const usuarios = await Auth02Usuario.findAll({
+    where,
     include: INCLUDE_ROLES,
     order: [["ID_AUTH02", "DESC"]],
   });
@@ -208,6 +225,11 @@ export async function asignarRolesUsuario(id, abreviaturas) {
   }
 
   const abrs = abreviaturas.map((a) => String(a).trim().toUpperCase());
+
+  if (abrs.includes(ROL_SISTEMA_EXCLUSIVO)) {
+    return { ok: false, mensaje: `El rol "${ROL_SISTEMA_EXCLUSIVO}" es exclusivo del sistema y no puede asignarse manualmente` };
+  }
+
   const roles = await Auth01Rol.findAll({
     where: { AUTH01_ABREVIATURA: abrs, AUTH01_FECHABAJA: { [Op.is]: null } },
   });
@@ -257,6 +279,11 @@ export async function agregarRolUsuario(id, abreviatura) {
   if (!usuario) return { ok: false, mensaje: "Usuario no encontrado" };
 
   const abr = String(abreviatura || "").trim().toUpperCase();
+
+  if (abr === ROL_SISTEMA_EXCLUSIVO) {
+    return { ok: false, mensaje: `El rol "${ROL_SISTEMA_EXCLUSIVO}" es exclusivo del sistema y no puede asignarse manualmente` };
+  }
+
   const rol  = await Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: abr, AUTH01_FECHABAJA: null } });
   if (!rol) return { ok: false, mensaje: `El rol "${abr}" no existe o está inactivo` };
 
