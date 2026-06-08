@@ -4,6 +4,7 @@ import { conectarDB } from "./database/sequelize.js";
 import { bootstrap_database } from "./database/bootstrap.js";
 import { probarSMTP } from "./services/mail_service.js";
 import { iniciarCronSuscripcion } from "./cron/suscripcion_cron.js";
+import { iniciarCronKeepalive } from "./cron/keepalive_cron.js";
 import "./models/index.js";
 
 async function main() {
@@ -24,15 +25,18 @@ async function main() {
     }
 
     iniciarCronSuscripcion();
+    iniciarCronKeepalive();
 
     const app = createApp();
 
-    const server = app.listen(env.PORT, "0.0.0.0", () => {
+    const PORT = process.env.PORT || 3000;
+
+    const server = app.listen(PORT, "0.0.0.0", () => {
       console.log("====================================");
       console.log(`✅ ${env.APP_FULL_NAME}`);
-      console.log(`✅ API local: http://localhost:${env.PORT}`);
-      console.log(`✅ HEALTH:    http://localhost:${env.PORT}/health`);
-      console.log(`✅ API base:  http://localhost:${env.PORT}/api`);
+      console.log(`✅ Servidor escuchando en puerto ${PORT}`);
+      console.log(`✅ HEALTH:    http://localhost:${PORT}/health`);
+      console.log(`✅ API base:  http://localhost:${PORT}/api`);
       console.log("====================================");
     });
 

@@ -16,6 +16,17 @@ const corsOrigins = env.CORS_ORIGIN
   ? env.CORS_ORIGIN.split(",").map((s) => s.trim())
   : CORS_DEV;
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Postman / curl
+    if (corsOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origen no permitido — ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-seed-token"],
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -27,6 +38,14 @@ const rutaFrontend = path.resolve(__dirname, "../../frontend/dist");
 
 export function createApp() {
   const app = express();
+
+  // ==========================================================
+  // SEGURIDAD
+  // ==========================================================
+
+  // CORS primero — responde el preflight OPTIONS antes de cualquier otro middleware
+  app.options("*", cors(corsOptions));
+  app.use(cors(corsOptions));
 
   // ==========================================================
   // SEGURIDAD
@@ -65,21 +84,6 @@ export function createApp() {
   // ==========================================================
 
   app.use(cookieParser());
-
-  // ==========================================================
-  // CORS
-  // ==========================================================
-
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin) return callback(null, true); // Postman / curl
-        if (corsOrigins.includes(origin)) return callback(null, true);
-        callback(new Error(`CORS: origen no permitido — ${origin}`));
-      },
-      credentials: true,
-    })
-  );
 
   // ==========================================================
   // HEALTH GENERAL
