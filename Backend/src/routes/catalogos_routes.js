@@ -44,7 +44,7 @@ import {
   crearReactivarController,
 } from "../controllers/generic_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
+import { requireAuth, requireRole, requireAccess } from "../middleware/auth_middleware.js";
 import { ACCESS } from "./access_roles.js";
 
 export const catalogosRouter = Router();
@@ -91,13 +91,13 @@ const ROLES_CONFIG = {
   updateFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA", "AUTH01_NIVEL"],
 };
 
-catalogosRouter.get(   "/roles",               requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListController(ROLES_CONFIG));
-catalogosRouter.get(   "/roles/paginado",      requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListPaginadoController(ROLES_CONFIG));
-catalogosRouter.get(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_GET),    crearGetByIdController(ROLES_CONFIG));
-catalogosRouter.post(  "/roles",               requireAuth, requireRole(...ACCESS.ROLES_CREATE), crearCreateController(ROLES_CONFIG));
-catalogosRouter.put(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_UPDATE), protegerRolSistema, crearUpdateController(ROLES_CONFIG));
-catalogosRouter.delete("/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_DELETE), protegerRolSistema, crearSoftDeleteController(ROLES_CONFIG));
-catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireRole(...ACCESS.ROLES_DELETE), protegerRolSistema, crearReactivarController(ROLES_CONFIG));
+catalogosRouter.get(   "/roles",               requireAuth, requireAccess(ACCESS.ROLES_GET),    crearListController(ROLES_CONFIG));
+catalogosRouter.get(   "/roles/paginado",      requireAuth, requireAccess(ACCESS.ROLES_GET),    crearListPaginadoController(ROLES_CONFIG));
+catalogosRouter.get(   "/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_GET),    crearGetByIdController(ROLES_CONFIG));
+catalogosRouter.post(  "/roles",               requireAuth, requireAccess(ACCESS.ROLES_CREATE), crearCreateController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_UPDATE), protegerRolSistema, crearUpdateController(ROLES_CONFIG));
+catalogosRouter.delete("/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_DELETE), protegerRolSistema, crearSoftDeleteController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireAccess(ACCESS.ROLES_DELETE), protegerRolSistema, crearReactivarController(ROLES_CONFIG));
 
 // =============================================================
 // CATEGORÍAS DE PRODUCTO  [GET público — lo usa el catálogo]

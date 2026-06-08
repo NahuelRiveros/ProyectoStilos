@@ -20,77 +20,77 @@ import {
   actualizarGraciaController,
 } from "../controllers/suscripcion_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
+import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
 import { ROLES, NIVELES } from "./access_roles.js";
 
 export const adminRouter = Router();
 
-// ── Jerarquía de roles — disponible para ADM y SADM ─────────
-adminRouter.get("/roles/jerarquia", requireAuth, requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN), (_req, res) => {
+// ── Jerarquía de roles — disponible para nivel >= 100 ───────
+adminRouter.get("/roles/jerarquia", requireAuth, requireNivel(NIVELES.ADMIN), (_req, res) => {
   return res.json({
     ok: true,
     data: {
-      descripcion: "Los roles tienen niveles numéricos: mayor nivel = más permisos. Un usuario puede tener varios roles activos a la vez.",
+      descripcion: "Roles del sistema. Mayor nivel = más permisos. Un usuario puede tener varios roles activos.",
+      regla_acceso: "Cualquier usuario con nivel >= 100 puede gestionar usuarios y roles. SADM (200) además gestiona la suscripción del sistema.",
       jerarquia: [
         {
           abreviatura: "SADM",
           nombre:      "Super Administrador",
           nivel:       NIVELES.SUPER_ADMIN,
-          creado_por:  "Sistema (automático)",
+          creado_por:  "Sistema automáticamente al iniciar",
           permisos: [
-            "Todo lo que puede ADM",
-            "Ver y gestionar la suscripción del sistema",
+            "Todo lo que puede ADM (nivel 200 >= 100)",
+            "Gestionar la suscripción del sistema (exclusivo)",
             "Activar / renovar suscripción",
             "Modificar días de gracia",
           ],
-          notas: "Se crea automáticamente al iniciar el sistema. No puede editarse ni eliminarse vía API.",
+          protegido: true,
         },
         {
           abreviatura: "ADM",
           nombre:      "Administrador",
           nivel:       NIVELES.ADMIN,
-          creado_por:  "Sistema (automático) o manualmente por SADM",
+          creado_por:  "Manualmente por SADM desde el panel de usuarios",
           permisos: [
-            "Gestionar usuarios (crear, editar, eliminar, asignar roles)",
+            "Gestionar usuarios (crear, editar, asignar roles, eliminar)",
+            "Crear y administrar roles personalizados",
             "Gestionar catálogos (categorías, talles, colores, marcas, etc.)",
             "Gestionar productos, stock y precios",
             "Ver y gestionar órdenes",
             "Configurar puntos de venta y opciones de envío",
-            "Crear y administrar roles personalizados",
           ],
-          notas: "No puede acceder a la suscripción del sistema. No puede editarse ni eliminarse vía API.",
+          protegido: true,
         },
         {
-          abreviatura: "STF (ejemplo)",
-          nombre:      "Staff / roles personalizados",
-          nivel:       NIVELES.STAFF,
-          creado_por:  "Manualmente por ADM o SADM vía POST /api/catalogos/roles",
+          abreviatura: "(personalizado)",
+          nombre:      "Staff / roles del negocio",
+          nivel:       "11 a 99 (configurable)",
+          creado_por:  "ADM o SADM vía POST /api/catalogos/roles",
           permisos: [
-            "Acceso intermedio según configuración del proyecto",
-            "Nivel 50 por convención, ajustable al crear el rol",
-            "Los permisos exactos dependen de la matriz ACCESS en access_roles.js",
+            "Acceso intermedio según lo que configure el administrador",
+            "Ejemplos: Vendedor (VND n50), Repositor (REP n50), Recepcionista (RCP n50)",
           ],
-          notas: "Ejemplos: Vendedor (VND), Repositor (REP), Recepcionista (RCP). Pueden editarse y eliminarse.",
+          protegido: false,
         },
         {
           abreviatura: "USR",
           nombre:      "Usuario",
           nivel:       NIVELES.USR,
-          creado_por:  "Sistema (automático al registrarse)",
+          creado_por:  "Sistema automáticamente al registrarse",
           permisos: [
-            "Navegar el catálogo de productos",
+            "Ver catálogo de productos",
             "Gestionar su propio carrito",
             "Crear y ver sus propias órdenes",
             "Editar su perfil y contraseña",
           ],
-          notas: "Rol por defecto para cualquier usuario que se registra. No puede editarse ni eliminarse vía API.",
+          protegido: true,
         },
       ],
-      como_crear_rol_personalizado: {
+      crear_rol_personalizado: {
         metodo: "POST",
         url:    "/api/catalogos/roles",
         body:   { AUTH01_NOMBRE: "Vendedor", AUTH01_ABREVIATURA: "VND", AUTH01_NIVEL: 50 },
-        notas:  "AUTH01_NIVEL entre 11 y 99 para roles de staff. La abreviatura debe ser única.",
+        notas:  "AUTH01_NIVEL entre 11 y 99 para staff. La abreviatura debe ser única y en mayúsculas.",
       },
     },
   });

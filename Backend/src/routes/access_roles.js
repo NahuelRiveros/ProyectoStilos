@@ -62,17 +62,19 @@ export const ROLES = {
 
 export const ACCESS = {
   // ─── USUARIOS ──────────────────────────────────────────
-  USUARIOS_GET:    { roles: [ROLES.ADMIN] },
-  USUARIOS_CREATE: { roles: [ROLES.ADMIN] },
-  USUARIOS_UPDATE: { roles: [ROLES.ADMIN] },
-  USUARIOS_DELETE: { roles: [ROLES.ADMIN] },
-  USUARIOS_ROLES:  { roles: [ROLES.ADMIN] },
+  // nivel >= 100: tanto ADM como SADM pueden gestionar usuarios
+  USUARIOS_GET:    { nivel: NIVELES.ADMIN },
+  USUARIOS_CREATE: { nivel: NIVELES.ADMIN },
+  USUARIOS_UPDATE: { nivel: NIVELES.ADMIN },
+  USUARIOS_DELETE: { nivel: NIVELES.ADMIN },
+  USUARIOS_ROLES:  { nivel: NIVELES.ADMIN },
 
   // ─── ROLES (catálogo) ──────────────────────────────────
-  ROLES_GET:    [ROLES.ADMIN],
-  ROLES_CREATE: [ROLES.ADMIN],
-  ROLES_UPDATE: [ROLES.ADMIN],
-  ROLES_DELETE: [ROLES.ADMIN],
+  // nivel >= 100: tanto ADM como SADM pueden crear/editar/eliminar roles
+  ROLES_GET:    { nivel: NIVELES.ADMIN },
+  ROLES_CREATE: { nivel: NIVELES.ADMIN },
+  ROLES_UPDATE: { nivel: NIVELES.ADMIN },
+  ROLES_DELETE: { nivel: NIVELES.ADMIN },
 
   // ─── CATÁLOGOS GENÉRICOS ───────────────────────────────
   CATALOGOS_GET:    { nivel: NIVELES.USR   },

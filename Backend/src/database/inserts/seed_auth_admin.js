@@ -16,13 +16,10 @@ export async function seed_auth_admin() {
     return;
   }
 
-  const [rolSadm, rolAdm] = await Promise.all([
-    Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: "SADM" } }),
-    Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: "ADM"  } }),
-  ]);
+  const rolSadm = await Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: "SADM" } });
 
-  if (!rolSadm || !rolAdm) {
-    console.warn("⚠️  No existen los roles SADM/ADM — ejecutar seed_auth_roles primero");
+  if (!rolSadm) {
+    console.warn("⚠️  No existe el rol SADM — ejecutar seed_auth_roles primero");
     return;
   }
 
@@ -39,11 +36,14 @@ export async function seed_auth_admin() {
     AUTH02_FECHABAJA:  null,
   });
 
-  // El super admin recibe SADM (dueño del sistema) + ADM (acceso completo al panel)
-  await Auth05UsuarioRol.bulkCreate([
-    { RELA_AUTH02: usuario.ID_AUTH02, RELA_AUTH01: rolSadm.ID_AUTH01, AUTH05_FECHAALTA: new Date(), AUTH05_FECHABAJA: null },
-    { RELA_AUTH02: usuario.ID_AUTH02, RELA_AUTH01: rolAdm.ID_AUTH01,  AUTH05_FECHAALTA: new Date(), AUTH05_FECHABAJA: null },
-  ]);
+  // SADM (nivel 200) pasa automáticamente todos los checks nivel >= 100,
+  // por lo que hereda permisos de ADM sin necesitar el rol ADM explícitamente.
+  await Auth05UsuarioRol.create({
+    RELA_AUTH02:      usuario.ID_AUTH02,
+    RELA_AUTH01:      rolSadm.ID_AUTH01,
+    AUTH05_FECHAALTA: new Date(),
+    AUTH05_FECHABAJA: null,
+  });
 
   console.log("✅ Super administrador creado");
   console.log(`   📧  Email:    ${emailAdmin}`);
