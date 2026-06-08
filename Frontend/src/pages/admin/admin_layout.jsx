@@ -7,6 +7,7 @@ import {
 
 import { getSuscripcion } from "../../api/admin_api";
 import { adminConfig, brandConfig } from "../../config/app_config";
+import { useAuth } from "../../auth/auth_context";
 
 const NAV_ITEMS = [
   { module: "dashboard",    to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true },
@@ -15,13 +16,19 @@ const NAV_ITEMS = [
   { module: "stockAlerts",  to: "/admin/stock-alertas",  label: "Stock",       icon: Boxes },
   { module: "home",         to: "/admin/home",           label: "Home",        icon: Home },
   { module: "users",        to: "/admin/usuarios",       label: "Usuarios",    icon: Users },
-  { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard },
+  { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard, soloSADM: true },
 ];
-
-const NAV = NAV_ITEMS.filter((item) => adminConfig.modules[item.module]);
 const ESTADOS_BLOQUEADOS = ["VENCIDO", "SIN_SUSCRIPCION"];
 
-function SuscripcionBanner({ estado }) {
+function useNavItems() {
+  const { usuario } = useAuth();
+  const esSADM = usuario?.roles_abr?.includes("SADM") ?? false;
+  return NAV_ITEMS.filter(
+    (item) => adminConfig.modules[item.module] && (!item.soloSADM || esSADM)
+  );
+}
+
+function SuscripcionBanner({ estado, esSADM }) {
   if (!ESTADOS_BLOQUEADOS.includes(estado)) return null;
 
   const msg = estado === "SIN_SUSCRIPCION"
@@ -34,11 +41,8 @@ function SuscripcionBanner({ estado }) {
         <AlertTriangle size={15} className="shrink-0" />
         <span className="text-sm font-medium">{msg}</span>
       </div>
-      {adminConfig.modules.subscription && (
-        <Link
-          to="/admin/suscripcion"
-          className="btn btn-accent btn-sm shrink-0"
-        >
+      {adminConfig.modules.subscription && esSADM && (
+        <Link to="/admin/suscripcion" className="btn btn-accent btn-sm shrink-0">
           Activar suscripcion
         </Link>
       )}
@@ -47,6 +51,8 @@ function SuscripcionBanner({ estado }) {
 }
 
 export default function AdminLayout() {
+  const NAV = useNavItems();
+  const { usuario } = useAuth();
   const { data: sus } = useQuery({
     queryKey: ["admin-suscripcion"],
     queryFn: async () => {
@@ -128,7 +134,7 @@ export default function AdminLayout() {
       {/* ── Contenido principal ── */}
       <div className="admin-content">
         <div className="h-10 lg:hidden" />
-        <SuscripcionBanner estado={sus?.estado ?? null} />
+        <SuscripcionBanner estado={sus?.estado ?? null} esSADM={usuario?.roles_abr?.includes("SADM") ?? false} />
         <div className="flex-1">
           <Outlet />
         </div>

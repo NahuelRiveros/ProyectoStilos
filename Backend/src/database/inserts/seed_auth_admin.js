@@ -12,7 +12,38 @@ export async function seed_auth_admin() {
   });
 
   if (yaExiste) {
-    console.log("⏭️  Usuario administrador ya existe");
+    // Migración: asegurar que el super admin tenga SADM y no ADM
+    const rolSadmMig = await Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: "SADM" } });
+    if (rolSadmMig) {
+      const tieneSadm = await Auth05UsuarioRol.findOne({
+        where: { RELA_AUTH02: yaExiste.ID_AUTH02, RELA_AUTH01: rolSadmMig.ID_AUTH01, AUTH05_FECHABAJA: null },
+      });
+      if (!tieneSadm) {
+        // Asignar SADM
+        const existente = await Auth05UsuarioRol.findOne({
+          where: { RELA_AUTH02: yaExiste.ID_AUTH02, RELA_AUTH01: rolSadmMig.ID_AUTH01 },
+        });
+        if (existente) {
+          await existente.update({ AUTH05_FECHABAJA: null });
+        } else {
+          await Auth05UsuarioRol.create({
+            RELA_AUTH02: yaExiste.ID_AUTH02, RELA_AUTH01: rolSadmMig.ID_AUTH01,
+            AUTH05_FECHAALTA: new Date(), AUTH05_FECHABAJA: null,
+          });
+        }
+        // Revocar ADM si lo tiene
+        const rolAdmMig = await Auth01Rol.findOne({ where: { AUTH01_ABREVIATURA: "ADM" } });
+        if (rolAdmMig) {
+          await Auth05UsuarioRol.update(
+            { AUTH05_FECHABAJA: new Date() },
+            { where: { RELA_AUTH02: yaExiste.ID_AUTH02, RELA_AUTH01: rolAdmMig.ID_AUTH01, AUTH05_FECHABAJA: null } }
+          );
+        }
+        console.log("✅ Super admin migrado a rol SADM");
+      } else {
+        console.log("⏭️  Usuario administrador ya existe con rol SADM");
+      }
+    }
     return;
   }
 

@@ -68,14 +68,21 @@ export const router = createBrowserRouter([
       ...(adminConfig.enabled ? [{
         path: "admin",
         element: (
-          <ProtectedRoute roles={["ADM"]}>
+          <ProtectedRoute nivel={100}>
             <AdminLayout />
           </ProtectedRoute>
         ),
         children: [
           { index: true, element: <AdminDashboardPage /> },
           ...(adminConfig.modules.users ? [{ path: "usuarios", element: <AdminUsuariosPage /> }] : []),
-          ...(adminConfig.modules.subscription ? [{ path: "suscripcion", element: <AdminSuscripcionPage /> }] : []),
+          ...(adminConfig.modules.subscription ? [{
+            path: "suscripcion",
+            element: (
+              <ProtectedRoute roles={["SADM"]}>
+                <AdminSuscripcionPage />
+              </ProtectedRoute>
+            ),
+          }] : []),
           ...(adminConfig.modules.products ? [
             { path: "productos", element: <AdminProductsPage /> },
             { path: "productos/nuevo", element: <AdminProductFormPage /> },
