@@ -27,6 +27,7 @@ import { ColoresSection, StockSection } from "../../components/admin/product_for
 const EMPTY_FORM = {
   RELA_PROD01: "", RELA_PROD02: "", RELA_PROD07: "",
   PROD03_NOMBRE: "", PROD03_DESCRIPCION: "",
+  PROD03_COD_REF: "",
   PROD03_PRECIO: "", PROD03_PRECIO_ANTERIOR: "",
   PROD03_DESCUENTO: "", PROD03_BADGE: "",
   PROD03_HOME_SECCION: "",
@@ -48,6 +49,7 @@ function productoToForm(p) {
     RELA_PROD07:            p.marca_id     != null ? String(p.marca_id)     : "",
     PROD03_NOMBRE:          p.nombre,
     PROD03_DESCRIPCION:     p.descripcion ?? "",
+    PROD03_COD_REF:         p.codigo_ref   ?? "",
     PROD03_PRECIO:          String(p.precio),
     PROD03_PRECIO_ANTERIOR: p.precio_anterior ? String(p.precio_anterior) : "",
     PROD03_DESCUENTO:       p.descuento ? String(p.descuento) : "",
@@ -237,6 +239,7 @@ export default function AdminProductFormPage() {
       ...(form.RELA_PROD07 ? { RELA_PROD07: Number(form.RELA_PROD07) } : {}),
       PROD03_NOMBRE:          form.PROD03_NOMBRE.trim(),
       PROD03_DESCRIPCION:     form.PROD03_DESCRIPCION.trim() || undefined,
+      PROD03_COD_REF:         form.PROD03_COD_REF.trim()    || null,
       PROD03_PRECIO:          Number(form.PROD03_PRECIO),
       PROD03_PRECIO_ANTERIOR: form.PROD03_PRECIO_ANTERIOR ? Number(form.PROD03_PRECIO_ANTERIOR) : null,
       PROD03_DESCUENTO:       form.PROD03_DESCUENTO.trim() || null,
@@ -360,6 +363,22 @@ export default function AdminProductFormPage() {
                           {errors.PROD03_NOMBRE}
                         </p>
                       )}
+                    </div>
+
+                    <div>
+                      <label className="label-form">
+                        Código de referencia
+                        <span className="ml-1.5 text-[10px] font-normal text-muted/50">opcional — solo visible en el admin</span>
+                      </label>
+                      <input
+                        value={form.PROD03_COD_REF}
+                        onChange={(e) => setField("PROD03_COD_REF", e.target.value)}
+                        className="input-form font-mono"
+                        placeholder="Ej: código en Lince, SKU propio, referencia interna…"
+                      />
+                      <p className="mt-1 text-[11px] text-muted">
+                        Útil para cruzar con sistemas externos como Lince Indumentaria. No se muestra al cliente.
+                      </p>
                     </div>
 
                     <div>

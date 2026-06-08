@@ -35,6 +35,7 @@ function toRow(p) {
     _badge:        p.badge ?? null,
     _home_seccion: p.home_seccion ?? null,
     nombre:        p.nombre,
+    codigo_ref:    p.codigo_ref ?? "",
     categoria:     p.categoria,
     genero:        p.genero ?? "",
     marca:         p.marca ?? "",
@@ -62,14 +63,21 @@ const COLUMNS = [
         </div>
         <div className="min-w-0">
           <span className="block font-semibold text-ink line-clamp-1">{row.nombre}</span>
-          {row._home_seccion && (
-            <span className={[
-              "mt-0.5 inline-block rounded-full px-1.5 py-px text-[9px] font-bold uppercase tracking-wide",
-              HOME_SECCION_COLORS[row._home_seccion] ?? "bg-line text-muted",
-            ].join(" ")}>
-              {HOME_SECCION_LABELS[row._home_seccion] ?? row._home_seccion}
-            </span>
-          )}
+          <div className="mt-0.5 flex flex-wrap items-center gap-1">
+            {row.codigo_ref && (
+              <span className="inline-block rounded bg-surface border border-line px-1.5 py-px font-mono text-[9px] font-semibold text-muted">
+                {row.codigo_ref}
+              </span>
+            )}
+            {row._home_seccion && (
+              <span className={[
+                "inline-block rounded-full px-1.5 py-px text-[9px] font-bold uppercase tracking-wide",
+                HOME_SECCION_COLORS[row._home_seccion] ?? "bg-line text-muted",
+              ].join(" ")}>
+                {HOME_SECCION_LABELS[row._home_seccion] ?? row._home_seccion}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     ),

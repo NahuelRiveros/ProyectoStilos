@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Heart, ShoppingBag, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { storeConfig } from "../../config/app_config";
 
 const S = {
   wrap: "card-ui card-hover group relative flex flex-col overflow-hidden",
@@ -133,13 +134,15 @@ export default function ProductCard({
           {discount && !isSoldOut && <span className={S.badgeDiscount}>{discount}</span>}
         </div>
 
-        <button
-          onClick={toggleWish}
-          className={[S.wishBtn, wishlisted ? "opacity-100" : "opacity-0 group-hover:opacity-100"].join(" ")}
-          aria-label={wishlisted ? "Quitar de favoritos" : "Guardar en favoritos"}
-        >
-          <Heart size={14} className={wishlisted ? "fill-rose-500 text-rose-500" : "text-ink/60"} />
-        </button>
+        {storeConfig.enableWishlist && (
+          <button
+            onClick={toggleWish}
+            className={[S.wishBtn, wishlisted ? "opacity-100" : "opacity-0 group-hover:opacity-100"].join(" ")}
+            aria-label={wishlisted ? "Quitar de favoritos" : "Guardar en favoritos"}
+          >
+            <Heart size={14} className={wishlisted ? "fill-rose-500 text-rose-500" : "text-ink/60"} />
+          </button>
+        )}
 
         <span className={S.quickView} aria-hidden="true">
           <Eye size={14} className="text-ink/70" />
@@ -175,10 +178,12 @@ export default function ProductCard({
           </div>
         )}
 
-        <div className={S.priceRow}>
-          <span className={S.priceMain}>{price}</span>
-          {oldPrice && <span className={S.priceOld}>{oldPrice}</span>}
-        </div>
+        {price && (
+          <div className={S.priceRow}>
+            <span className={S.priceMain}>{price}</span>
+            {oldPrice && <span className={S.priceOld}>{oldPrice}</span>}
+          </div>
+        )}
 
         <div className={S.detailBtn}>Ver detalle</div>
       </div>

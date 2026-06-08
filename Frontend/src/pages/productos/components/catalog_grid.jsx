@@ -1,5 +1,6 @@
 import { PackageOpen } from "lucide-react";
 import ProductCard from "../../../components/home/product_card";
+import { storeConfig } from "../../../config/app_config";
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR");
@@ -73,10 +74,9 @@ export default function CatalogGrid({
           id={p.id}
           name={p.nombre}
           category={p.categoria}
-          price={formatPrice(p.precio)}
-          priceRaw={p.precio}
-          oldPrice={p.precio_anterior ? formatPrice(p.precio_anterior) : null}
-          discount={formatDiscount(p)}
+          price={storeConfig.enablePrices ? formatPrice(p.precio) : null}
+          oldPrice={storeConfig.enablePrices && p.precio_anterior ? formatPrice(p.precio_anterior) : null}
+          discount={storeConfig.enablePrices ? formatDiscount(p) : null}
           images={p.imagenes.map((img) =>
             typeof img === "string" ? { src: img } : img
           )}
