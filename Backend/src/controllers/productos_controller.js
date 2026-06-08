@@ -145,7 +145,7 @@ export async function listarProductos(req, res) {
     const {
       genero, categoria, marca, precio_max,
       solo_ofertas, solo_stock,
-      home_seccion, q,
+      home_seccion, q, ids,
       orden, pagina, por_pagina,
     } = req.query;
 
@@ -170,6 +170,12 @@ export async function listarProductos(req, res) {
 
     if (q && q.trim()) {
       where.PROD03_NOMBRE = { [Op.iLike]: `%${q.trim()}%` };
+    }
+
+    // ?ids=1,2,3 → retorna solo esos productos (usado por home para novedades seleccionadas)
+    if (ids) {
+      const parsed = String(ids).split(",").map(Number).filter(n => Number.isInteger(n) && n > 0);
+      if (parsed.length) where.ID_PROD03 = { [Op.in]: parsed };
     }
 
     // "solo con stock" → excluye los marcados como agotados

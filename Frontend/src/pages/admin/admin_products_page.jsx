@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, RefreshCw, Trash2, Package, X, SlidersHorizontal } from "lucide-react";
+import { Plus, Edit2, RefreshCw, Trash2, Package, X, SlidersHorizontal, Search } from "lucide-react";
 import { getProductos } from "../../api/producto_api";
 import { getMarcas, getCategorias, getGeneros } from "../../api/catalogo_api";
 import { http } from "../../api/http";
@@ -136,7 +136,7 @@ const COLUMNS = [
   },
 ];
 
-const FILTROS_VACIOS = { marca: "", categoria: "", genero: "", badge: "", homeSec: "" };
+const FILTROS_VACIOS = { q: "", marca: "", categoria: "", genero: "", badge: "", homeSec: "" };
 
 function countFiltros(f) {
   return Object.values(f).filter(Boolean).length;
@@ -193,6 +193,14 @@ export default function AdminProductsPage() {
 
   const rows = productos
     .filter(p => {
+      if (filtros.q) {
+        const q = filtros.q.toLowerCase();
+        const match = p.nombre.toLowerCase().includes(q)
+          || (p.codigo_ref ?? "").toLowerCase().includes(q)
+          || p.categoria.toLowerCase().includes(q)
+          || (p.marca ?? "").toLowerCase().includes(q);
+        if (!match) return false;
+      }
       if (filtros.marca     && (p.marca   ?? "") !== filtros.marca)     return false;
       if (filtros.categoria && p.categoria        !== filtros.categoria) return false;
       if (filtros.genero    && (p.genero  ?? "") !== filtros.genero)    return false;
@@ -261,6 +269,27 @@ export default function AdminProductsPage() {
       />
 
       <div className="mb-4 space-y-3">
+
+        {/* Barra de búsqueda por nombre */}
+        <div className="relative">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            type="text"
+            value={filtros.q}
+            onChange={e => setFiltro("q", e.target.value)}
+            placeholder="Buscar por nombre, código o marca…"
+            className="w-full rounded-xl border border-line bg-card py-2.5 pl-10 pr-4 text-sm text-ink placeholder:text-muted/50 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/20"
+          />
+          {filtros.q && (
+            <button
+              onClick={() => setFiltro("q", "")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted hover:text-ink"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowFiltros(v => !v)}
@@ -280,6 +309,7 @@ export default function AdminProductsPage() {
             )}
           </button>
 
+          {filtros.q && <FiltroChip label={`"${filtros.q}"`} onRemove={() => setFiltro("q", "")} />}
           {filtros.marca && <FiltroChip label={`Marca: ${filtros.marca}`} onRemove={() => setFiltro("marca", "")} />}
           {filtros.categoria && <FiltroChip label={`Categoría: ${filtros.categoria}`} onRemove={() => setFiltro("categoria", "")} />}
           {filtros.genero && <FiltroChip label={`Género: ${filtros.genero}`} onRemove={() => setFiltro("genero", "")} />}
@@ -359,9 +389,6 @@ export default function AdminProductsPage() {
         columns={COLUMNS}
         keyField="_id"
         loading={loading}
-        searchable
-        searchPlaceholder="Buscar por nombre, categoría o marca..."
-        searchColumns={["nombre", "categoria", "marca"]}
         actions={actions}
         emptyMessage={
           totalFiltros > 0

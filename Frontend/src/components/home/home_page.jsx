@@ -316,23 +316,28 @@ export default function HomePage() {
     async function loadHome() {
       setLoading(true);
       try {
-        const [homeConfig, carouselRes, novedadesRes, ofertasRes, allRes, catalogosRes] = await Promise.all([
+        const [homeConfig, carouselRes, novedadesRes, ofertasRes, catalogosRes] = await Promise.all([
           getHomeConfig(),
           getProductos({ home_seccion: "carousel", limit: 3 }),
           getProductos({ home_seccion: "novedades", limit: 8 }),
           getOfertasDestacadas().catch(() => []),
-          getProductos({ limit: 12 }),
           getCatalogoNavegacion().catch(() => []),
         ]);
 
         if (cancelled) return;
 
         const selectedIds = homeConfig.novedades_ids ?? [];
-        const selectedNovedades = selectedIds.length
-          ? selectedIds
-              .map((id) => allRes.productos.find((producto) => producto.id === id))
-              .filter(Boolean)
-          : novedadesRes.productos;
+        // Carga los productos por ID exacto si el admin los seleccionó manualmente
+        let selectedNovedades;
+        if (selectedIds.length) {
+          const { productos: byIds } = await getProductos({ ids: selectedIds.join(","), limit: selectedIds.length });
+          // Respeta el orden elegido por el admin
+          selectedNovedades = selectedIds
+            .map((id) => byIds.find((p) => p.id === id))
+            .filter(Boolean);
+        } else {
+          selectedNovedades = novedadesRes.productos;
+        }
 
         setConfig(homeConfig);
         setCarouselProducts(carouselRes.productos);
