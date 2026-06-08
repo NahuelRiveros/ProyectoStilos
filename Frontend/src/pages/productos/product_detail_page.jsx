@@ -6,8 +6,10 @@ import {
 } from "lucide-react";
 import { getProducto } from "../../api/producto_api";
 import { useWhatsAppCart } from "../../context/whatsapp_cart_context";
+import { useCart } from "../../cart/cart_context";
+import { useAuth } from "../../auth/auth_context";
 import { abrirWhatsApp, buildWhatsAppMessage } from "../../config/whatsapp_config";
-import { isWhatsAppMode, storeConfig } from "../../config/app_config";
+import { isWhatsAppMode, isEcommerceMode, storeConfig, cartConfig } from "../../config/app_config";
 
 const fmt = (n) =>
   `$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
@@ -15,7 +17,9 @@ const fmt = (n) =>
 export default function ProductDetailPage() {
   const { id }      = useParams();
   const navigate    = useNavigate();
-  const { addItem } = useWhatsAppCart();
+  const { addItem: addWhatsAppItem } = useWhatsAppCart();
+  const { addItem: addCartItem }     = useCart();
+  const { isAuth }                   = useAuth();
 
   const [producto, setProducto] = useState(null);
   const [loading,  setLoading]  = useState(true);
@@ -115,7 +119,22 @@ export default function ProductDetailPage() {
   const catalogoBase = producto.genero_slug ? `/${producto.genero_slug}` : "/catalogo";
 
   function handleAgregarConsulta() {
-    addItem(producto, talle?.talle ?? null);
+    addWhatsAppItem(producto, talle?.talle ?? null);
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 2500);
+  }
+
+  function handleAgregarCarrito() {
+    if (!isAuth) {
+      navigate("/login");
+      return;
+    }
+    // precio_unidad NO se envía — el backend lo obtiene desde la base de datos
+    addCartItem({
+      producto_id: producto.id,
+      talle_id:    talle?.id ?? null,
+      cantidad:    1,
+    });
     setAgregado(true);
     setTimeout(() => setAgregado(false), 2500);
   }
@@ -357,6 +376,38 @@ export default function ProductDetailPage() {
               </p>
             </div>
           )}
+
+          {/* ── BOTONES CARRITO ──────────────────────────────────────────── */}
+          {isEcommerceMode() && cartConfig.productDetailCta === "cart" && !isSoldOut ? (
+            <div className="space-y-3 pt-1">
+              <button
+                onClick={handleAgregarCarrito}
+                disabled={hasTalles && !talle}
+                className={[
+                  "btn btn-lg w-full",
+                  agregado
+                    ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                    : "btn-primary",
+                  hasTalles && !talle ? "opacity-50 cursor-not-allowed" : "",
+                ].join(" ")}
+              >
+                {agregado ? (
+                  <><Check size={18} /> ¡Agregado al carrito!</>
+                ) : (
+                  <><ShoppingBag size={18} /> Agregar al carrito</>
+                )}
+              </button>
+              {hasTalles && !talle && (
+                <p className="text-center text-[11px] text-muted">Seleccioná un talle para continuar</p>
+              )}
+            </div>
+          ) : isEcommerceMode() && cartConfig.productDetailCta === "cart" ? (
+            <div className="rounded-2xl border border-line bg-surface px-5 py-4 text-center">
+              <ShoppingBag size={22} className="mx-auto mb-2 text-muted/30" />
+              <p className="text-sm font-bold text-ink">Producto agotado</p>
+              <p className="mt-0.5 text-xs text-muted">Por el momento no tenemos stock disponible.</p>
+            </div>
+          ) : null}
 
           {/* ── BOTONES WHATSAPP ─────────────────────────────────────────── */}
           {isWhatsAppMode() && !isSoldOut ? (

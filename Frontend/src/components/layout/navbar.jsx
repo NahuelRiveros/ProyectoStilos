@@ -11,6 +11,7 @@ import NavbarDesktop from "./navbar_desktop";
 import NavbarMegaMenu from "./navbar_mega_menu";
 import NavbarMobile from "./navbar_mobile";
 import NavbarUserBox from "./navbar_userbox";
+import CartIcon from "../../cart/cart_icon";
 
 function mapNavItem(item) {
   return {
@@ -153,6 +154,8 @@ export default function Navbar() {
 
           {/* Right section */}
           <div className="flex items-center gap-2">
+            <CartIcon />
+
             <div className="hidden lg:flex lg:items-center lg:gap-2">
               {usuario ? (
                 <NavbarUserBox />

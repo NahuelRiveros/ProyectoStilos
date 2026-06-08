@@ -22,4 +22,10 @@ export const businessConfig = {
     terms: "",      // Terminos y condiciones
     shipping: "",   // Politica de envios
   },
+
+  // [FOOTER] URL del widget Data Fiscal de AFIP (codigo QR con datos tributarios)
+  // Obtener en https://www.afip.gob.ar/fe/qr/ una vez dado de alta en AFIP
+  // Ej: "https://www.afip.gob.ar/fe/qr/?p=..."
+  // Solo se muestra si cartConfig.mostrarDataFiscal: true
+  dataFiscalUrl: "",
 };

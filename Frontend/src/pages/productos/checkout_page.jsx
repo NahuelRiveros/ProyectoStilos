@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { Truck, FileText, ShoppingBag } from "lucide-react";
 
 import { useAuth } from "../../auth/auth_context";
-import { useCart } from "../../context/cart_context";
-import { getCarrito } from "../../api/carrito_api";
+import { useCart } from "../../cart/cart_context";
+import { getCarrito } from "../../cart/cart_api";
 import { getOpcionesEnvio, getCondicionesIva } from "../../api/catalogo_api";
 import { crearOrden } from "../../api/orden_api";
 

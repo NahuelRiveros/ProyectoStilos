@@ -5,7 +5,8 @@ Esta carpeta concentra los cambios habituales para reutilizar la tienda con otro
 ## Archivos
 
 - `brand_config.js`: nombre, logo, textos de marca, footer y redes sociales.
-- `store_config.js`: modo de tienda, carrito, checkout, pagos, precios, stock y WhatsApp.
+- `store_config.js`: modo de tienda, precios, stock, WhatsApp y lista de deseos.
+- `cart_config.js`: habilita/deshabilita carrito, checkout, pagos y boton CTA en producto.
 - `catalog_config.js`: labels y rutas publicas del catalogo.
 - `admin_config.js`: habilita/deshabilita el admin y sus modulos internos.
 - `business_config.js`: datos legales, contacto y politicas del negocio.

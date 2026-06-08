@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relevamiento de pagina web</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #efefef;
+      padding: 28px 16px;
+    }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      background: #111;
+      color: #fff;
+      padding: 32px 52px 28px;
+    }
+    .doc-header h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .doc-header p  { font-size: 12px; color: #aaa; margin-top: 6px; line-height: 1.5; }
+
+    .meta-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .meta-field { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; }
+    .meta-line  { border-bottom: 1px solid #555; min-width: 140px; height: 18px; display: inline-block; }
+
+    /* ── BODY ── */
+    .doc-body { padding: 0 52px 52px; }
+
+    /* ── SECCIONES ── */
+    .section { margin-top: 40px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px solid #111;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    .section-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-subtitle {
+      font-size: 11px;
+      color: #888;
+      margin-top: -14px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      padding-left: 2px;
+    }
+
+    /* ── CAMPOS ── */
+    .field { margin-bottom: 16px; }
+
+    .field > label, .field > .qlabel {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 5px;
+    }
+    .eg {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      font-style: italic;
+      font-weight: 400;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .line {
+      border: none;
+      border-bottom: 1px solid #bbb;
+      width: 100%;
+      height: 24px;
+      display: block;
+    }
+    .line-tall {
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      width: 100%;
+      height: 60px;
+      display: block;
+    }
+    .line-xl {
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      width: 100%;
+      height: 88px;
+      display: block;
+    }
+
+    /* GRIDS */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 20px; }
+    .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0 16px; }
+    .span2 { grid-column: span 2; }
+    .span3 { grid-column: span 3; }
+
+    /* OPCIONES */
+    .opts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }
+    .opts.col { flex-direction: column; gap: 8px; }
+    .opt {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; cursor: pointer; line-height: 1.4;
+    }
+    .opt input { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+    .opt strong { display: block; }
+    .opt .opt-desc { font-size: 11px; color: #666; }
+
+    /* SLIDER CARD */
+    .slider-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      background: #fafafa;
+    }
+    .slider-card .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* TABLA */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      background: #f0f0f0;
+      padding: 7px 10px;
+      text-align: left;
+      font-weight: 700;
+      border: 1px solid #ddd;
+    }
+    td {
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #fafafa; }
+    td.chk { text-align: center; width: 54px; }
+
+    /* TARJETAS MODO TIENDA */
+    .mode-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .mode-card {
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .15s;
+    }
+    .mode-card:has(input:checked) {
+      border-color: #111;
+      background: #f9f9f9;
+    }
+    .mode-card input[type="radio"] {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 15px; height: 15px;
+    }
+    .mode-card .mc-icon  { font-size: 22px; margin-bottom: 6px; }
+    .mode-card .mc-title {
+      font-size: 13px; font-weight: 800;
+      margin-bottom: 4px; line-height: 1.2;
+      padding-right: 20px;
+    }
+    .mode-card .mc-sub {
+      font-size: 11px; color: #555;
+      line-height: 1.4; margin-bottom: 8px;
+    }
+    .mode-card .mc-block {
+      background: #f0f0f0;
+      border-radius: 4px;
+      padding: 7px 9px;
+      margin-bottom: 7px;
+    }
+    .mode-card .mc-block-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #888;
+      margin-bottom: 3px;
+    }
+    .mode-card .mc-block-text {
+      font-size: 11px; color: #333; line-height: 1.4;
+    }
+    .mode-card .mc-tag {
+      display: inline-block;
+      background: #e8e8e8;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    /* NOTA INTERNA */
+    .note {
+      background: #fffbe6;
+      border-left: 3px solid #f0b400;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    /* BLOQUE FINAL */
+    .final-block {
+      background: #111;
+      color: #eee;
+      padding: 24px 28px;
+      border-radius: 5px;
+      margin-top: 44px;
+      font-size: 12px;
+    }
+    .final-block h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .final-block p  { line-height: 1.6; color: #ccc; margin-bottom: 8px; }
+    .final-block code {
+      background: #333; color: #fff;
+      padding: 1px 6px; border-radius: 3px;
+      font-family: Consolas, monospace; font-size: 11px;
+    }
+
+    hr { border: none; border-top: 1px solid #eee; margin: 30px 0; }
+
+    /* PRINT */
+    .no-print { }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; max-width: none; }
+      .doc-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .doc-body { padding: 0 40px 40px; }
+      .no-print { display: none !important; }
+      .section { break-inside: avoid; }
+      .slider-card { break-inside: avoid; }
+      .final-block { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- BTN IMPRIMIR -->
+  <div class="no-print" style="text-align:right; padding:14px 20px 0; background:#fff;">
+    <button onclick="window.print()"
+      style="padding:8px 18px; background:#111; color:#fff; border:none; border-radius:4px; font-size:13px; cursor:pointer;">
+      Guardar como PDF / Imprimir
+    </button>
+  </div>
+
+  <!-- ENCABEZADO -->
+  <div class="doc-header">
+    <h1>Relevamiento de pagina web</h1>
+    <p>
+      Estas preguntas nos ayudan a entender tu negocio y armar tu sitio tal como lo necesitas.<br>
+      No hace falta saber de tecnologia — cuanto mas claro nos cuentes, mas rapido queda listo.
+    </p>
+    <div class="meta-row">
+      <div class="meta-field">Fecha <span class="meta-line"></span></div>
+      <div class="meta-field">Negocio / Cliente <span class="meta-line"></span></div>
+      <div class="meta-field">Relevado por <span class="meta-line"></span></div>
+    </div>
+  </div>
+
+  <div class="doc-body">
+
+    <!-- ══════════════════════════════════════════════
+         1. TU NEGOCIO
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🏪</span>
+        <span class="section-title">1 · Tu negocio</span>
+      </div>
+      <p class="section-subtitle">Todo lo que necesitamos saber sobre vos antes de arrancar.</p>
+
+      <div class="field span2">
+        <label>¿A que se dedica tu negocio? Contanos brevemente que venden o que servicio ofrecen.</label>
+        <span class="line-xl"></span>
+      </div>
+
+      <div class="g2" style="margin-top:4px;">
+        <div class="field">
+          <label>Nombre de la marca o negocio</label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Joyeria Luna", "Urban Fit", "Mora Boutique"</span>
+        </div>
+        <div class="field">
+          <label>Frase corta que define lo que hacen <span style="font-weight:400;color:#888;">(opcional)</span></label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Accesorios de autor", "Moda para todos los dias"</span>
+        </div>
+        <div class="field">
+          <label>Telefono de contacto del negocio</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>Email de contacto / consultas</label>
+          <span class="line"></span>
+        </div>
+        <div class="field span2">
+          <label>Direccion fisica (si tienen local o taller)</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>Ciudad</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>Provincia y pais</label>
+          <span class="line"></span>
+        </div>
+        <div class="field span2">
+          <label>Horario de atencion <span style="font-weight:400;color:#888;">(el que van a mostrar online)</span></label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Lun a Vie de 9 a 18 hs · Sabados de 10 a 14 hs"</span>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+        <label>¿Tienen logo? <span style="font-weight:400;color:#888;">(marcar)</span></label>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="logo" /> Si, lo envio por separado</label>
+          <label class="opt"><input type="radio" name="logo" /> Si, aca esta el link: <span class="line" style="width:200px; display:inline-block; margin-left:8px;"></span></label>
+          <label class="opt"><input type="radio" name="logo" /> No, usamos el nombre como texto</label>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         2. COMO FUNCIONA LA TIENDA
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🛍️</span>
+        <span class="section-title">2 · Como funciona la tienda</span>
+      </div>
+      <p class="section-subtitle">Como quieren que los clientes interactuen con los productos.</p>
+
+      <div class="field">
+        <label>¿Que quieren que haga el cliente cuando ve un producto que le gusta? <span style="font-weight:400;color:#888;">(marcar una)</span></label>
+
+        <div class="mode-cards">
+
+          <!-- OPCION 1 -->
+          <label class="mode-card">
+            <input type="radio" name="store_mode" />
+            <div class="mc-icon">👁️</div>
+            <div class="mc-title">Solo mirar</div>
+            <div class="mc-sub">El sitio muestra los productos pero no tiene boton de compra ni de contacto.</div>
+            <div class="mc-block">
+              <div class="mc-block-label">Como lo vive el cliente</div>
+              <div class="mc-block-text">Navega los productos, ve fotos y descripcion, pero si quiere comprar tiene que contactarlos por su cuenta (telefono, Instagram, etc.).</div>
+            </div>
+            <div class="mc-block">
+              <div class="mc-block-label">Ejemplo conocido</div>
+              <div class="mc-block-text">Como el menu de un restaurant en la vitrina — lo podes ver pero no pedir desde ahi.</div>
+            </div>
+            <span class="mc-tag">Ideal si no venden online todavia</span>
+          </label>
+
+          <!-- OPCION 2 -->
+          <label class="mode-card">
+            <input type="radio" name="store_mode" />
+            <div class="mc-icon">💬</div>
+            <div class="mc-title">Consultar por WhatsApp</div>
+            <div class="mc-sub">El cliente ve el producto y hay un boton verde para abrir WhatsApp con el mensaje listo.</div>
+            <div class="mc-block">
+              <div class="mc-block-label">Como lo vive el cliente</div>
+              <div class="mc-block-text">Toca "Consultar" y se abre WhatsApp con algo asi ya escrito: "Hola! Me interesa: Remera Lisa Blanca Talle M - $8.500. Tienen disponible?"</div>
+            </div>
+            <div class="mc-block">
+              <div class="mc-block-label">Ejemplo conocido</div>
+              <div class="mc-block-text">Como ver algo en Instagram y mandar un DM preguntando el precio y si tienen stock.</div>
+            </div>
+            <span class="mc-tag">La opcion mas usada</span>
+          </label>
+
+          <!-- OPCION 3 -->
+          <label class="mode-card">
+            <input type="radio" name="store_mode" />
+            <div class="mc-icon">🛒</div>
+            <div class="mc-title">Comprar directo en el sitio</div>
+            <div class="mc-sub">El cliente compra sin salir del sitio: carrito, datos de envio y pago con tarjeta o Mercado Pago.</div>
+            <div class="mc-block">
+              <div class="mc-block-label">Como lo vive el cliente</div>
+              <div class="mc-block-text">Elige talle y color, agrega al carrito, completa sus datos, elige envio y paga. Todo automatico, sin que ustedes tengan que hacer nada.</div>
+            </div>
+            <div class="mc-block">
+              <div class="mc-block-label">Ejemplo conocido</div>
+              <div class="mc-block-text">Como comprar en Mercado Libre, Zara o cualquier tienda online grande.</div>
+            </div>
+            <span class="mc-tag">Requiere integracion de pagos</span>
+          </label>
+
+        </div>
+      </div>
+
+      <div class="g2" style="margin-top:8px;">
+        <div class="field">
+          <label>¿Los precios son publicos (cualquiera los ve)?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="prices" /> Si, mostramos precios</label>
+            <label class="opt"><input type="radio" name="prices" /> No, solo consultando</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>¿Muestran cuanto stock queda de cada producto?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="stock" /> Si</label>
+            <label class="opt"><input type="radio" name="stock" /> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>¿Quieren que los clientes puedan guardar favoritos?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="wishlist" /> Si</label>
+            <label class="opt"><input type="radio" name="wishlist" /> No</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+        <label>Si usan WhatsApp: numero de la cuenta del negocio <span style="font-weight:400;color:#888;">(con codigo de pais)</span></label>
+        <span class="line"></span>
+        <span class="eg">Ej: 5493704123456 (Argentina: 54 + codigo de area sin 0 + numero sin 15)</span>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         3. ENCABEZADO Y MENU DE NAVEGACION
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📌</span>
+        <span class="section-title">3 · Encabezado y menu</span>
+      </div>
+      <p class="section-subtitle">La barra que aparece siempre arriba de la pagina con los links principales.</p>
+
+      <div class="field">
+        <label>¿Que secciones quieren en el menu principal? <span style="font-weight:400;color:#888;">(marcar las que aplican)</span></label>
+        <div class="opts" style="margin-top:10px; gap: 8px 0; flex-direction:column;">
+          <label class="opt"><input type="checkbox" /> <span><strong>Inicio / Home</strong> — link a la pagina principal</span></label>
+          <label class="opt"><input type="checkbox" /> <span><strong>Productos / Catalogo</strong> — link al listado de productos</span></label>
+          <label class="opt"><input type="checkbox" /> <span><strong>Colecciones o categorias</strong> — menu desplegable con las divisiones del catalogo</span></label>
+          <label class="opt"><input type="checkbox" /> <span><strong>Nosotros / Quienes somos</strong></span></label>
+          <label class="opt"><input type="checkbox" /> <span><strong>Contacto</strong></span></label>
+          <label class="opt"><input type="checkbox" /> <span>Otro: <span class="line" style="width:220px; display:inline-block; margin-left:6px;"></span></span></label>
+        </div>
+      </div>
+
+      <div class="g3" style="margin-top:8px;">
+        <div class="field">
+          <label>¿Como se llama el boton que lleva a los productos?</label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Productos", "Catalogo", "Ver todo"</span>
+        </div>
+        <div class="field">
+          <label>¿Como se llama el boton de inicio?</label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Home", "Inicio", "Principal"</span>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+        <label>¿Como organizan los productos? ¿Tienen categorias, colecciones, marcas, lineas?</label>
+        <span class="line-tall"></span>
+        <span class="eg">Ej: "Tenemos 3 colecciones: Verano, Invierno y Basicos. Dentro de cada una hay tipos como Remeras, Pantalones, etc."</span>
+      </div>
+
+      <div class="g3" style="margin-top:4px;">
+        <div class="field">
+          <label>¿Como llamamos al nivel 1? <span style="font-weight:400;color:#888;">(el mas grande)</span></label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Coleccion", "Linea", "Marca"</span>
+        </div>
+        <div class="field">
+          <label>¿Como llamamos al nivel 2?</label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Categoria", "Tipo", "Rubro"</span>
+        </div>
+        <div class="field">
+          <label>¿Como llamamos al nivel 3? <span style="font-weight:400;color:#888;">(si existe)</span></label>
+          <span class="line"></span>
+          <span class="eg">Ej: "Subcategoria", "Modelo", "Variante"</span>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         4. PAGINA DE INICIO (HOME)
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🖼️</span>
+        <span class="section-title">4 · Pagina de inicio</span>
+      </div>
+      <p class="section-subtitle">
+        Lo primero que ve el cliente cuando entra al sitio. Pueden tener un carrusel de imagenes,
+        una cinta de anuncios, productos destacados y mas.
+      </p>
+
+      <!-- CARRUSEL -->
+      <div class="field">
+        <label>¿Quieren un carrusel / slider de imagenes en la parte superior? <span style="font-weight:400;color:#888;">(como un banner que va pasando)</span></label>
+        <div class="opts" style="margin-bottom:12px;">
+          <label class="opt"><input type="radio" name="slider" /> Si</label>
+          <label class="opt"><input type="radio" name="slider" /> No</label>
+        </div>
+      </div>
+
+      <p style="font-size:11px; color:#888; margin-bottom:12px;">Si dijeron SI: completar las imagenes que quieren mostrar (pueden ser hasta 3 o mas).</p>
+
+      <!-- SLIDE 1 -->
+      <div class="slider-card">
+        <div class="card-title">Imagen 1 del carrusel</div>
+        <div class="g2">
+          <div class="field">
+            <label>Titulo principal</label>
+            <span class="line"></span>
+            <span class="eg">Ej: "Nueva Coleccion Invierno 2025"</span>
+          </div>
+          <div class="field">
+            <label>Subtitulo o descripcion breve</label>
+            <span class="line"></span>
+            <span class="eg">Ej: "Abrigate con estilo · Envios a todo el pais"</span>
+          </div>
+          <div class="field">
+            <label>Boton de accion <span style="font-weight:400;color:#888;">(texto del boton)</span></label>
+            <span class="line"></span>
+            <span class="eg">Ej: "Ver coleccion", "Comprar ahora", "Consultar"</span>
+          </div>
+          <div class="field">
+            <label>¿A donde lleva ese boton?</label>
+            <span class="line"></span>
+            <span class="eg">Ej: "A la seccion de abrigos", "Al catalogo completo"</span>
+          </div>
+          <div class="field span2">
+            <label>Imagen <span style="font-weight:400;color:#888;">(URL, nombre del archivo o describir que imagen poner)</span></label>
+            <span class="line"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slider-card">
+        <div class="card-title">Imagen 2 del carrusel <span style="font-weight:400;color:#aaa;">(opcional)</span></div>
+        <div class="g2">
+          <div class="field">
+            <label>Titulo principal</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>Subtitulo o descripcion breve</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>Texto del boton</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>¿A donde lleva?</label>
+            <span class="line"></span>
+          </div>
+          <div class="field span2">
+            <label>Imagen</label>
+            <span class="line"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slider-card">
+        <div class="card-title">Imagen 3 del carrusel <span style="font-weight:400;color:#aaa;">(opcional)</span></div>
+        <div class="g2">
+          <div class="field">
+            <label>Titulo principal</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>Subtitulo o descripcion breve</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>Texto del boton</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>¿A donde lleva?</label>
+            <span class="line"></span>
+          </div>
+          <div class="field span2">
+            <label>Imagen</label>
+            <span class="line"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CINTA DE ANUNCIOS -->
+      <div class="field" style="margin-top:8px;">
+        <label>¿Quieren una cinta de texto que corra o aparezca debajo del menu? <span style="font-weight:400;color:#888;">(tipo "ticker" o banner angosto)</span></label>
+        <div class="opts" style="margin-bottom:10px;">
+          <label class="opt"><input type="radio" name="ticker" /> Si</label>
+          <label class="opt"><input type="radio" name="ticker" /> No</label>
+        </div>
+        <label>¿Que dice esa cinta?</label>
+        <span class="line"></span>
+        <span class="eg">Ej: "Envios a todo el pais · Nuevos productos cada semana · Paga en cuotas sin interes"</span>
+      </div>
+
+      <!-- OTRAS SECCIONES HOME -->
+      <div class="field" style="margin-top:8px;">
+        <label>¿Que mas quieren mostrar en la pagina de inicio? <span style="font-weight:400;color:#888;">(marcar lo que aplica)</span></label>
+        <div class="opts col" style="margin-top:10px;">
+          <label class="opt"><input type="checkbox" /> Productos destacados o mas vendidos</label>
+          <label class="opt"><input type="checkbox" /> Novedades / nuevos ingresos</label>
+          <label class="opt"><input type="checkbox" /> Categorias o colecciones con foto (grilla de accesos rapidos)</label>
+          <label class="opt"><input type="checkbox" /> Marcas que trabajan (logos)</label>
+          <label class="opt"><input type="checkbox" /> Testimionos o resenas de clientes</label>
+          <label class="opt"><input type="checkbox" /> Seccion "Quienes somos" o historia de la marca</label>
+          <label class="opt"><input type="checkbox" /> Formulario de contacto o suscripcion a novedades</label>
+          <label class="opt"><input type="checkbox" />
+            Otro: <span class="line" style="width:260px; display:inline-block; margin-left:6px;"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:8px;">
+        <label>¿Alguna seccion especial o idea que quieran incluir? Describila con tus palabras.</label>
+        <span class="line-xl"></span>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         5. PIE DE PAGINA (FOOTER)
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📋</span>
+        <span class="section-title">5 · Pie de pagina</span>
+      </div>
+      <p class="section-subtitle">
+        La parte de abajo de todas las paginas. Suele tener datos de contacto, redes sociales,
+        metodos de pago e informacion legal. Solo mostramos lo que completen.
+      </p>
+
+      <div class="field">
+        <label>¿Que informacion quieren mostrar en el pie de pagina? <span style="font-weight:400;color:#888;">(marcar)</span></label>
+        <div class="opts col" style="margin-top:10px;">
+          <label class="opt"><input type="checkbox" /> Redes sociales (Instagram, Facebook, etc.)</label>
+          <label class="opt"><input type="checkbox" /> Metodos de pago aceptados (logos de tarjetas, Mercado Pago, etc.)</label>
+          <label class="opt"><input type="checkbox" /> Tipos de envio que ofrecen</label>
+          <label class="opt"><input type="checkbox" /> Ubicacion / direccion del local</label>
+          <label class="opt"><input type="checkbox" /> Mapa interactivo (Google Maps)</label>
+          <label class="opt"><input type="checkbox" /> Horario de atencion</label>
+          <label class="opt"><input type="checkbox" /> Email de contacto</label>
+          <label class="opt"><input type="checkbox" /> Telefono / WhatsApp</label>
+          <label class="opt"><input type="checkbox" /> Datos legales (razon social, CUIT)</label>
+          <label class="opt"><input type="checkbox" /> Politica de cambios y devoluciones</label>
+          <label class="opt"><input type="checkbox" /> Politica de privacidad</label>
+          <label class="opt"><input type="checkbox" /> Terminos y condiciones</label>
+          <label class="opt"><input type="checkbox" /> Politica de envios</label>
+        </div>
+      </div>
+
+      <div class="g2" style="margin-top:16px;">
+        <div class="field">
+          <label>Redes sociales — Instagram</label>
+          <span class="line"></span>
+          <span class="eg">Ej: @joyerialuna o URL completa</span>
+        </div>
+        <div class="field">
+          <label>Facebook</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>LinkedIn</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>Otra red social / TikTok / YouTube</label>
+          <span class="line"></span>
+        </div>
+      </div>
+
+      <div class="g2" style="margin-top:4px;">
+        <div class="field">
+          <label>Razon social <span style="font-weight:400;color:#888;">(nombre legal)</span></label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>CUIT / CUIL</label>
+          <span class="line"></span>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+        <label>Metodos de pago que aceptan <span style="font-weight:400;color:#888;">(marcar los que aplican)</span></label>
+        <div class="opts" style="margin-top:8px;">
+          <label class="opt"><input type="checkbox" /> Efectivo</label>
+          <label class="opt"><input type="checkbox" /> Transferencia bancaria</label>
+          <label class="opt"><input type="checkbox" /> Mercado Pago</label>
+          <label class="opt"><input type="checkbox" /> Tarjeta de debito</label>
+          <label class="opt"><input type="checkbox" /> Tarjeta de credito</label>
+          <label class="opt"><input type="checkbox" /> Cuotas sin interes</label>
+          <label class="opt"><input type="checkbox" /> Otro: <span class="line" style="width:140px; display:inline-block; margin-left:6px;"></span></label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:8px;">
+        <label>Tipos de envio que ofrecen</label>
+        <div class="opts" style="margin-top:8px;">
+          <label class="opt"><input type="checkbox" /> Retiro en local</label>
+          <label class="opt"><input type="checkbox" /> Envio a domicilio (zona local)</label>
+          <label class="opt"><input type="checkbox" /> Correo Argentino</label>
+          <label class="opt"><input type="checkbox" /> OCA</label>
+          <label class="opt"><input type="checkbox" /> Andreani</label>
+          <label class="opt"><input type="checkbox" /> Todo el pais</label>
+          <label class="opt"><input type="checkbox" /> Internacional</label>
+          <label class="opt"><input type="checkbox" /> Otro: <span class="line" style="width:140px; display:inline-block; margin-left:6px;"></span></label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:8px;">
+        <label>Frase o texto corto que resume el pie de pagina <span style="font-weight:400;color:#888;">(opcional)</span></label>
+        <span class="line"></span>
+        <span class="eg">Ej: "Accesorios de autor · Hecho en Argentina", "Moda sustentable desde 2018"</span>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         6. MENSAJE DE WHATSAPP
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">💬</span>
+        <span class="section-title">6 · Mensaje de WhatsApp</span>
+      </div>
+      <p class="section-subtitle">
+        Cuando un cliente hace click en "Consultar por WhatsApp", se genera automaticamente
+        un mensaje con el detalle del producto. Pueden personalizar el saludo y el cierre.
+      </p>
+
+      <div class="g2">
+        <div class="field span2">
+          <label>¿Con que frase empieza el mensaje que recibe el negocio?</label>
+          <span class="line-tall"></span>
+          <span class="eg">Ej: "Hola! Me interesan estos productos de Joyeria Luna:"<br>
+          (despues del saludo se lista automaticamente lo que consulto el cliente)</span>
+        </div>
+        <div class="field span2">
+          <label>¿Con que frase cierra el mensaje?</label>
+          <span class="line-tall"></span>
+          <span class="eg">Ej: "Podrian confirmarme disponibilidad y formas de pago y entrega? Gracias!"</span>
+        </div>
+        <div class="field">
+          <label>¿Incluir el precio de cada producto en el mensaje?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="wa_precio" /> Si</label>
+            <label class="opt"><input type="radio" name="wa_precio" /> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>¿Incluir el total estimado al final del mensaje?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="wa_total" /> Si</label>
+            <label class="opt"><input type="radio" name="wa_total" /> No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         7. PANEL DE ADMINISTRACION
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">⚙️</span>
+        <span class="section-title">7 · Panel interno</span>
+      </div>
+      <p class="section-subtitle">
+        El panel que usa el negocio para cargar productos, ver pedidos y gestionar el sitio.
+        Tildamos solo los modulos que realmente van a usar.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Herramienta</th>
+            <th>Para que sirve</th>
+            <th class="chk">Lo usan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Resumen general</strong></td>
+            <td>Pantalla de inicio con metricas y novedades del sitio</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Carga de productos</strong></td>
+            <td>Agregar, editar y desactivar productos del catalogo</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Categorias del catalogo</strong></td>
+            <td>Crear y organizar colecciones, categorias y subcategorias</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Alertas de stock bajo</strong></td>
+            <td>Aviso cuando algun producto queda con poco stock</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Editor de portada</strong></td>
+            <td>Cambiar las imagenes y textos de la pagina de inicio desde el panel</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Usuarios del sistema</strong></td>
+            <td>Agregar o quitar personas que acceden al panel interno</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Pedidos</strong></td>
+            <td>Ver y gestionar ordenes de compra (solo tienda online)</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+          <tr>
+            <td><strong>Facturacion y pagos</strong></td>
+            <td>Ver resumen de ventas y pagos recibidos (solo tienda online)</td>
+            <td class="chk"><input type="checkbox" /></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="g2" style="margin-top:16px;">
+        <div class="field">
+          <label>¿Cuantas personas van a administrar el sitio?</label>
+          <span class="line"></span>
+        </div>
+        <div class="field">
+          <label>¿Quieren que el acceso al panel sea privado con usuario y contrasena?</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="auth" /> Si</label>
+            <label class="opt"><input type="radio" name="auth" /> No (no es necesario)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         8. MARCA DE AGUA / COLORES Y ESTILO
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🎨</span>
+        <span class="section-title">8 · Colores y estilo</span>
+      </div>
+      <p class="section-subtitle">No hace falta saber de diseno — solo contarnos que les gusta.</p>
+
+      <div class="field">
+        <label>¿Tienen colores de marca definidos?</label>
+        <div class="g3" style="margin-top:8px;">
+          <div class="field">
+            <label>Color principal <span style="font-weight:400;color:#888;">(nombre o codigo #)</span></label>
+            <span class="line"></span>
+            <span class="eg">Ej: "Bordo", "Azul marino", "#1A1A2E"</span>
+          </div>
+          <div class="field">
+            <label>Color secundario</label>
+            <span class="line"></span>
+          </div>
+          <div class="field">
+            <label>Color de fondo preferido</label>
+            <span class="line"></span>
+            <span class="eg">Ej: "Blanco", "Crema", "Negro"</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Tienen referencias visuales? Pueden poner links de sitios que les gusten como referencia.</label>
+        <span class="line-tall"></span>
+      </div>
+
+      <div class="field">
+        <label>¿Como describirian el estilo que buscan para la pagina? <span style="font-weight:400;color:#888;">(marcar)</span></label>
+        <div class="opts" style="margin-top:8px;">
+          <label class="opt"><input type="checkbox" /> Minimalista / limpio</label>
+          <label class="opt"><input type="checkbox" /> Elegante / premium</label>
+          <label class="opt"><input type="checkbox" /> Moderno / tecnologico</label>
+          <label class="opt"><input type="checkbox" /> Calidez / artesanal</label>
+          <label class="opt"><input type="checkbox" /> Colorido / juvenil</label>
+          <label class="opt"><input type="checkbox" /> Oscuro / sobrio</label>
+          <label class="opt"><input type="checkbox" /> Otro: <span class="line" style="width:180px; display:inline-block; margin-left:6px;"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ══════════════════════════════════════════════
+         9. OBSERVACIONES
+    ═══════════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <span class="section-title">9 · Otras consultas u observaciones</span>
+      </div>
+      <p class="section-subtitle">Todo lo que quieran agregar que no entro en las preguntas anteriores.</p>
+      <div class="field">
+        <span class="line-xl" style="height:100px;"></span>
+      </div>
+    </div>
+
+
+  </div><!-- /doc-body -->
+</div><!-- /page -->
+
+</body>
+</html>

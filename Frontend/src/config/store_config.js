@@ -8,13 +8,6 @@ export const storeConfig = {
   // [GLOBAL] Modo de operacion de la tienda (ver STORE_MODES arriba)
   mode: STORE_MODES.CATALOG_WHATSAPP,
 
-  // [CARRITO] Habilita el icono y panel de carrito en la navbar
-  enableCart: false,
-  // [CHECKOUT] Habilita el flujo de checkout (requiere enableCart: true)
-  enableCheckout: false,
-  // [CHECKOUT] Habilita metodos de pago como MercadoPago (requiere enableCheckout: true)
-  enablePayments: false,
-
   // [WHATSAPP] Muestra el boton "Consultar por WhatsApp" en producto y carrito
   enableWhatsAppConsultation: true,
   // [PRODUCTO] Habilita la funcionalidad de lista de deseos / favoritos
@@ -23,16 +16,8 @@ export const storeConfig = {
   enableStockVisibility: true,
   // [PRODUCTO / CARRITO] Muestra precios. false = catalogo sin precios visible
   enablePrices: true,
-
-  // [PRODUCTO] Accion del boton principal en la pagina de detalle de producto
-  // Valores posibles: "whatsapp" | "cart" | "none"
-  productDetailCta: "whatsapp",
 };
 
 export function isWhatsAppMode() {
   return storeConfig.enableWhatsAppConsultation && storeConfig.mode !== STORE_MODES.CATALOG_ONLY;
-}
-
-export function isEcommerceMode() {
-  return storeConfig.mode === STORE_MODES.ECOMMERCE;
 }

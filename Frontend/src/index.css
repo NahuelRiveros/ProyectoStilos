@@ -1,89 +1,61 @@
 @import "tailwindcss";
 
+/*
+ * COLORES — NO editar los valores aquí directamente.
+ * Editar src/config/theme_config.js: los valores se inyectan
+ * automáticamente al arrancar via ThemeProvider (main.jsx).
+ *
+ * Este bloque define los FALLBACKS usados antes de que ThemeProvider
+ * aplique las variables. Deben coincidir con los defaults de theme_config.js.
+ *
+ * Guía rápida de qué afecta cada sección:
+ *   accent         → botones, badges, hovers activos, marca en navbar
+ *   content.*      → página, formularios, inputs, cards, tablas, modales
+ *   navbar (shell) → barra superior, mega-menu, menú móvil
+ *   footer         → pie de página (independiente del navbar)
+ *   admin          → sidebar y barra del backoffice
+ *   trust          → sellos de confianza del footer (ecommerce)
+ */
 @theme {
-  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-sans:    "Outfit", system-ui, sans-serif;
   --font-display: "Outfit", system-ui, sans-serif;
 
-  /* ─────────────────────────────────────────────────────────────
-   * TEMA DE CONTENIDO (página, formularios, cards)
-   * ──────────────────────────────────────────────────────────── */
-  --color-navy:   #060d1f;   /* texto navy / botón principal */
-  --color-ink:    #111827;
-  --color-muted:  #64748b;
-  --color-surface: #f8fafc;
-  --color-card:   #ffffff;
-  --color-line:   #e2e8f0;
-
-  /* ─────────────────────────────────────────────────────────────
-   * ACENTO DE MARCA  ← cambiar aquí afecta botones, actives, hovers
-   * ──────────────────────────────────────────────────────────── */
-  --color-accent:       #fbbf24;   /* champagne · color principal de acento */
-  --color-accent-on:    #0a0f1a;   /* texto legible sobre el acento */
-
-  /* alias champagne → accent (retrocompatibilidad) */
-  --color-champagne:       #000000;
+  /* acento → theme_config.js: accent, accentOn, accentLight, accentDark */
+  --color-accent:          #fbbf24;
+  --color-accent-on:       #0a0f1a;
+  --color-champagne:       #fbbf24;   /* alias accent — corregido (era #000000) */
   --color-champagne-light: #fef3c7;
   --color-champagne-dark:  #b45309;
 
-  /* ─────────────────────────────────────────────────────────────
-   * SHELL  ← bg + texto del navbar · footer · sidebar · mega-menu
-   *
-   *  Cambiar SOLO este bloque para cambiar el tema completo del shell.
-   *
-   *  ┌─ TEMA OSCURO navy (original) ───────────────────────────┐
-   *  │  --color-shell:           #060d1f;                      │
-   *  │  --color-shell-raised:    #0a1528;                      │
-   *  │  --color-shell-float:     #0d1525;                      │
-   *  │  --color-shell-text:      #ffffff;                      │
-   *  │  --color-shell-text-dim:  #94a3b8;  ← slate-400        │
-   *  └─────────────────────────────────────────────────────────┘
-   *
-   *  ┌─ TEMA CHAMPAGNE cálido ──────────────────────────────────┐
-   *  │  --color-shell:           #fef3c7;                      │
-   *  │  --color-shell-raised:    #fde68a;                      │
-   *  │  --color-shell-float:     #ffffff;                      │
-   *  │  --color-shell-text:      #1c0f00;                      │
-   *  │  --color-shell-text-dim:  #78593a;                      │
-   *  └─────────────────────────────────────────────────────────┘
-   *
-   *  ┌─ TEMA SLATE medio ──────────────────────────────────────┐
-   *  │  --color-shell:           #0f172a;                      │
-   *  │  --color-shell-raised:    #1e293b;                      │
-   *  │  --color-shell-float:     #1a2332;                      │
-   *  │  --color-shell-text:      #f1f5f9;                      │
-   *  │  --color-shell-text-dim:  #64748b;                      │
-   *  └─────────────────────────────────────────────────────────┘
-   * ──────────────────────────────────────────────────────────── */
-  --color-shell:           #fef3c7;   /* bg navbar · footer · mobile-nav · brand-strip */
-  --color-shell-raised:    #fef3c7;   /* bg mega-menu (panel desplegable) */
-  --color-shell-float:     #ffffff;   /* bg dropdown userbox / elementos flotantes */
-  --color-shell-text:      #1c0f00;   /* texto principal: links nav, nombre de marca */
-  --color-shell-text-dim:  #78593a;   /* texto secundario: links inactivos, labels, íconos */
+  /* contenido → theme_config.js: content.* */
+  --color-navy:    #060d1f;
+  --color-ink:     #111827;
+  --color-muted:   #64748b;
+  --color-surface: #f8fafc;
+  --color-card:    #ffffff;
+  --color-line:    #e2e8f0;
 
-  /* ─────────────────────────────────────────────────────────────
-   * ADMIN PANEL  ← sidebar · barra mobile · fondo del panel
-   *
-   *  Independiente del shell público — podés tener navbar champagne
-   *  y sidebar admin oscuro al mismo tiempo.
-   *
-   *  ┌─ TEMA OSCURO navy (default) ────────────────────────────┐
-   *  │  --color-admin:          #060d1f;                       │
-   *  │  --color-admin-raised:   #0a1528;                       │
-   *  │  --color-admin-text:     #f1f5f9;                       │
-   *  │  --color-admin-text-dim: #64748b;                       │
-   *  └─────────────────────────────────────────────────────────┘
-   *
-   *  ┌─ TEMA SLATE MEDIO ──────────────────────────────────────┐
-   *  │  --color-admin:          #1e293b;                       │
-   *  │  --color-admin-raised:   #334155;                       │
-   *  │  --color-admin-text:     #f8fafc;                       │
-   *  │  --color-admin-text-dim: #94a3b8;                       │
-   *  └─────────────────────────────────────────────────────────┘
-   * ──────────────────────────────────────────────────────────── */
-  --color-admin:          #060d1f;   /* bg sidebar · barra mobile admin */
-  --color-admin-raised:   #0a1528;   /* bg tope gradiente sidebar */
-  --color-admin-text:     #f1f5f9;   /* texto activo y hover en sidebar */
-  --color-admin-text-dim: #64748b;   /* texto inactivo, labels, íconos */
+  /* navbar → theme_config.js: navbar.* */
+  --color-shell:          #fef3c7;
+  --color-shell-raised:   #fde68a;
+  --color-shell-float:    #ffffff;
+  --color-shell-text:     #1c0f00;
+  --color-shell-text-dim: #78593a;
+
+  /* footer → theme_config.js: footer.* */
+  --color-footer:          #060d1f;
+  --color-footer-text:     #ffffff;
+  --color-footer-text-dim: #94a3b8;
+
+  /* admin → theme_config.js: admin.* */
+  --color-admin:          #060d1f;
+  --color-admin-raised:   #0a1528;
+  --color-admin-text:     #f1f5f9;
+  --color-admin-text-dim: #64748b;
+
+  /* trust → theme_config.js: trust.secure  |  mp: fijo, no exponer */
+  --color-trust-secure: #22c55e;
+  --color-mp:           #009EE3;
 }
 
 html,
@@ -341,6 +313,82 @@ body {
   .product-option:hover { border-color: var(--color-navy); background-color: var(--color-surface); }
   .product-option-active { border-color: var(--color-accent); background-color: color-mix(in srgb, var(--color-accent) 24%, white); color: var(--color-champagne-dark); }
   .product-option-disabled { cursor: not-allowed; border-color: color-mix(in srgb, var(--color-line) 50%, transparent); color: color-mix(in srgb, var(--color-muted) 30%, transparent); text-decoration: line-through; }
+
+  /* ── Footer — sellos de confianza ───────────────────────────
+     Todas las clases usan variables del @theme, así el footer
+     hereda el tema del shell automáticamente.
+     ──────────────────────────────────────────────────────────── */
+
+  /* Separador superior de la sección de sellos */
+  .footer-trust-divider {
+    border-top: 1px solid color-mix(in srgb, var(--color-footer-text) 10%, transparent);
+    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+  }
+
+  /* Badge base — contenedor de cada sello */
+  .footer-badge {
+    display:         flex;
+    align-items:     center;
+    gap:             0.375rem;
+    border-radius:   0.5rem;
+    border:          1px solid;
+    padding:         0.375rem 0.75rem;
+  }
+
+  /* Sello MercadoPago — color de marca MP */
+  .footer-badge-mp {
+    border-color:     color-mix(in srgb, var(--color-mp) 25%, transparent);
+    background-color: color-mix(in srgb, var(--color-mp) 8%, transparent);
+  }
+  .footer-badge-mp-text {
+    font-size:      0.5625rem;
+    font-weight:    900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color:          var(--color-mp);
+    line-height:    1.2;
+  }
+
+  /* Sello Compra Segura — usa --color-trust-secure */
+  .footer-badge-secure {
+    border-color:     color-mix(in srgb, var(--color-trust-secure) 25%, transparent);
+    background-color: color-mix(in srgb, var(--color-trust-secure) 8%, transparent);
+    color:            color-mix(in srgb, var(--color-trust-secure) 85%, #000);
+  }
+  .footer-badge-secure-text {
+    font-size:      0.5625rem;
+    font-weight:    900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height:    1.2;
+  }
+
+  /* Sello SSL / HTTPS — usa --color-footer-* */
+  .footer-badge-ssl {
+    border-color:     color-mix(in srgb, var(--color-footer-text) 15%, transparent);
+    background-color: color-mix(in srgb, var(--color-footer-text) 5%, transparent);
+    color:            var(--color-footer-text-dim);
+    font-size:        0.5625rem;
+    font-weight:      600;
+    text-transform:   uppercase;
+    letter-spacing:   0.06em;
+  }
+
+  /* Textos legales del footer (Defensa del Consumidor, etc.) */
+  .footer-legal-text {
+    font-size:   0.625rem;
+    line-height: 1.5;
+    color:       color-mix(in srgb, var(--color-footer-text-dim) 55%, transparent);
+  }
+  .footer-legal-link {
+    text-underline-offset: 0.125rem;
+    transition:            color 0.15s ease;
+  }
+  .footer-legal-link:hover {
+    color:           var(--color-footer-text-dim);
+    text-decoration: underline;
+  }
 
   @media (min-width: 1024px) {
     .nav-list { display: flex; }

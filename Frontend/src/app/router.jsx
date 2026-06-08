@@ -23,9 +23,9 @@ import AdminHomeConfigPage from "../pages/admin/admin_home_config_page";
 
 import CatalogPage from "../pages/productos/catalog_page";
 import ProductDetailPage from "../pages/productos/product_detail_page";
-import CartPage from "../pages/productos/cart_page";
+import CartPage from "../cart/cart_page";
 import CheckoutPage from "../pages/productos/checkout_page";
-import { adminConfig, storeConfig } from "../config/app_config";
+import { adminConfig, cartConfig } from "../config/app_config";
 
 export const router = createBrowserRouter([
   {
@@ -89,14 +89,14 @@ export const router = createBrowserRouter([
 
       {
         path: "carrito",
-        element: storeConfig.enableCart
-          ? <CartPage />
+        element: cartConfig.enableCart
+          ? <ProtectedRoute><CartPage /></ProtectedRoute>
           : <Navigate to="/catalogo" replace />,
       },
       {
         path: "checkout",
-        element: storeConfig.enableCheckout
-          ? <CheckoutPage />
+        element: cartConfig.enableCheckout
+          ? <ProtectedRoute><CheckoutPage /></ProtectedRoute>
           : <Navigate to="/catalogo" replace />,
       },
       { path: "test", element: <Navigate to="/catalogo" replace /> },

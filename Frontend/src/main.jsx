@@ -9,15 +9,18 @@ import { router } from "./app/router";
 import { queryClient } from "./app/query_client";
 import { AuthProvider } from "./auth/auth_context";
 import { ToastProvider } from "./context/toast_context";
+import ThemeProvider from "./app/theme_provider";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>
 );
