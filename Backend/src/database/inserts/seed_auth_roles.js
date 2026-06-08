@@ -16,8 +16,9 @@ export async function seed_auth_roles() {
   console.log("🌱 Verificando roles base (AUTH_01_ROL)...");
 
   const roles = [
-    { AUTH01_NOMBRE: "Administrador", AUTH01_ABREVIATURA: "ADM", AUTH01_NIVEL: 100 },
-    { AUTH01_NOMBRE: "Usuario",       AUTH01_ABREVIATURA: "USR", AUTH01_NIVEL: 10  },
+    { AUTH01_NOMBRE: "Super Administrador", AUTH01_ABREVIATURA: "SADM", AUTH01_NIVEL: 200 },
+    { AUTH01_NOMBRE: "Administrador",       AUTH01_ABREVIATURA: "ADM",  AUTH01_NIVEL: 100 },
+    { AUTH01_NOMBRE: "Usuario",             AUTH01_ABREVIATURA: "USR",  AUTH01_NIVEL: 10  },
     // ── Roles del proyecto (agregar acá) ──────────────────────────────
     // { AUTH01_NOMBRE: "Staff", AUTH01_ABREVIATURA: "STF", AUTH01_NIVEL: 50 },
   ];

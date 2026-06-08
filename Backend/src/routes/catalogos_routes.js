@@ -49,37 +49,55 @@ import { ACCESS } from "./access_roles.js";
 
 export const catalogosRouter = Router();
 
+// Roles del sistema: no se pueden editar ni eliminar vía API
+const ROLES_SISTEMA = ["SADM", "ADM", "USR"];
+
+async function protegerRolSistema(req, res, next) {
+  const rol = await Auth01Rol.findByPk(req.params.id, {
+    attributes: ["AUTH01_ABREVIATURA"],
+  });
+  if (!rol) return next(); // el 404 lo maneja el controller
+  if (ROLES_SISTEMA.includes(rol.AUTH01_ABREVIATURA)) {
+    return res.status(403).json({
+      ok: false,
+      codigo: "ROL_SISTEMA",
+      mensaje: `El rol "${rol.AUTH01_ABREVIATURA}" es del sistema y no puede modificarse`,
+    });
+  }
+  return next();
+}
+
 // =============================================================
 // ROLES  [auth requerido]
 // GET    /catalogos/roles
 // GET    /catalogos/roles/paginado
 // GET    /catalogos/roles/:id
-// POST   /catalogos/roles             [ADMIN]
-// PUT    /catalogos/roles/:id         [ADMIN]
-// DELETE /catalogos/roles/:id         [ADMIN]
-// PUT    /catalogos/roles/:id/reactivar [ADMIN]
+// POST   /catalogos/roles                 [ADMIN]
+// PUT    /catalogos/roles/:id             [ADMIN — no sistema]
+// DELETE /catalogos/roles/:id             [ADMIN — no sistema]
+// PUT    /catalogos/roles/:id/reactivar   [ADMIN — no sistema]
 // =============================================================
 
 const ROLES_CONFIG = {
   model:           Auth01Rol,
   nombre:          "roles",
   where:           { AUTH01_FECHABAJA: null },
-  attributes:      ["ID_AUTH01", "AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
-  order:           [["AUTH01_NOMBRE", "ASC"]],
+  attributes:      ["ID_AUTH01", "AUTH01_NOMBRE", "AUTH01_ABREVIATURA", "AUTH01_NIVEL"],
+  order:           [["AUTH01_NIVEL", "DESC"], ["AUTH01_NOMBRE", "ASC"]],
   campoBusqueda:   "AUTH01_NOMBRE",
   campoFechaBaja:  "AUTH01_FECHABAJA",
   allowHardDelete: false,
-  createFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
-  updateFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA"],
+  createFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA", "AUTH01_NIVEL"],
+  updateFields:    ["AUTH01_NOMBRE", "AUTH01_ABREVIATURA", "AUTH01_NIVEL"],
 };
 
 catalogosRouter.get(   "/roles",               requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListController(ROLES_CONFIG));
 catalogosRouter.get(   "/roles/paginado",      requireAuth, requireRole(...ACCESS.ROLES_GET),    crearListPaginadoController(ROLES_CONFIG));
 catalogosRouter.get(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_GET),    crearGetByIdController(ROLES_CONFIG));
 catalogosRouter.post(  "/roles",               requireAuth, requireRole(...ACCESS.ROLES_CREATE), crearCreateController(ROLES_CONFIG));
-catalogosRouter.put(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_UPDATE), crearUpdateController(ROLES_CONFIG));
-catalogosRouter.delete("/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_DELETE), crearSoftDeleteController(ROLES_CONFIG));
-catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireRole(...ACCESS.ROLES_DELETE), crearReactivarController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_UPDATE), protegerRolSistema, crearUpdateController(ROLES_CONFIG));
+catalogosRouter.delete("/roles/:id",           requireAuth, requireRole(...ACCESS.ROLES_DELETE), protegerRolSistema, crearSoftDeleteController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireRole(...ACCESS.ROLES_DELETE), protegerRolSistema, crearReactivarController(ROLES_CONFIG));
 
 // =============================================================
 // CATEGORÍAS DE PRODUCTO  [GET público — lo usa el catálogo]
