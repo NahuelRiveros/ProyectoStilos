@@ -7,8 +7,8 @@ import { Auth06Suscripcion } from "./auth_06_suscripcion.js";
 
 import { pers_01_persona } from "./personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "./personas/pers_02_tipo_documento.js";
-import { pers_03_sexo } from "./Personas/pers_03_sexo.js";
-import { pers_04_estado_civil } from "./Personas/pers_04_estado_civil.js";
+import { pers_03_sexo } from "./personas/pers_03_sexo.js";
+import { pers_04_estado_civil } from "./personas/pers_04_estado_civil.js";
 import { pers_05_provincia } from "./personas/pers_05_provincia.js";
 import { pers_06_localidad } from "./personas/pers_06_localidad.js";
 

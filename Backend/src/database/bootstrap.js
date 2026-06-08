@@ -18,8 +18,8 @@ import {
 } from "../models/index.js";
 import { pers_01_persona } from "../models/personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "../models/personas/pers_02_tipo_documento.js";
-import { pers_03_sexo } from "../models/Personas/pers_03_sexo.js";
-import { pers_04_estado_civil } from "../models/Personas/pers_04_estado_civil.js";
+import { pers_03_sexo } from "../models/personas/pers_03_sexo.js";
+import { pers_04_estado_civil } from "../models/personas/pers_04_estado_civil.js";
 import { pers_05_provincia } from "../models/personas/pers_05_provincia.js";
 import { pers_06_localidad } from "../models/personas/pers_06_localidad.js";
 
