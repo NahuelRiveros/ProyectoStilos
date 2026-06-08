@@ -101,6 +101,7 @@ function mapProducto(p) {
     precio_anterior: p.PROD03_PRECIO_ANTERIOR ? parseFloat(p.PROD03_PRECIO_ANTERIOR) : null,
     descuento:       p.PROD03_DESCUENTO  ?? null,
     imagenes:        p.PROD03_IMAGENES   ?? [],
+    codigo_ref:      p.PROD03_COD_REF    ?? null,
     colores:         p.PROD03_COLORES    ?? [],
     badge:           p.PROD03_BADGE      ?? null,
     home_seccion:    p.PROD03_HOME_SECCION ?? null,
@@ -247,7 +248,7 @@ export async function crearProducto(req, res) {
   try {
     const CAMPOS = [
       "RELA_PROD01", "RELA_PROD02", "RELA_PROD07",
-      "PROD03_NOMBRE", "PROD03_DESCRIPCION",
+      "PROD03_NOMBRE", "PROD03_DESCRIPCION", "PROD03_COD_REF",
       "PROD03_PRECIO", "PROD03_PRECIO_ANTERIOR", "PROD03_DESCUENTO",
       "PROD03_BADGE", "PROD03_HOME_SECCION", "PROD03_IMAGENES", "PROD03_COLORES", "PROD03_ACTIVO", "PROD03_FECHAALTA",
     ];
@@ -283,7 +284,7 @@ export async function actualizarProducto(req, res) {
 
     const CAMPOS = [
       "RELA_PROD01", "RELA_PROD02", "RELA_PROD07",
-      "PROD03_NOMBRE", "PROD03_DESCRIPCION",
+      "PROD03_NOMBRE", "PROD03_DESCRIPCION", "PROD03_COD_REF",
       "PROD03_PRECIO", "PROD03_PRECIO_ANTERIOR", "PROD03_DESCUENTO",
       "PROD03_BADGE", "PROD03_HOME_SECCION", "PROD03_IMAGENES", "PROD03_COLORES", "PROD03_ACTIVO",
     ];

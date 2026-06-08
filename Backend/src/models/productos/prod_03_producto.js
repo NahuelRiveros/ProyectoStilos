@@ -69,8 +69,21 @@ export const Prod03Producto = sequelize.define(
       allowNull: true,
     },
 
+    // Código de referencia interno (SKU, código de proveedor, etc.)
+    PROD03_COD_REF: {
+      type: DataTypes.STRING(60),
+      allowNull: true,
+    },
+
     // Array JSON: [{ src: string, alt?: string }]
     PROD03_IMAGENES: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: [],
+    },
+
+    // Array JSON: IDs de colores asociados al producto [ 1, 3, 5 ]
+    PROD03_COLORES: {
       type: DataTypes.JSONB,
       allowNull: false,
       defaultValue: [],
