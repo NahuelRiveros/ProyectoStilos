@@ -52,6 +52,22 @@ export const catalogosRouter = Router();
 // Roles del sistema: no se pueden editar ni eliminar vía API
 const ROLES_SISTEMA = ["SADM", "ADM", "USR"];
 
+// Nivel máximo permitido para roles personalizados (staff).
+// Los niveles >= 100 están reservados para roles del sistema (ADM, SADM).
+function validarNivelRol(req, res, next) {
+  const nivel = req.body?.AUTH01_NIVEL;
+  if (nivel === undefined || nivel === null || nivel === "") return next();
+  const n = Number(nivel);
+  if (!Number.isInteger(n) || n < 1 || n > 99) {
+    return res.status(400).json({
+      ok: false,
+      codigo: "NIVEL_INVALIDO",
+      mensaje: "AUTH01_NIVEL debe ser un entero entre 1 y 99 para roles personalizados",
+    });
+  }
+  return next();
+}
+
 async function protegerRolSistema(req, res, next) {
   const rol = await Auth01Rol.findByPk(req.params.id, {
     attributes: ["AUTH01_ABREVIATURA"],
@@ -94,8 +110,8 @@ const ROLES_CONFIG = {
 catalogosRouter.get(   "/roles",               requireAuth, requireAccess(ACCESS.ROLES_GET),    crearListController(ROLES_CONFIG));
 catalogosRouter.get(   "/roles/paginado",      requireAuth, requireAccess(ACCESS.ROLES_GET),    crearListPaginadoController(ROLES_CONFIG));
 catalogosRouter.get(   "/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_GET),    crearGetByIdController(ROLES_CONFIG));
-catalogosRouter.post(  "/roles",               requireAuth, requireAccess(ACCESS.ROLES_CREATE), crearCreateController(ROLES_CONFIG));
-catalogosRouter.put(   "/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_UPDATE), protegerRolSistema, crearUpdateController(ROLES_CONFIG));
+catalogosRouter.post(  "/roles",               requireAuth, requireAccess(ACCESS.ROLES_CREATE), validarNivelRol, crearCreateController(ROLES_CONFIG));
+catalogosRouter.put(   "/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_UPDATE), protegerRolSistema, validarNivelRol, crearUpdateController(ROLES_CONFIG));
 catalogosRouter.delete("/roles/:id",           requireAuth, requireAccess(ACCESS.ROLES_DELETE), protegerRolSistema, crearSoftDeleteController(ROLES_CONFIG));
 catalogosRouter.put(   "/roles/:id/reactivar", requireAuth, requireAccess(ACCESS.ROLES_DELETE), protegerRolSistema, crearReactivarController(ROLES_CONFIG));
 

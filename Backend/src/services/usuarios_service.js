@@ -224,7 +224,7 @@ export async function asignarRolesUsuario(id, abreviaturas) {
     return { ok: false, mensaje: "Enviá al menos un rol (campo roles: string[])" };
   }
 
-  const abrs = abreviaturas.map((a) => String(a).trim().toUpperCase());
+  const abrs = [...new Set(abreviaturas.map((a) => String(a).trim().toUpperCase()))];
 
   if (abrs.includes(ROL_SISTEMA_EXCLUSIVO)) {
     return { ok: false, mensaje: `El rol "${ROL_SISTEMA_EXCLUSIVO}" es exclusivo del sistema y no puede asignarse manualmente` };

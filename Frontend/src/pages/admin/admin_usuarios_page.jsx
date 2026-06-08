@@ -404,13 +404,15 @@ export default function AdminUsuariosPage() {
     },
   });
 
-  const { data: roles = [] } = useQuery({
+  const { data: rolesRaw = [] } = useQuery({
     queryKey: ["roles"],
     queryFn: async () => {
       const r = await getRoles();
       return r.data?.data ?? [];
     },
   });
+  // SADM es exclusivo del sistema — no debe aparecer en selección manual
+  const roles = rolesRaw.filter((r) => r.AUTH01_ABREVIATURA !== "SADM");
 
   function invalidar() {
     qc.invalidateQueries({ queryKey: ["admin-usuarios"] });
