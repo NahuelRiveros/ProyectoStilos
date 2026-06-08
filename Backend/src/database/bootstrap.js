@@ -5,6 +5,7 @@ import {
   Auth04LogSesion,
   Auth05UsuarioRol,
   Auth06Suscripcion,
+  Auth07SuscripcionLog,
   Prod01Categoria,
   Prod02Genero,
   Prod03Producto,
@@ -45,7 +46,8 @@ async function sincronizar_modelos() {
     Auth03ResetToken, // depende de Auth02Usuario
     Auth04LogSesion,  // depende de Auth02Usuario
     Auth05UsuarioRol,   // junction N:N: depende de Auth01Rol y Auth02Usuario
-    Auth06Suscripcion,  // tabla independiente — estado de suscripción del sistema
+    Auth06Suscripcion,      // tabla independiente — estado de suscripción del sistema
+    Auth07SuscripcionLog,   // historial de acciones sobre la suscripción
     ////////
     pers_03_sexo,
     pers_02_tipo_documento,

@@ -7,9 +7,11 @@
 //   GET  /api/admin/roles/jerarquia      → estructura y permisos de cada nivel
 //
 // Suscripción → solo SADM (Super Admin, dueño del sistema):
-//   GET  /api/admin/suscripcion          → estado actual
-//   POST /api/admin/suscripcion/activar  → activar/renovar N días
-//   PUT  /api/admin/suscripcion/gracia   → cambiar días de gracia
+//   GET    /api/admin/suscripcion           → estado actual
+//   POST   /api/admin/suscripcion/activar   → activar/renovar N días
+//   PUT    /api/admin/suscripcion/gracia    → cambiar días de gracia
+//   DELETE /api/admin/suscripcion           → eliminar suscripción
+//   GET    /api/admin/suscripcion/historial → últimas 50 acciones
 // =============================================================
 
 import { Router } from "express";
@@ -19,6 +21,7 @@ import {
   activarSuscripcionController,
   actualizarGraciaController,
   eliminarSuscripcionController,
+  historialController,
 } from "../controllers/suscripcion_controller.js";
 
 import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
@@ -102,3 +105,4 @@ adminRouter.get(   "/suscripcion",         requireAuth, requireRole(ROLES.SUPER_
 adminRouter.post(  "/suscripcion/activar", requireAuth, requireRole(ROLES.SUPER_ADMIN), activarSuscripcionController);
 adminRouter.put(   "/suscripcion/gracia",  requireAuth, requireRole(ROLES.SUPER_ADMIN), actualizarGraciaController);
 adminRouter.delete("/suscripcion",         requireAuth, requireRole(ROLES.SUPER_ADMIN), eliminarSuscripcionController);
+adminRouter.get(   "/suscripcion/historial", requireAuth, requireRole(ROLES.SUPER_ADMIN), historialController);

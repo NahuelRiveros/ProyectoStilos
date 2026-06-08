@@ -1,4 +1,4 @@
-import { Auth06Suscripcion } from "../models/index.js";
+import { Auth06Suscripcion, Auth07SuscripcionLog } from "../models/index.js";
 
 // ==========================================================
 // ESTADOS DE SUSCRIPCIÓN
@@ -52,6 +52,18 @@ export function diasRestantesGracia(suscripcion) {
 }
 
 // ==========================================================
+// CALCULAR DÍAS RESTANTES HASTA EL VENCIMIENTO
+// ==========================================================
+
+export function diasHastaVencimiento(suscripcion) {
+  if (!suscripcion) return null;
+  const hoy      = new Date(); hoy.setHours(0, 0, 0, 0);
+  const fechaFin = new Date(suscripcion.AUTH06_FECHA_FIN); fechaFin.setHours(0, 0, 0, 0);
+  const diff     = Math.ceil((fechaFin - hoy) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff : null;
+}
+
+// ==========================================================
 // OBTENER SUSCRIPCIÓN ACTUAL (única fila en la tabla)
 // ==========================================================
 
@@ -86,6 +98,32 @@ export async function getSuscripcionEstado() {
 // ==========================================================
 
 // ==========================================================
+// REGISTRAR LOG DE ACCIÓN
+// ==========================================================
+
+export async function registrarLog({ accion, dias, fechaFinResult, notas, emailSadm }) {
+  await Auth07SuscripcionLog.create({
+    AUTH07_ACCION:          accion,
+    AUTH07_DIAS:            dias          ?? null,
+    AUTH07_FECHA_FIN_RESULT: fechaFinResult ?? null,
+    AUTH07_NOTAS:           notas         ?? null,
+    AUTH07_EMAIL:           emailSadm,
+    AUTH07_FECHA:           new Date(),
+  });
+}
+
+// ==========================================================
+// OBTENER HISTORIAL DE ACCIONES
+// ==========================================================
+
+export async function getHistorial() {
+  return await Auth07SuscripcionLog.findAll({
+    order: [["AUTH07_FECHA", "DESC"]],
+    limit: 50,
+  });
+}
+
+// ==========================================================
 // ELIMINAR SUSCRIPCIÓN (borra todos los registros de la tabla)
 // Deja el sistema en estado SIN_SUSCRIPCION.
 // ==========================================================
@@ -95,7 +133,7 @@ export async function eliminarSuscripcion() {
   return { ok: true, mensaje: "Suscripción eliminada. El sistema queda sin suscripción activa.", eliminados };
 }
 
-export async function activarSuscripcion({ dias, notas }) {
+export async function activarSuscripcion({ dias, notas, emailSadm }) {
   const cantDias = Number(dias);
 
   if (!cantDias || cantDias < 1 || cantDias > 365) {
@@ -116,18 +154,21 @@ export async function activarSuscripcion({ dias, notas }) {
     const nuevaFin = new Date(base);
     nuevaFin.setDate(nuevaFin.getDate() + cantDias);
 
+    const nuevaFinStr = nuevaFin.toISOString().split("T")[0];
     await existente.update({
-      AUTH06_FECHA_FIN:    nuevaFin.toISOString().split("T")[0],
+      AUTH06_FECHA_FIN:    nuevaFinStr,
       AUTH06_RENOVACIONES: (existente.AUTH06_RENOVACIONES ?? 0) + 1,
       AUTH06_NOTAS:        notas ?? existente.AUTH06_NOTAS,
     });
+
+    await registrarLog({ accion: "RENOVAR", dias: cantDias, fechaFinResult: nuevaFinStr, notas, emailSadm });
 
     return {
       ok: true,
       mensaje: `Suscripción renovada por ${cantDias} días`,
       data: {
         fecha_inicio:  existente.AUTH06_FECHA_INICIO,
-        fecha_fin:     nuevaFin.toISOString().split("T")[0],
+        fecha_fin:     nuevaFinStr,
         renovaciones:  existente.AUTH06_RENOVACIONES,
         estado:        ESTADO_SUSCRIPCION.ACTIVO,
       },
@@ -137,14 +178,17 @@ export async function activarSuscripcion({ dias, notas }) {
   // Primera activación
   const fechaFin = new Date(hoy);
   fechaFin.setDate(fechaFin.getDate() + cantDias);
+  const fechaFinStr = fechaFin.toISOString().split("T")[0];
 
   const nueva = await Auth06Suscripcion.create({
     AUTH06_FECHA_INICIO:  hoy.toISOString().split("T")[0],
-    AUTH06_FECHA_FIN:     fechaFin.toISOString().split("T")[0],
+    AUTH06_FECHA_FIN:     fechaFinStr,
     AUTH06_DIAS_GRACIA:   10,
     AUTH06_RENOVACIONES:  1,
     AUTH06_NOTAS:         notas ?? null,
   });
+
+  await registrarLog({ accion: "ACTIVAR", dias: cantDias, fechaFinResult: fechaFinStr, notas, emailSadm });
 
   return {
     ok: true,

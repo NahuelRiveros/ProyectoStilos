@@ -4,6 +4,7 @@ import { Auth03ResetToken } from "./auth_03_reset_token.js";
 import { Auth04LogSesion } from "./auth_04_log_sesion.js";
 import { Auth05UsuarioRol } from "./auth_05_usuario_rol.js";
 import { Auth06Suscripcion } from "./auth_06_suscripcion.js";
+import { Auth07SuscripcionLog } from "./auth_07_suscripcion_log.js";
 
 import { pers_01_persona } from "./personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "./personas/pers_02_tipo_documento.js";
@@ -53,6 +54,7 @@ export {
   Auth04LogSesion,
   Auth05UsuarioRol,
   Auth06Suscripcion,
+  Auth07SuscripcionLog,
   // Personas
   pers_01_persona,
   pers_02_tipo_documento,
