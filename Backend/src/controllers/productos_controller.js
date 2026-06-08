@@ -133,8 +133,9 @@ async function obtenerCategoriaYDescendientes(id) {
 
 // =============================================================
 // GET /productos
-// ?genero=damas  &categoria=remeras  &precio_max=5000
-// &solo_ofertas=true  &solo_stock=true
+// ?genero=damas  &categoria=remeras  &marca=nike  &precio_max=5000
+// &solo_ofertas=true  &solo_stock=true  &q=remera
+// &home_seccion=carousel
 // &orden=novedad|precio_asc|precio_desc|nombre_asc
 // &pagina=1  &por_pagina=12
 // =============================================================
@@ -144,7 +145,7 @@ export async function listarProductos(req, res) {
     const {
       genero, categoria, marca, precio_max,
       solo_ofertas, solo_stock,
-      home_seccion,
+      home_seccion, q,
       orden, pagina, por_pagina,
     } = req.query;
 
@@ -165,6 +166,10 @@ export async function listarProductos(req, res) {
 
     if (home_seccion) {
       where.PROD03_HOME_SECCION = home_seccion;
+    }
+
+    if (q && q.trim()) {
+      where.PROD03_NOMBRE = { [Op.iLike]: `%${q.trim()}%` };
     }
 
     // "solo con stock" → excluye los marcados como agotados
@@ -360,8 +365,11 @@ export async function obtenerStock(req, res) {
 
     const stocks = await Prod05Stock.findAll({
       where:   { RELA_PROD03: id },
-      include: [{ model: Prod04Talle, as: "talle", attributes: ["ID_PROD04", "PROD04_NOMBRE", "PROD04_ORDEN"] }],
-      order:   [[{ model: Prod04Talle, as: "talle" }, "PROD04_ORDEN", "ASC"]],
+      include: [
+        { model: Prod04Talle, as: "talle",  attributes: ["ID_PROD04", "PROD04_NOMBRE", "PROD04_ORDEN"] },
+        { model: Prod06Color, as: "color",  attributes: ["ID_PROD06", "PROD06_NOMBRE", "PROD06_HEX"],   required: false },
+      ],
+      order: [[{ model: Prod04Talle, as: "talle" }, "PROD04_ORDEN", "ASC"]],
     });
 
     return okResponse(res, { data: stocks, mensaje: "Stock obtenido correctamente" });
@@ -393,13 +401,13 @@ export async function actualizarStock(req, res) {
 
     await sequelize.transaction(async (t) => {
       for (const entrada of entradas) {
-        const { talle_id = null, cantidad } = entrada;
+        const { talle_id = null, color_id = null, cantidad } = entrada;
 
         if (typeof cantidad !== "number" || cantidad < 0) continue;
 
         const [registro] = await Prod05Stock.findOrCreate({
-          where:    { RELA_PROD03: id, RELA_PROD04: talle_id },
-          defaults: { RELA_PROD03: id, RELA_PROD04: talle_id, PROD05_STOCK: cantidad, PROD05_FECHAALTA: hoy },
+          where:    { RELA_PROD03: id, RELA_PROD04: talle_id, RELA_PROD06: color_id },
+          defaults: { RELA_PROD03: id, RELA_PROD04: talle_id, RELA_PROD06: color_id, PROD05_STOCK: cantidad, PROD05_FECHAALTA: hoy },
           transaction: t,
         });
 
@@ -412,7 +420,10 @@ export async function actualizarStock(req, res) {
     // devuelve el stock actualizado
     const stockActualizado = await Prod05Stock.findAll({
       where:   { RELA_PROD03: id },
-      include: [{ model: Prod04Talle, as: "talle", attributes: ["ID_PROD04", "PROD04_NOMBRE"] }],
+      include: [
+        { model: Prod04Talle, as: "talle",  attributes: ["ID_PROD04", "PROD04_NOMBRE", "PROD04_ORDEN"] },
+        { model: Prod06Color, as: "color",  attributes: ["ID_PROD06", "PROD06_NOMBRE", "PROD06_HEX"],   required: false },
+      ],
     });
 
     return okResponse(res, { data: stockActualizado, mensaje: "Stock actualizado correctamente" });

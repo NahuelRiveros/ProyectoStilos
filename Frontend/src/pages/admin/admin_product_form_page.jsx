@@ -66,15 +66,21 @@ function productoToForm(p) {
 function stockToEdit(rows, talles) {
   if (rows.length > 0) {
     return rows.map((r) => ({
-      talle_id: r.talle_id,
-      nombre:   r.talle ?? "Sin talle",
-      cantidad: String(r.stock),
+      talle_id:    r.talle_id,
+      nombre:      r.talle     ?? "Sin talle",
+      color_id:    r.color_id  ?? null,
+      color_nombre: r.color    ?? null,
+      color_hex:   r.color_hex ?? null,
+      cantidad:    String(r.stock),
     }));
   }
   return talles.slice(0, 3).map((t) => ({
-    talle_id: t.id,
-    nombre:   t.nombre,
-    cantidad: "0",
+    talle_id:    t.id,
+    nombre:      t.nombre,
+    color_id:    null,
+    color_nombre: null,
+    color_hex:   null,
+    cantidad:    "0",
   }));
 }
 
@@ -165,17 +171,19 @@ export default function AdminProductFormPage() {
           const t = tallesCat.find((t) => t.id === Number(v));
           return { ...row, talle_id: v ? Number(v) : null, nombre: t?.nombre ?? "Sin talle" };
         }
+        if (field === "color_id") {
+          const c = coloresCat.find((c) => c.id === Number(v));
+          return { ...row, color_id: v ? Number(v) : null, color_nombre: c?.nombre ?? null, color_hex: c?.hex ?? null };
+        }
         return { ...row, cantidad: v };
       }),
     );
   }
 
   function addStockRow() {
-    const used = stock.map((r) => r.talle_id);
-    const next = tallesCat.find((t) => !used.includes(t.id));
     setStock((p) => [
       ...p,
-      { talle_id: next?.id ?? null, nombre: next?.nombre ?? "Sin talle", cantidad: "0" },
+      { talle_id: null, nombre: "Sin talle", color_id: null, color_nombre: null, color_hex: null, cantidad: "0" },
     ]);
   }
 
@@ -253,7 +261,7 @@ export default function AdminProductFormPage() {
 
     const stockEntries = stock
       .filter((r) => r.cantidad !== "")
-      .map((r) => ({ talle_id: r.talle_id, cantidad: Number(r.cantidad) }));
+      .map((r) => ({ talle_id: r.talle_id, color_id: r.color_id ?? null, cantidad: Number(r.cantidad) }));
 
     try {
       let productoId;
@@ -582,13 +590,14 @@ export default function AdminProductFormPage() {
               <div className="rounded-2xl bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-start justify-between">
                   <div>
-                    <h2 className="text-[11px] font-black uppercase tracking-widest text-muted">Stock por talle</h2>
-                    <p className="mt-0.5 text-xs text-muted">Dejá un talle en 0 para marcarlo como agotado.</p>
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-muted">Stock por variante</h2>
+                    <p className="mt-0.5 text-xs text-muted">Cada fila es una combinación de talle + color. Dejá 0 para marcar como agotado.</p>
                   </div>
                 </div>
                 <StockSection
                   rows={stock}
                   tallesCatalogo={tallesCat}
+                  coloresCatalogo={coloresCat}
                   onSet={setStockField}
                   onAdd={addStockRow}
                   onRemove={removeStockRow}

@@ -48,11 +48,14 @@ export async function actualizarProducto(id, payload) {
 export async function getProductoStock(id) {
   const { data } = await http.get(`/productos/${id}/stock`);
   return data.data.map((s) => ({
-    id: s.ID_PROD05,
+    id:          s.ID_PROD05,
     producto_id: s.RELA_PROD03,
-    talle_id: s.RELA_PROD04,
-    talle: s.talle?.PROD04_NOMBRE ?? null,
-    stock: s.PROD05_STOCK,
+    talle_id:    s.RELA_PROD04,
+    talle:       s.talle?.PROD04_NOMBRE ?? null,
+    color_id:    s.RELA_PROD06 ?? null,
+    color:       s.color?.PROD06_NOMBRE ?? null,
+    color_hex:   s.color?.PROD06_HEX    ?? null,
+    stock:       s.PROD05_STOCK,
   }));
 }
 
