@@ -44,7 +44,8 @@ export function createApp() {
   // ==========================================================
 
   // CORS primero — responde el preflight OPTIONS antes de cualquier otro middleware
-  app.options("*", cors(corsOptions));
+  // Express 5 / path-to-regexp v8: "*" ya no es válido, usar regex
+  app.options(/.*/, cors(corsOptions));
   app.use(cors(corsOptions));
 
   // ==========================================================
