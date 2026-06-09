@@ -23,6 +23,8 @@ export const catalogConfig = {
   // ── Textos del menú ────────────────────────────────────────────────────────
   navProductsLabel: "Productos",
   navHomeLabel: "Home",
+  navAboutLabel: "Nosotros",
+  navContactLabel: "Contacto",
 
   // ── Cómo se llaman las categorías en este negocio ──────────────────────────
   // Aparecen en filtros, breadcrumbs y menús del catálogo
