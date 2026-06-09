@@ -19,7 +19,8 @@ import AdminProductsPage from "../pages/admin/admin_products_page";
 import AdminProductFormPage from "../pages/admin/admin_product_form_page";
 import AdminCatalogsPage from "../pages/admin/admin_catalogs_page";
 import AdminStockAlertsPage from "../pages/admin/admin_stock_alerts_page";
-import AdminHomeConfigPage from "../pages/admin/admin_home_config_page";
+import AdminHomeConfigPage      from "../pages/admin/admin_home_config_page";
+import AdminWhatsappConfigPage  from "../pages/admin/admin_whatsapp_config_page";
 
 import CatalogPage from "../pages/productos/catalog_page";
 import ProductDetailPage from "../pages/productos/product_detail_page";
@@ -91,6 +92,7 @@ export const router = createBrowserRouter([
           ...(adminConfig.modules.catalogs ? [{ path: "catalogos", element: <AdminCatalogsPage /> }] : []),
           ...(adminConfig.modules.stockAlerts ? [{ path: "stock-alertas", element: <AdminStockAlertsPage /> }] : []),
           ...(adminConfig.modules.home ? [{ path: "home", element: <AdminHomeConfigPage /> }] : []),
+          ...(adminConfig.modules.whatsapp ? [{ path: "whatsapp", element: <AdminWhatsappConfigPage /> }] : []),
         ],
       }] : []),
 

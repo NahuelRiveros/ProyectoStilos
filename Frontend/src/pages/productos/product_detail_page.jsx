@@ -10,6 +10,7 @@ import { useCart } from "../../cart/cart_context";
 import { useAuth } from "../../auth/auth_context";
 import { abrirWhatsApp, buildWhatsAppMessage } from "../../config/whatsapp_config";
 import { isWhatsAppMode, isEcommerceMode, storeConfig, cartConfig } from "../../config/app_config";
+import { useWhatsappConfig } from "../../api/whatsapp_config_api";
 
 const fmt = (n) =>
   `$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
@@ -20,6 +21,7 @@ export default function ProductDetailPage() {
   const { addItem: addWhatsAppItem } = useWhatsAppCart();
   const { addItem: addCartItem }     = useCart();
   const { isAuth }                   = useAuth();
+  const whatsappCfg                  = useWhatsappConfig();
 
   const [producto, setProducto] = useState(null);
   const [loading,  setLoading]  = useState(true);
@@ -145,8 +147,8 @@ export default function ProductDetailPage() {
       talle:    talle?.talle ?? null,
       precio:   producto.precio,
       cantidad: 1,
-    }]);
-    abrirWhatsApp(mensaje);
+    }], whatsappCfg);
+    abrirWhatsApp(mensaje, whatsappCfg.phone);
   }
 
   return (
@@ -438,9 +440,11 @@ export default function ProductDetailPage() {
                 {agregado ? "¡Listo! Producto en la lista" : "Agregar a lista de consulta"}
               </button>
 
-              <p className="text-center text-[10px] text-muted">
-                Los pedidos se coordinan por WhatsApp · Envío o retiro en tienda
-              </p>
+              {whatsappCfg.deliveryNote && (
+                <p className="text-center text-[10px] text-muted">
+                  {whatsappCfg.deliveryNote}
+                </p>
+              )}
             </div>
           ) : isWhatsAppMode() ? (
             <div className="rounded-2xl border border-line bg-surface px-5 py-4 text-center">

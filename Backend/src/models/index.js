@@ -41,6 +41,7 @@ import { Ord03Orden } from "./ordenes/ord_03_orden.js";
 import { Ord04Item } from "./ordenes/ord_04_item.js";
 
 import { Home01Config } from "./home/home_01_config.js";
+import { Conf01Whatsapp } from "./config/conf_01_whatsapp.js";
 
 import { setupAssociations } from "./associations.js";
 
@@ -91,4 +92,6 @@ export {
   Ord04Item,
   // Home
   Home01Config,
+  // Config
+  Conf01Whatsapp,
 };

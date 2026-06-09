@@ -1,25 +1,35 @@
+// CATÁLOGO DE PRODUCTOS
+// Cómo se navega el catálogo, qué links aparecen en el menú y cómo se llaman las categorías.
+
 export const catalogConfig = {
-  // [ROUTER] Ruta base del catalogo de productos
+
+  // ── Navegación ─────────────────────────────────────────────────────────────
+  // Ruta base del catálogo de productos
   basePath: "/catalogo",
 
-  // [NAVBAR] Labels de los links del menu principal
+  // ¿Mostrar el link "Home" en el menú principal?
+  showHomeLink: true,
+  // ¿Mostrar el link "Productos" en el menú principal?
+  showProductsLink: true,
+  // ¿Mostrar los grupos/colecciones como items en el menú?
+  showGroupsInNavbar: true,
+  // false = link directo a productos / true = dropdown con productos al pasar el cursor
+  showProductsDropdown: false,
+  // ¿Mostrar el link "Nosotros" en el menú? (requiere crear la página /nosotros)
+  showAboutLink: false,
+  // ¿Mostrar el link "Contacto" en el menú? (requiere crear la página /contacto)
+  showContactLink: false,
+
+  // ── Textos del menú ────────────────────────────────────────────────────────
   navProductsLabel: "Productos",
   navHomeLabel: "Home",
 
-  // [NAVBAR / FILTROS] Labels de las categorias — aparecen en filtros y breadcrumbs
-  groupLabel: "Coleccion",
-  categoryLabel: "Categoria",
-  subcategoryLabel: "Subcategoria",
+  // ── Cómo se llaman las categorías en este negocio ──────────────────────────
+  // Aparecen en filtros, breadcrumbs y menús del catálogo
+  groupLabel: "Colección",            // Nivel 1 (ej: "Hombre", "Mujer", "Temporada")
+  categoryLabel: "Categoría",         // Nivel 2 (ej: "Remeras", "Pantalones")
+  subcategoryLabel: "Subcategoría",   // Nivel 3
 
-  // [NAVBAR] Muestra el link "Home" en el menu principal
-  showHomeLink: true,
-  // [NAVBAR] Muestra el link "Productos" en el menu principal
-  showProductsLink: true,
-  // [NAVBAR] Muestra los grupos/colecciones como items en el menu
-  showGroupsInNavbar: true,
-  // [NAVBAR] Muestra un dropdown con productos dentro del menu (false = link directo)
-  showProductsDropdown: false,
-
-  // [ROUTER] Ruta de fallback cuando la categoria buscada no existe
+  // Ruta de fallback si la categoría buscada no existe
   categoryFallbackPath: "/catalogo",
 };

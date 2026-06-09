@@ -2,6 +2,7 @@ import { X, Trash2, MessageCircle, ShoppingBag } from "lucide-react";
 import { useWhatsAppCart } from "../../context/whatsapp_cart_context";
 import { abrirWhatsApp, buildWhatsAppMessage } from "../../config/whatsapp_config";
 import { isWhatsAppMode } from "../../config/app_config";
+import { useWhatsappConfig } from "../../api/whatsapp_config_api";
 
 const fmt = (n) => `$${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
 
@@ -13,12 +14,13 @@ function getImgSrc(img) {
 
 export default function WhatsAppFloatingButton() {
   const { items, total, panelOpen, setPanelOpen, removeItem, clearCart } = useWhatsAppCart();
+  const whatsappCfg = useWhatsappConfig();
 
   if (!isWhatsAppMode() || items.length === 0) return null;
 
   function enviar() {
-    const mensaje = buildWhatsAppMessage(items);
-    abrirWhatsApp(mensaje);
+    const mensaje = buildWhatsAppMessage(items, whatsappCfg);
+    abrirWhatsApp(mensaje, whatsappCfg.phone);
   }
 
   return (

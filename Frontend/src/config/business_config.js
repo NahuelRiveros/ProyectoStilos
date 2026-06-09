@@ -1,31 +1,38 @@
-export const businessConfig = {
-  // [FOOTER / LEGAL] Razon social del negocio
-  legalName: "",
-  // [FOOTER / LEGAL] CUIT o identificacion tributaria
-  taxId: "",
+// DATOS DEL NEGOCIO
+// Información legal y de contacto que aparece en el footer.
 
-  // [FOOTER / CONTACTO] Direccion fisica del negocio
-  address: "",
+export const businessConfig = {
+
+  // ── Datos legales ──────────────────────────────────────────────────────────
+  legalName: "",  // Razón social (ej: "Juan Pérez Accesorios S.R.L.")
+  taxId: "",      // CUIT (ej: "20-12345678-9")
+
+  // ── Dirección ─────────────────────────────────────────────────────────────
+  address: "",    // Calle y número (ej: "San Martín 1234, Local 5")
   city: "",
   province: "",
   country: "Argentina",
 
-  // [FOOTER] Horario de atencion al publico
-  openingHours: "",
-  // [FOOTER / CONTACTO] Email de soporte visible al cliente
+  // ── Contacto visible al cliente ────────────────────────────────────────────
+  // Teléfono general (ej: "+54 9 11 1234-5678") — puede ser un fijo o un celular de contacto
+  // Distinto del número de WhatsApp de consultas que está en whatsapp_config.js
+  phone: "",
+  // Email de contacto (ej: "hola@mitienda.com")
   supportEmail: "",
 
-  // [FOOTER] Textos o URLs de politicas — dejar "" para ocultar el link en el footer
+  // ── Horarios ──────────────────────────────────────────────────────────────
+  openingHours: "", // Ej: "Lunes a viernes de 9 a 18 hs"
+
+  // ── Políticas — dejar vacío ("") para ocultar el link en el footer ─────────
   policies: {
-    exchanges: "",  // Politica de cambios y devoluciones
-    privacy: "",    // Politica de privacidad
-    terms: "",      // Terminos y condiciones
-    shipping: "",   // Politica de envios
+    exchanges: "", // Cambios y devoluciones
+    privacy:   "", // Política de privacidad
+    terms:     "", // Términos y condiciones
+    shipping:  "", // Envíos
   },
 
-  // [FOOTER] URL del widget Data Fiscal de AFIP (codigo QR con datos tributarios)
-  // Obtener en https://www.afip.gob.ar/fe/qr/ una vez dado de alta en AFIP
-  // Ej: "https://www.afip.gob.ar/fe/qr/?p=..."
-  // Solo se muestra si cartConfig.mostrarDataFiscal: true
+  // ── AFIP ──────────────────────────────────────────────────────────────────
+  // Widget Data Fiscal (QR de AFIP). Solo se muestra si cartConfig.mostrarDataFiscal: true
+  // Generar en: https://www.afip.gob.ar/fe/qr/
   dataFiscalUrl: "",
 };

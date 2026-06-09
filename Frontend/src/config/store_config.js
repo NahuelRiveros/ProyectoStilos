@@ -1,20 +1,30 @@
+// TIPO DE TIENDA
+// Define cómo funciona la tienda para los clientes.
+// Este es el primer archivo a configurar en un proyecto nuevo.
+
 export const STORE_MODES = {
-  CATALOG_ONLY:      "catalog_only",       // Solo muestra productos, sin acciones de compra
-  CATALOG_WHATSAPP:  "catalog_whatsapp",   // Catalogo + boton de consulta por WhatsApp
-  ECOMMERCE:         "ecommerce",          // Carrito + checkout completo
+  CATALOG_ONLY:     "catalog_only",     // Solo muestra productos — sin botones de compra ni WhatsApp
+  CATALOG_WHATSAPP: "catalog_whatsapp", // Muestra productos — el cliente consulta por WhatsApp
+  ECOMMERCE:        "ecommerce",        // Carrito de compras + checkout + pagos online
 };
 
 export const storeConfig = {
-  // [GLOBAL] Modo de operacion de la tienda (ver STORE_MODES arriba)
+  // Modo de la tienda. Cambiar esto activa o desactiva funcionalidades automáticamente.
   mode: STORE_MODES.CATALOG_WHATSAPP,
 
-  // [WHATSAPP] Muestra el boton "Consultar por WhatsApp" en producto y carrito
+  // Muestra el botón "Consultar por WhatsApp" en el producto y en el carrito de consulta.
+  // Se activa solo en modo CATALOG_WHATSAPP.
   enableWhatsAppConsultation: true,
-  // [PRODUCTO] Habilita la funcionalidad de lista de deseos / favoritos
+
+  // Lista de deseos / favoritos para el cliente.
   enableWishlist: false,
-  // [PRODUCTO / ADMIN] Muestra el stock disponible al cliente en la ficha de producto
+
+  // Muestra cuántas unidades quedan en la ficha de cada producto.
+  // false = el cliente no ve el stock disponible.
   enableStockVisibility: true,
-  // [PRODUCTO / CARRITO] Muestra precios. false = catalogo sin precios visible
+
+  // Muestra los precios en el catálogo y en el detalle de producto.
+  // false = catálogo sin precios (solo para ver, sin datos de valor).
   enablePrices: true,
 };
 

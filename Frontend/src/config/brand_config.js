@@ -1,26 +1,33 @@
+// IDENTIDAD DE MARCA
+// Nombre, logo y textos que aparecen en todo el sitio.
+
 export const brandConfig = {
-  // [NAVBAR] Nombre completo de la marca — aparece en navbar desktop y titulo del browser
+
+  // ── Nombre y logo ─────────────────────────────────────────────────────────
+  // Nombre completo — aparece en el menú y en el título del navegador
   name: "Angar",
-  // [NAVBAR] Inicial o abreviacion — se muestra en navbar movil/colapsado
+  // Abreviación del nombre — se muestra cuando el espacio en el menú es reducido (celular)
   shortName: "A",
-  // [HOME / SEO] Subtitulo de la marca
-  tagline: "Catalogo de productos",
-  // [NAVBAR] URL del logo. null = muestra el texto de `name`
+  // Frase corta que describe el negocio — aparece en la home y ayuda al SEO
+  tagline: "Catálogo de productos",
+  // URL del logo. null = se muestra el nombre en texto.
+  // Subir el logo a Cloudinary y pegar la URL, o usar "/logo.png" dentro de /public
   logoUrl: null,
-  // [NAVBAR] Ruta a la que lleva el logo/marca al hacer click
+  // Ruta de destino al hacer clic en el logo
   homePath: "/",
 
-  // [ADMIN] Nombre que aparece en el encabezado del panel backoffice
+  // ── Panel de administración ────────────────────────────────────────────────
+  // Nombre que aparece en el encabezado del backoffice
   adminName: "Angar Backoffice",
 
-  // [FOOTER] Nombre en el titulo del footer
+  // ── Footer ─────────────────────────────────────────────────────────────────
   footerName: "Angar",
-  // [FOOTER] Texto descriptivo debajo del nombre en el footer
+  // Frase debajo del nombre en el footer
   footerSubtitle: "Base ecommerce modular",
-  // [FOOTER] Texto de copyright/licencia al pie del footer
+  // Texto de copyright al pie de página
   footerLicense: "Base ecommerce",
 
-  // [FOOTER] URLs de redes sociales — dejar "" para ocultar el icono
+  // Redes sociales — dejar vacío ("") para ocultar el ícono en el footer
   social: {
     instagram: "https://www.instagram.com/angar.accesorios",
     facebook: "",

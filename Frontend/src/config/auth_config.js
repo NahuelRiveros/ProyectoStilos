@@ -1,18 +1,22 @@
+// AUTENTICACIÓN
+// Configuración del sistema de login y sesión.
+// Raramente necesita cambios entre proyectos — solo si se renombran los endpoints del backend.
+
 export const authConfig = {
-  // [AUTH] Nombre de la clave en localStorage donde se persiste el token de sesion
+  // Clave en localStorage donde se guarda el token de sesión del usuario
   storageKey: "token",
 
-  // [AUTH / API] Endpoints del backend de autenticacion
+  // Rutas del backend de autenticación
   endpoints: {
     login:          "/auth/login",
     register:       "/auth/register",
     logout:         "/auth/logout",
-    me:             "/auth/me",              // Valida el token y devuelve el usuario actual
+    me:             "/auth/me",
     forgotPassword: "/auth/forgot-password",
     resetPassword:  "/auth/reset-password",
   },
 
-  // [LOGIN PAGE] Labels del formulario de inicio de sesion
+  // Textos del formulario de inicio de sesión
   loginCampos: {
     emailLabel:    "Email",
     passwordLabel: "Contraseña",

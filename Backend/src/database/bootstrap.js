@@ -16,6 +16,7 @@ import {
   Prod08CategoriaGenero,
   Envio01Opcion,
   Home01Config,
+  Conf01Whatsapp,
 } from "../models/index.js";
 import { pers_01_persona } from "../models/personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "../models/personas/pers_02_tipo_documento.js";
@@ -67,6 +68,7 @@ async function sincronizar_modelos() {
     ////////
     Envio01Opcion,
     Home01Config,
+    Conf01Whatsapp,
   ];
 
   for (const model of modelos_en_orden) {

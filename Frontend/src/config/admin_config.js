@@ -1,23 +1,27 @@
-export const adminConfig = {
-  // [ADMIN] false = deshabilita el acceso al panel admin para todos los roles
-  enabled: true,
-  // [NAVBAR] Label del link "Admin" visible solo para usuarios con rol admin
-  navLabel: "Admin",
-  // [ADMIN] Texto en la pantalla de acceso denegado
-  restrictedLabel: "Area restringida",
+// PANEL DE ADMINISTRACIÓN
+// Qué módulos aparecen en el menú lateral del backoffice.
 
-  // [ADMIN / SIDEBAR] Modulos visibles en el menu lateral del backoffice
-  // false = oculta el modulo del sidebar (no elimina la ruta, solo la esconde)
+export const adminConfig = {
+  // false = nadie puede entrar al panel, independientemente del rol.
+  enabled: true,
+
+  // Textos del panel
+  navLabel: "Admin",
+  restrictedLabel: "Área restringida",
+
+  // Módulos del menú lateral.
+  // false = oculta el módulo del menú (no elimina la ruta, solo la esconde).
   modules: {
-    dashboard:    true,   // Resumen general y metricas
+    dashboard:    true,   // Resumen y métricas generales
     products:     true,   // ABM de productos
-    catalogs:     true,   // Grupos, categorias y subcategorias
-    stockAlerts:  true,   // Alertas de productos con stock bajo
-    home:         true,   // Editor de banners y seccion Home
-    users:        true,   // Gestion de usuarios y roles
-    subscription: true,   // Plan y suscripcion del cliente
+    catalogs:     true,   // Grupos, categorías y subcategorías
+    stockAlerts:  true,   // Alertas de stock bajo
+    home:         true,   // Editor de banners y sección home
+    whatsapp:     true,   // Configuración de WhatsApp (número, mensaje, nota de entrega)
+    users:        true,   // Gestión de usuarios y roles
+    subscription: true,   // Plan y suscripción del cliente
     orders:       false,  // Pedidos (requiere modo ecommerce)
-    invoices:     false,  // Facturacion (requiere modo ecommerce)
+    invoices:     false,  // Facturación (requiere modo ecommerce)
     payments:     false,  // Reportes de pagos (requiere modo ecommerce)
   },
 };
