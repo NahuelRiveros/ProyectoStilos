@@ -11,9 +11,13 @@ function buildVars() {
     // Acento de marca
     "--color-accent":          t.accent,
     "--color-accent-on":       t.accentOn,
-    "--color-champagne":       t.accent,       // alias para retrocompatibilidad (era #000000 — bug corregido)
+    "--color-champagne":       t.accent,       // alias para retrocompatibilidad
     "--color-champagne-light": t.accentLight,
     "--color-champagne-dark":  t.accentDark,
+
+    // Acento secundario
+    "--color-accent-secondary":    t.accentSecondary,
+    "--color-accent-secondary-on": t.accentSecondaryOn,
 
     // Contenido (página, formularios, cards)
     "--color-navy":    t.content.navy,

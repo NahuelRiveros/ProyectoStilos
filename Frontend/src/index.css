@@ -17,41 +17,45 @@
  *   trust          → sellos de confianza del footer (ecommerce)
  */
 @theme {
-  --font-sans:    "Outfit", system-ui, sans-serif;
-  --font-display: "Outfit", system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", "Georgia", serif;
+  --font-sans:    "DM Sans", system-ui, sans-serif;
 
   /* acento → theme_config.js: accent, accentOn, accentLight, accentDark */
-  --color-accent:          #fbbf24;
-  --color-accent-on:       #0a0f1a;
-  --color-champagne:       #fbbf24;   /* alias accent — corregido (era #000000) */
-  --color-champagne-light: #fef3c7;
-  --color-champagne-dark:  #b45309;
+  --color-accent:          #B5836A;
+  --color-accent-on:       #1E0D07;
+  --color-champagne:       #B5836A;   /* alias accent */
+  --color-champagne-light: #F5E8DF;
+  --color-champagne-dark:  #7A4728;
+
+  /* acento secundario → theme_config.js: accentSecondary, accentSecondaryOn */
+  --color-accent-secondary:    #3D1F0F;
+  --color-accent-secondary-on: #F5EDE6;
 
   /* contenido → theme_config.js: content.* */
-  --color-navy:    #060d1f;
-  --color-ink:     #111827;
-  --color-muted:   #64748b;
-  --color-surface: #f8fafc;
+  --color-navy:    #1E0D07;
+  --color-ink:     #2A1710;
+  --color-muted:   #9B7B6A;
+  --color-surface: #FBF8F5;
   --color-card:    #ffffff;
-  --color-line:    #e2e8f0;
+  --color-line:    #EDE4DC;
 
   /* navbar → theme_config.js: navbar.* */
-  --color-shell:          #fef3c7;
-  --color-shell-raised:   #fde68a;
+  --color-shell:          #FAF5F0;
+  --color-shell-raised:   #F0E6DB;
   --color-shell-float:    #ffffff;
-  --color-shell-text:     #1c0f00;
-  --color-shell-text-dim: #78593a;
+  --color-shell-text:     #1E0D07;
+  --color-shell-text-dim: #9B7B6A;
 
   /* footer → theme_config.js: footer.* */
-  --color-footer:          #060d1f;
-  --color-footer-text:     #ffffff;
-  --color-footer-text-dim: #94a3b8;
+  --color-footer:          #1E0D07;
+  --color-footer-text:     #FAF5F0;
+  --color-footer-text-dim: #9B7B6A;
 
   /* admin → theme_config.js: admin.* */
-  --color-admin:          #060d1f;
-  --color-admin-raised:   #0a1528;
-  --color-admin-text:     #f1f5f9;
-  --color-admin-text-dim: #64748b;
+  --color-admin:          #1A0C07;
+  --color-admin-raised:   #261508;
+  --color-admin-text:     #F5EDE6;
+  --color-admin-text-dim: #8B6B5A;
 
   /* trust → theme_config.js: trust.secure  |  mp: fijo, no exponer */
   --color-trust-secure: #22c55e;
@@ -66,7 +70,7 @@ body,
 
 body {
   margin: 0;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-sans, 'DM Sans', system-ui, sans-serif);
   background: var(--color-surface);
 }
 
