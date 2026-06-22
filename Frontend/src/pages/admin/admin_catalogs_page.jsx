@@ -160,8 +160,12 @@ function MarcasTab() {
         toast.success("Marca creada correctamente");
       }
       cancelForm();
-    } catch {
-      toast.error("Error al guardar la marca. Revisá que el nombre no esté repetido.");
+    } catch (err) {
+      const msg = err?.response?.data?.mensaje ?? err?.message ?? "Error desconocido";
+      const status = err?.response?.status;
+      if (status === 403) toast.error("Sin permisos para crear marcas. Cerrá sesión y volvé a entrar.");
+      else if (status === 409 || msg.toLowerCase().includes("exist")) toast.error("Ya existe una marca con ese nombre o slug.");
+      else toast.error(`Error al guardar la marca: ${msg}`);
     } finally { setSaving(false); }
   }
 

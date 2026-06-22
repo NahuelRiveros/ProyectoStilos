@@ -21,8 +21,8 @@ import {
   obtenerOfertasDestacadas,
 } from "../controllers/productos_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
-import { ACCESS } from "./access_roles.js";
+import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
+import { ACCESS, NIVELES } from "./access_roles.js";
 
 export const productosRouter = Router();
 
@@ -39,7 +39,7 @@ export const productosRouter = Router();
 
 productosRouter.get("/",                  listarProductos);
 productosRouter.get("/ofertas/destacadas", obtenerOfertasDestacadas);
-productosRouter.get("/stock-bajo",         requireAuth, requireRole(...ACCESS.PRODUCTOS_STOCK), stockBajo);
+productosRouter.get("/stock-bajo",         requireAuth, requireNivel(NIVELES.ADMIN), stockBajo);
 productosRouter.get("/:id",                obtenerProducto);
 
 // =============================================================
@@ -50,10 +50,10 @@ productosRouter.get("/:id",                obtenerProducto);
 // PUT    /productos/:id/reactivar
 // =============================================================
 
-productosRouter.post(  "/",               requireAuth, requireRole(...ACCESS.PRODUCTOS_CREATE), crearProducto);
-productosRouter.put(   "/:id",            requireAuth, requireRole(...ACCESS.PRODUCTOS_UPDATE), actualizarProducto);
-productosRouter.delete("/:id",            requireAuth, requireRole(...ACCESS.PRODUCTOS_DELETE), darDeBajaProducto);
-productosRouter.put(   "/:id/reactivar",  requireAuth, requireRole(...ACCESS.PRODUCTOS_DELETE), reactivarProducto);
+productosRouter.post(  "/",               requireAuth, requireNivel(NIVELES.ADMIN), crearProducto);
+productosRouter.put(   "/:id",            requireAuth, requireNivel(NIVELES.ADMIN), actualizarProducto);
+productosRouter.delete("/:id",            requireAuth, requireNivel(NIVELES.ADMIN), darDeBajaProducto);
+productosRouter.put(   "/:id/reactivar",  requireAuth, requireNivel(NIVELES.ADMIN), reactivarProducto);
 
 // =============================================================
 // STOCK  [solo admin]
@@ -61,5 +61,5 @@ productosRouter.put(   "/:id/reactivar",  requireAuth, requireRole(...ACCESS.PRO
 // PUT /productos/:id/stock   → upsert masivo [{ talle_id, cantidad }]
 // =============================================================
 
-productosRouter.get("/:id/stock", requireAuth, requireRole(...ACCESS.PRODUCTOS_STOCK), obtenerStock);
-productosRouter.put("/:id/stock", requireAuth, requireRole(...ACCESS.PRODUCTOS_STOCK), actualizarStock);
+productosRouter.get("/:id/stock", requireAuth, requireNivel(NIVELES.ADMIN), obtenerStock);
+productosRouter.put("/:id/stock", requireAuth, requireNivel(NIVELES.ADMIN), actualizarStock);

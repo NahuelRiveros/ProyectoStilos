@@ -17,13 +17,13 @@ import {
   vaciarCarrito,
 } from "../controllers/carrito_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
-import { ACCESS } from "./access_roles.js";
+import { requireAuth, requireNivel } from "../middleware/auth_middleware.js";
+import { NIVELES } from "./access_roles.js";
 
 export const carritoRouter = Router();
 
 // Todos los endpoints de carrito requieren auth
-carritoRouter.use(requireAuth, requireRole(...ACCESS.CARRITO));
+carritoRouter.use(requireAuth, requireNivel(NIVELES.USR));
 
 // =============================================================
 // GET  /carrito

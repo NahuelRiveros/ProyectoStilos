@@ -11,10 +11,10 @@ import { Router } from "express";
 
 import { subir, eliminar } from "../controllers/upload_controller.js";
 import { uploadImagen }     from "../middleware/upload_middleware.js";
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
-import { ACCESS } from "./access_roles.js";
+import { requireAuth, requireNivel } from "../middleware/auth_middleware.js";
+import { NIVELES } from "./access_roles.js";
 
 export const uploadRouter = Router();
 
-uploadRouter.post(  "/imagen", requireAuth, requireRole(...ACCESS.UPLOAD_CREATE), uploadImagen, subir);
-uploadRouter.delete("/imagen", requireAuth, requireRole(...ACCESS.UPLOAD_CREATE), eliminar);
+uploadRouter.post(  "/imagen", requireAuth, requireNivel(NIVELES.ADMIN), uploadImagen, subir);
+uploadRouter.delete("/imagen", requireAuth, requireNivel(NIVELES.ADMIN), eliminar);

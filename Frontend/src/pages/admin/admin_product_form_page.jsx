@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Check, Package, Palette, Ruler, AlertCircle, Crown,
+  Check, Package, Layers, AlertCircle, Crown,
 } from "lucide-react";
 
 import {
@@ -22,7 +22,7 @@ import {
 } from "../../api/catalogo_api";
 import { AdminSpinner } from "../../components/admin";
 import ImageUploader from "../../components/ui/image_uploader";
-import { ColoresSection, StockSection } from "../../components/admin/product_form";
+import { VariantesSection } from "../../components/admin/product_form";
 
 const EMPTY_FORM = {
   RELA_PROD01: "", RELA_PROD02: "", RELA_PROD07: "",
@@ -153,44 +153,6 @@ export default function AdminProductFormPage() {
     setErrors((p) => ({ ...p, [k]: undefined }));
   }
 
-  function toggleColor(c) {
-    const already = form.PROD03_COLORES.some((s) => s.id === c.id);
-    setField(
-      "PROD03_COLORES",
-      already
-        ? form.PROD03_COLORES.filter((s) => s.id !== c.id)
-        : [...form.PROD03_COLORES, { id: c.id, nombre: c.nombre, hex: c.hex }],
-    );
-  }
-
-  function setStockField(i, field, v) {
-    setStock((p) =>
-      p.map((row, idx) => {
-        if (idx !== i) return row;
-        if (field === "talle_id") {
-          const t = tallesCat.find((t) => t.id === Number(v));
-          return { ...row, talle_id: v ? Number(v) : null, nombre: t?.nombre ?? "Sin talle" };
-        }
-        if (field === "color_id") {
-          const c = coloresCat.find((c) => c.id === Number(v));
-          return { ...row, color_id: v ? Number(v) : null, color_nombre: c?.nombre ?? null, color_hex: c?.hex ?? null };
-        }
-        return { ...row, cantidad: v };
-      }),
-    );
-  }
-
-  function addStockRow() {
-    setStock((p) => [
-      ...p,
-      { talle_id: null, nombre: "Sin talle", color_id: null, color_nombre: null, color_hex: null, cantidad: "0" },
-    ]);
-  }
-
-  function removeStockRow(i) {
-    setStock((p) => p.filter((_, idx) => idx !== i));
-  }
-
   function handlePrecioBaseChange(v) {
     setPrecioBase(v);
     const base = Number(v);
@@ -291,10 +253,9 @@ export default function AdminProductFormPage() {
   const hasInfoError = errors.PROD03_NOMBRE || errors.PROD03_PRECIO || errors.RELA_PROD01 || errors.RELA_PROD02;
 
   const FORM_TABS = [
-    { id: "info",     label: "Información", icon: Package,  hasError: !!hasInfoError },
-    { id: "imagenes", label: "Imágenes",    icon: Crown,    hasError: false },
-    { id: "stock",    label: "Stock",       icon: Ruler,    hasError: false },
-    { id: "colores",  label: "Colores",     icon: Palette,  hasError: false },
+    { id: "info",      label: "Información", icon: Package, hasError: !!hasInfoError },
+    { id: "imagenes",  label: "Imágenes",    icon: Crown,   hasError: false },
+    { id: "variantes", label: "Variantes",   icon: Layers,  hasError: false },
   ];
 
   return (
@@ -586,40 +547,18 @@ export default function AdminProductFormPage() {
               </div>
             )}
 
-            {tab === "stock" && (
+            {tab === "variantes" && (
               <div className="rounded-2xl bg-card p-6 shadow-sm">
-                <div className="mb-4 flex items-start justify-between">
-                  <div>
-                    <h2 className="text-[11px] font-black uppercase tracking-widest text-muted">Stock por variante</h2>
-                    <p className="mt-0.5 text-xs text-muted">Cada fila es una combinación de talle + color. Dejá 0 para marcar como agotado.</p>
-                  </div>
-                </div>
-                <StockSection
-                  rows={stock}
-                  tallesCatalogo={tallesCat}
+                <h2 className="mb-1 text-[11px] font-black uppercase tracking-widest text-muted">Colores, talles y stock</h2>
+                <p className="mb-5 text-xs text-muted">Elegí los colores y talles disponibles, luego cargá el stock de cada combinación.</p>
+                <VariantesSection
                   coloresCatalogo={coloresCat}
-                  onSet={setStockField}
-                  onAdd={addStockRow}
-                  onRemove={removeStockRow}
+                  tallesCatalogo={tallesCat}
+                  coloresSeleccionados={form.PROD03_COLORES}
+                  stock={stock}
+                  onColoresChange={(v) => setField("PROD03_COLORES", v)}
+                  onStockChange={setStock}
                 />
-              </div>
-            )}
-
-            {tab === "colores" && (
-              <div className="rounded-2xl bg-card p-6 shadow-sm">
-                <h2 className="mb-2 text-[11px] font-black uppercase tracking-widest text-muted">Colores disponibles</h2>
-                <p className="mb-4 text-xs text-muted">Seleccioná los colores en que está disponible este artículo.</p>
-                <ColoresSection catalogo={coloresCat} selected={form.PROD03_COLORES} onToggle={toggleColor} />
-                {form.PROD03_COLORES.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {form.PROD03_COLORES.map((c) => (
-                      <span key={c.id} className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink">
-                        <span className="h-3 w-3 rounded-full border border-line/40" style={{ backgroundColor: c.hex ?? "#e5e7eb" }} />
-                        {c.nombre}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -699,9 +638,17 @@ export default function AdminProductFormPage() {
                 <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-muted">Stock</h2>
                 <div className="space-y-1.5">
                   {stock.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-ink">{r.nombre}</span>
-                      <span className={["font-bold tabular-nums", Number(r.cantidad) === 0 ? "text-rose-500" : "text-emerald-600"].join(" ")}>
+                    <div key={i} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="font-semibold text-ink shrink-0">{r.nombre}</span>
+                      {r.color_nombre && (
+                        <span className="flex items-center gap-1 min-w-0">
+                          {r.color_hex && (
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: r.color_hex }} />
+                          )}
+                          <span className="truncate text-xs text-muted">{r.color_nombre}</span>
+                        </span>
+                      )}
+                      <span className={["ml-auto font-bold tabular-nums shrink-0", Number(r.cantidad) === 0 ? "text-rose-500" : "text-emerald-600"].join(" ")}>
                         {r.cantidad || 0}
                       </span>
                     </div>

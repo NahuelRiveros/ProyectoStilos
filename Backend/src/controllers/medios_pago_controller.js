@@ -40,9 +40,9 @@ const DEFAULT_CONFIG = {
       nombre: "Go Cuotas",
       logo: "",
       habilitado: false,
-      descripcion: "Banco Nación — hasta 24 cuotas. Consultá en el local.",
+      descripcion: "Go Cuotas — hasta 3 cuotas. Consultá en el local.",
       cuotas: [
-        { cantidad: 24, sinInteres: true, tarjetas: ["Banco Nación"] },
+        { cantidad: 3, sinInteres: true, tarjetas: ["Banco Nación"] },
       ],
     },
     {

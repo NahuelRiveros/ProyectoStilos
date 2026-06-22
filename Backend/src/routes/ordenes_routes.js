@@ -13,8 +13,8 @@ import {
   actualizarEstadoOrden,
 } from "../controllers/ordenes_controller.js";
 
-import { requireAuth, requireRole } from "../middleware/auth_middleware.js";
-import { ACCESS } from "./access_roles.js";
+import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
+import { ACCESS, NIVELES } from "./access_roles.js";
 
 export const ordenesRouter = Router();
 
@@ -29,10 +29,10 @@ ordenesRouter.use(requireAuth);
 // PUT    /ordenes/:id/cancelar   → cancelar si está "pendiente"
 // =============================================================
 
-ordenesRouter.post( "/",               requireRole(...ACCESS.ORDENES_CREATE), crearOrden);
-ordenesRouter.get(  "/",               requireRole(...ACCESS.ORDENES_READ),   getMisOrdenes);
-ordenesRouter.get(  "/:id",            requireRole(...ACCESS.ORDENES_READ),   getOrden);
-ordenesRouter.put(  "/:id/cancelar",   requireRole(...ACCESS.ORDENES_READ),   cancelarOrden);
+ordenesRouter.post( "/",               requireNivel(NIVELES.USR),   crearOrden);
+ordenesRouter.get(  "/",               requireNivel(NIVELES.USR),   getMisOrdenes);
+ordenesRouter.get(  "/:id",            requireNivel(NIVELES.USR),   getOrden);
+ordenesRouter.put(  "/:id/cancelar",   requireNivel(NIVELES.USR),   cancelarOrden);
 
 // =============================================================
 // ADMIN — gestión completa
@@ -42,5 +42,5 @@ ordenesRouter.put(  "/:id/cancelar",   requireRole(...ACCESS.ORDENES_READ),   ca
 
 // IMPORTANTE: la ruta /admin/todas debe ir ANTES de /:id
 // para que Express no interprete "admin" como un :id
-ordenesRouter.get("/admin/todas",       requireRole(...ACCESS.ORDENES_ADMIN), getTodasOrdenes);
-ordenesRouter.put("/admin/:id/estado",  requireRole(...ACCESS.ORDENES_ADMIN), actualizarEstadoOrden);
+ordenesRouter.get("/admin/todas",       requireNivel(NIVELES.ADMIN), getTodasOrdenes);
+ordenesRouter.put("/admin/:id/estado",  requireNivel(NIVELES.ADMIN), actualizarEstadoOrden);

@@ -44,8 +44,8 @@ import {
   crearReactivarController,
 } from "../controllers/generic_controller.js";
 
-import { requireAuth, requireRole, requireAccess } from "../middleware/auth_middleware.js";
-import { ACCESS } from "./access_roles.js";
+import { requireAuth, requireRole, requireAccess, requireNivel } from "../middleware/auth_middleware.js";
+import { ACCESS, NIVELES } from "./access_roles.js";
 
 export const catalogosRouter = Router();
 
@@ -262,11 +262,11 @@ catalogosRouter.get("/navegacion", async (req, res, next) => {
 catalogosRouter.get(  "/categorias",          crearListController(CATEGORIAS_CONFIG));
 catalogosRouter.get(  "/categorias/paginado", crearListPaginadoController(CATEGORIAS_CONFIG));
 catalogosRouter.get(  "/categorias/:id",      crearGetByIdController(CATEGORIAS_CONFIG));
-catalogosRouter.post( "/categorias",          requireAuth, requireRole(...ACCESS.CATEGORIAS_CREATE), crearCreateController(CATEGORIAS_CONFIG));
-catalogosRouter.put(  "/categorias/:id",      requireAuth, requireRole(...ACCESS.CATEGORIAS_UPDATE), crearUpdateController(CATEGORIAS_CONFIG));
+catalogosRouter.post( "/categorias",          requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(CATEGORIAS_CONFIG));
+catalogosRouter.put(  "/categorias/:id",      requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(CATEGORIAS_CONFIG));
 
 // DELETE /catalogos/categorias/:id [ADMIN] — eliminación definitiva
-catalogosRouter.delete("/categorias/:id", requireAuth, requireRole(...ACCESS.CATEGORIAS_DELETE), async (req, res, next) => {
+catalogosRouter.delete("/categorias/:id", requireAuth, requireNivel(NIVELES.ADMIN), async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!id) return res.status(400).json({ ok: false, mensaje: "El parámetro id es requerido" });
@@ -308,7 +308,7 @@ catalogosRouter.get("/categorias/:id/generos", async (req, res, next) => {
 });
 
 // PUT  /catalogos/categorias/:id/generos  [ADMIN] — reemplaza géneros asignados
-catalogosRouter.put("/categorias/:id/generos", requireAuth, requireRole(...ACCESS.CATEGORIAS_UPDATE), async (req, res, next) => {
+catalogosRouter.put("/categorias/:id/generos", requireAuth, requireNivel(NIVELES.ADMIN), async (req, res, next) => {
   try {
     const { genero_ids = [] } = req.body;
     await Prod08CategoriaGenero.destroy({ where: { RELA_PROD01: req.params.id } });
@@ -352,10 +352,10 @@ const GENEROS_CONFIG = {
 catalogosRouter.get(   "/generos",               crearListController(GENEROS_CONFIG));
 catalogosRouter.get(   "/generos/paginado",      crearListPaginadoController(GENEROS_CONFIG));
 catalogosRouter.get(   "/generos/:id",           crearGetByIdController(GENEROS_CONFIG));
-catalogosRouter.post(  "/generos",               requireAuth, requireRole(...ACCESS.GENEROS_CREATE), crearCreateController(GENEROS_CONFIG));
-catalogosRouter.put(   "/generos/:id",           requireAuth, requireRole(...ACCESS.GENEROS_UPDATE), crearUpdateController(GENEROS_CONFIG));
-catalogosRouter.delete("/generos/:id",           requireAuth, requireRole(...ACCESS.GENEROS_DELETE), crearSoftDeleteController(GENEROS_CONFIG));
-catalogosRouter.put(   "/generos/:id/reactivar", requireAuth, requireRole(...ACCESS.GENEROS_DELETE), crearReactivarController(GENEROS_CONFIG));
+catalogosRouter.post(  "/generos",               requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(GENEROS_CONFIG));
+catalogosRouter.put(   "/generos/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(GENEROS_CONFIG));
+catalogosRouter.delete("/generos/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(GENEROS_CONFIG));
+catalogosRouter.put(   "/generos/:id/reactivar", requireAuth, requireNivel(NIVELES.ADMIN), crearReactivarController(GENEROS_CONFIG));
 
 // =============================================================
 // TALLES  [GET público]
@@ -384,10 +384,10 @@ const TALLES_CONFIG = {
 catalogosRouter.get(   "/talles",               crearListController(TALLES_CONFIG));
 catalogosRouter.get(   "/talles/paginado",      crearListPaginadoController(TALLES_CONFIG));
 catalogosRouter.get(   "/talles/:id",           crearGetByIdController(TALLES_CONFIG));
-catalogosRouter.post(  "/talles",               requireAuth, requireRole(...ACCESS.TALLES_CREATE), crearCreateController(TALLES_CONFIG));
-catalogosRouter.put(   "/talles/:id",           requireAuth, requireRole(...ACCESS.TALLES_UPDATE), crearUpdateController(TALLES_CONFIG));
-catalogosRouter.delete("/talles/:id",           requireAuth, requireRole(...ACCESS.TALLES_DELETE), crearSoftDeleteController(TALLES_CONFIG));
-catalogosRouter.put(   "/talles/:id/reactivar", requireAuth, requireRole(...ACCESS.TALLES_DELETE), crearReactivarController(TALLES_CONFIG));
+catalogosRouter.post(  "/talles",               requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(TALLES_CONFIG));
+catalogosRouter.put(   "/talles/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(TALLES_CONFIG));
+catalogosRouter.delete("/talles/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(TALLES_CONFIG));
+catalogosRouter.put(   "/talles/:id/reactivar", requireAuth, requireNivel(NIVELES.ADMIN), crearReactivarController(TALLES_CONFIG));
 
 // =============================================================
 // COLORES  [GET público — el formulario de producto los usa sin login]
@@ -416,10 +416,10 @@ const COLORES_CONFIG = {
 catalogosRouter.get(   "/colores",               crearListController(COLORES_CONFIG));
 catalogosRouter.get(   "/colores/paginado",      crearListPaginadoController(COLORES_CONFIG));
 catalogosRouter.get(   "/colores/:id",           crearGetByIdController(COLORES_CONFIG));
-catalogosRouter.post(  "/colores",               requireAuth, requireRole(...ACCESS.COLORES_CREATE), crearCreateController(COLORES_CONFIG));
-catalogosRouter.put(   "/colores/:id",           requireAuth, requireRole(...ACCESS.COLORES_UPDATE), crearUpdateController(COLORES_CONFIG));
-catalogosRouter.delete("/colores/:id",           requireAuth, requireRole(...ACCESS.COLORES_DELETE), crearSoftDeleteController(COLORES_CONFIG));
-catalogosRouter.put(   "/colores/:id/reactivar", requireAuth, requireRole(...ACCESS.COLORES_DELETE), crearReactivarController(COLORES_CONFIG));
+catalogosRouter.post(  "/colores",               requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(COLORES_CONFIG));
+catalogosRouter.put(   "/colores/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(COLORES_CONFIG));
+catalogosRouter.delete("/colores/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(COLORES_CONFIG));
+catalogosRouter.put(   "/colores/:id/reactivar", requireAuth, requireNivel(NIVELES.ADMIN), crearReactivarController(COLORES_CONFIG));
 
 // =============================================================
 // ESTADOS DE ORDEN  [auth requerido]
@@ -438,10 +438,10 @@ const ESTADOS_ORDEN_CONFIG = {
   updateFields:["ORD01_ETIQUETA"],
 };
 
-catalogosRouter.get(  "/estados-orden",      requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_GET),    crearListController(ESTADOS_ORDEN_CONFIG));
-catalogosRouter.get(  "/estados-orden/:id",  requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_GET),    crearGetByIdController(ESTADOS_ORDEN_CONFIG));
-catalogosRouter.post( "/estados-orden",      requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_CREATE), crearCreateController(ESTADOS_ORDEN_CONFIG));
-catalogosRouter.put(  "/estados-orden/:id",  requireAuth, requireRole(...ACCESS.ESTADOS_ORDEN_UPDATE), crearUpdateController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.get(  "/estados-orden",      requireAuth, requireNivel(NIVELES.ADMIN), crearListController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.get(  "/estados-orden/:id",  requireAuth, requireNivel(NIVELES.ADMIN), crearGetByIdController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.post( "/estados-orden",      requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(ESTADOS_ORDEN_CONFIG));
+catalogosRouter.put(  "/estados-orden/:id",  requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(ESTADOS_ORDEN_CONFIG));
 
 // =============================================================
 // CONDICIONES IVA  [auth requerido — se usa en checkout]
@@ -456,8 +456,8 @@ const CONDICION_IVA_CONFIG = {
   order:      [["ORD02_NOMBRE", "ASC"]],
 };
 
-catalogosRouter.get("/condiciones-iva",     requireAuth, requireRole(...ACCESS.CONDICION_IVA_GET), crearListController(CONDICION_IVA_CONFIG));
-catalogosRouter.get("/condiciones-iva/:id", requireAuth, requireRole(...ACCESS.CONDICION_IVA_GET), crearGetByIdController(CONDICION_IVA_CONFIG));
+catalogosRouter.get("/condiciones-iva",     requireAuth, requireNivel(NIVELES.ADMIN), crearListController(CONDICION_IVA_CONFIG));
+catalogosRouter.get("/condiciones-iva/:id", requireAuth, requireNivel(NIVELES.ADMIN), crearGetByIdController(CONDICION_IVA_CONFIG));
 
 // =============================================================
 // TIPOS DE COMPROBANTE AFIP  [auth requerido]
@@ -472,8 +472,8 @@ const TIPO_COMP_CONFIG = {
   order:      [["FACT01_LETRA", "ASC"]],
 };
 
-catalogosRouter.get("/tipos-comprobante",     requireAuth, requireRole(...ACCESS.TIPO_COMP_GET), crearListController(TIPO_COMP_CONFIG));
-catalogosRouter.get("/tipos-comprobante/:id", requireAuth, requireRole(...ACCESS.TIPO_COMP_GET), crearGetByIdController(TIPO_COMP_CONFIG));
+catalogosRouter.get("/tipos-comprobante",     requireAuth, requireNivel(NIVELES.ADMIN), crearListController(TIPO_COMP_CONFIG));
+catalogosRouter.get("/tipos-comprobante/:id", requireAuth, requireNivel(NIVELES.ADMIN), crearGetByIdController(TIPO_COMP_CONFIG));
 
 // =============================================================
 // PUNTOS DE VENTA  [solo admin]
@@ -496,12 +496,12 @@ const PUNTO_VENTA_CONFIG = {
   updateFields:    ["FACT02_NOMBRE", "FACT02_ACTIVO"],
 };
 
-catalogosRouter.get(   "/puntos-venta",          requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearListController(PUNTO_VENTA_CONFIG));
-catalogosRouter.get(   "/puntos-venta/paginado", requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearListPaginadoController(PUNTO_VENTA_CONFIG));
-catalogosRouter.get(   "/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_GET),    crearGetByIdController(PUNTO_VENTA_CONFIG));
-catalogosRouter.post(  "/puntos-venta",          requireAuth, requireRole(...ACCESS.PUNTO_VENTA_CREATE), crearCreateController(PUNTO_VENTA_CONFIG));
-catalogosRouter.put(   "/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_UPDATE), crearUpdateController(PUNTO_VENTA_CONFIG));
-catalogosRouter.delete("/puntos-venta/:id",      requireAuth, requireRole(...ACCESS.PUNTO_VENTA_DELETE), crearSoftDeleteController(PUNTO_VENTA_CONFIG));
+catalogosRouter.get(   "/puntos-venta",          requireAuth, requireNivel(NIVELES.ADMIN), crearListController(PUNTO_VENTA_CONFIG));
+catalogosRouter.get(   "/puntos-venta/paginado", requireAuth, requireNivel(NIVELES.ADMIN), crearListPaginadoController(PUNTO_VENTA_CONFIG));
+catalogosRouter.get(   "/puntos-venta/:id",      requireAuth, requireNivel(NIVELES.ADMIN), crearGetByIdController(PUNTO_VENTA_CONFIG));
+catalogosRouter.post(  "/puntos-venta",          requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(PUNTO_VENTA_CONFIG));
+catalogosRouter.put(   "/puntos-venta/:id",      requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(PUNTO_VENTA_CONFIG));
+catalogosRouter.delete("/puntos-venta/:id",      requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(PUNTO_VENTA_CONFIG));
 
 // =============================================================
 // OPCIONES DE ENVÍO  [GET autenticado — se elige en checkout]
@@ -547,12 +547,12 @@ const OPCIONES_ENVIO_CONFIG = {
   ],
 };
 
-catalogosRouter.get(   "/opciones-envio",               requireAuth, requireRole(...ACCESS.ENVIO_OPCION_GET),    crearListController(OPCIONES_ENVIO_CONFIG));
-catalogosRouter.get(   "/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_GET),    crearGetByIdController(OPCIONES_ENVIO_CONFIG));
-catalogosRouter.post(  "/opciones-envio",               requireAuth, requireRole(...ACCESS.ENVIO_OPCION_CREATE), crearCreateController(OPCIONES_ENVIO_CONFIG));
-catalogosRouter.put(   "/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_UPDATE), crearUpdateController(OPCIONES_ENVIO_CONFIG));
-catalogosRouter.delete("/opciones-envio/:id",           requireAuth, requireRole(...ACCESS.ENVIO_OPCION_DELETE), crearSoftDeleteController(OPCIONES_ENVIO_CONFIG));
-catalogosRouter.put(   "/opciones-envio/:id/reactivar", requireAuth, requireRole(...ACCESS.ENVIO_OPCION_DELETE), crearReactivarController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.get(   "/opciones-envio",               requireAuth, requireNivel(NIVELES.ADMIN), crearListController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.get(   "/opciones-envio/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearGetByIdController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.post(  "/opciones-envio",               requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.put(   "/opciones-envio/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.delete("/opciones-envio/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(OPCIONES_ENVIO_CONFIG));
+catalogosRouter.put(   "/opciones-envio/:id/reactivar", requireAuth, requireNivel(NIVELES.ADMIN), crearReactivarController(OPCIONES_ENVIO_CONFIG));
 
 // =============================================================
 // MARCAS  [GET público — el catálogo las necesita sin login]
@@ -581,7 +581,7 @@ const MARCAS_CONFIG = {
 catalogosRouter.get(   "/marcas",               crearListController(MARCAS_CONFIG));
 catalogosRouter.get(   "/marcas/paginado",      crearListPaginadoController(MARCAS_CONFIG));
 catalogosRouter.get(   "/marcas/:id",           crearGetByIdController(MARCAS_CONFIG));
-catalogosRouter.post(  "/marcas",               requireAuth, requireRole(...ACCESS.MARCAS_CREATE), crearCreateController(MARCAS_CONFIG));
-catalogosRouter.put(   "/marcas/:id",           requireAuth, requireRole(...ACCESS.MARCAS_UPDATE), crearUpdateController(MARCAS_CONFIG));
-catalogosRouter.delete("/marcas/:id",           requireAuth, requireRole(...ACCESS.MARCAS_DELETE), crearSoftDeleteController(MARCAS_CONFIG));
-catalogosRouter.put(   "/marcas/:id/reactivar", requireAuth, requireRole(...ACCESS.MARCAS_DELETE), crearReactivarController(MARCAS_CONFIG));
+catalogosRouter.post(  "/marcas",               requireAuth, requireNivel(NIVELES.ADMIN), crearCreateController(MARCAS_CONFIG));
+catalogosRouter.put(   "/marcas/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearUpdateController(MARCAS_CONFIG));
+catalogosRouter.delete("/marcas/:id",           requireAuth, requireNivel(NIVELES.ADMIN), crearSoftDeleteController(MARCAS_CONFIG));
+catalogosRouter.put(   "/marcas/:id/reactivar", requireAuth, requireNivel(NIVELES.ADMIN), crearReactivarController(MARCAS_CONFIG));
