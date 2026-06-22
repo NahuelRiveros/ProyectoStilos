@@ -108,9 +108,7 @@ export const router = createBrowserRouter([
           ? <ProtectedRoute><CheckoutPage /></ProtectedRoute>
           : <Navigate to="/catalogo" replace />,
       },
-      { path: "test", element: <Navigate to="/catalogo" replace /> },
-      { path: "test2", element: <Navigate to="/catalogo" replace /> },
-      { path: ":genero", element: <CatalogPage /> },
+{ path: ":genero", element: <CatalogPage /> },
       { path: ":genero/:categoria", element: <CatalogPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
