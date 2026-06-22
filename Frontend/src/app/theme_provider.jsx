@@ -7,6 +7,7 @@ function buildVars() {
     // Fuentes
     "--font-sans":    t.fontSans,
     "--font-display": t.fontDisplay,
+    "--font-promo":   t.fontPromo,
 
     // Acento de marca
     "--color-accent":          t.accent,

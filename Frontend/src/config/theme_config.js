@@ -3,42 +3,41 @@
 // Los valores se aplican automáticamente como variables CSS al iniciar la app.
 // No hace falta tocar index.css para cambiar colores — solo editar este archivo.
 //
-// Tema actual: "Atelier" — cuero italiano, lujo contemporáneo, crema y terracota
-// Diseñado para carteras y accesorios femeninos de calidad.
+// Tema actual: "Stilos" — moda urbana, azul marino y crema, tipografía editorial + chunky
 
 export const themeConfig = {
 
   // ── Fuentes ────────────────────────────────────────────────────────────────
   // Para cambiar: actualizar los <link> de Google Fonts en index.html primero.
-  // fontDisplay → títulos, nombre de marca, headings de producto (serif editorial)
+  // fontDisplay → logo, títulos editoriales, headings de producto (serif de alto contraste)
   // fontSans    → textos, botones, labels, UI en general
+  // fontPromo   → headings de oferta, banners, textos chunky y de impacto
   fontDisplay: '"Cormorant Garamond", "Georgia", serif',
   fontSans:    '"DM Sans", system-ui, sans-serif',
+  fontPromo:   '"Rubik One", "Impact", sans-serif',
 
 
   // ── Color de acento (marca) ────────────────────────────────────────────────
   // Afecta botones principales, badges, hovers y elementos destacados.
-  accent:      "#B5836A",   // Terracota-rosa — cuero italiano, sofisticado
-  accentOn:    "#1E0D07",   // Texto sobre el acento — contraste oscuro
-  accentLight: "#F5E8DF",   // Blush muy claro (fondos suaves, alertas, badges)
-  accentDark:  "#7A4728",   // Siena profundo (texto sobre fondos claros)
+  accent:      "#C9A87C",   // Brass dorado — cálido, complementa navy y crema
+  accentOn:    "#1C2438",   // Texto sobre el acento — contraste oscuro
+  accentLight: "#F5EAD8",   // Crema suave — fondos de badges y alertas
+  accentDark:  "#8A6B3A",   // Bronce oscuro — texto sobre fondos claros
 
   // ── Acento secundario ──────────────────────────────────────────────────────
-  // Complementa al acento principal. Útil para badges "Nuevo", "Exclusivo",
-  // bordes especiales y elementos de contraste dentro del sitio.
-  accentSecondary:   "#3D1F0F",   // Espresso oscuro — marrón cuero muy profundo
-  accentSecondaryOn: "#F5EDE6",   // Crema cálida — texto sobre el secundario
+  accentSecondary:   "#283149",   // Navy Stilos — contenedores y bloques de impacto
+  accentSecondaryOn: "#F3E6D9",   // Crema Stilos — texto sobre navy
 
 
   // ── Contenido ─────────────────────────────────────────────────────────────
   // Afecta la página, formularios, inputs, cards, modales, tablas y dropdowns.
   content: {
-    navy:    "#1E0D07",   // Espresso profundo — botón primario, links, énfasis fuerte
-    ink:     "#2A1710",   // Marrón cálido oscuro — texto principal de la página
-    muted:   "#9B7B6A",   // Rosa-gris polvoriento — texto secundario, placeholders
-    surface: "#FBF8F5",   // Blanco cremoso cálido — fondo de la página y secciones
+    navy:    "#283149",   // Navy Stilos — botón primario, links, énfasis fuerte
+    ink:     "#1C2438",   // Casi negro azulado — texto principal de la página
+    muted:   "#8A95A8",   // Azul-gris polvoriento — texto secundario, placeholders
+    surface: "#F3E6D9",   // Crema Stilos — fondo de la página y secciones
     card:    "#FFFFFF",   // Blanco puro — fondo de cards, modales y dropdowns
-    line:    "#EDE4DC",   // Borde cálido rosado-gris — separadores y bordes
+    line:    "#E2D3C4",   // Borde crema-cálido — separadores y bordes
   },
 
 
@@ -46,16 +45,15 @@ export const themeConfig = {
   // Afecta la barra superior fija, el mega-menú y el menú móvil.
   //
   // Ejemplos de combinaciones:
-  //   Crema cálida (actual) → bg: "#FAF5F0",  text: "#1E0D07",  textDim: "#9B7B6A"
-  //   Espresso oscuro       → bg: "#1E0D07",  text: "#FAF5F0",  textDim: "#9B7B6A"
-  //   Terracota suave       → bg: "#F5E8DF",  text: "#3D1F0F",  textDim: "#9B7B6A"
-  //   Blanco limpio         → bg: "#ffffff",  text: "#2A1710",  textDim: "#9B7B6A"
+  //   Crema (actual)  → bg: "#F3E6D9",  text: "#283149",  textDim: "#7A8FA8"
+  //   Navy sólido     → bg: "#283149",  text: "#F3E6D9",  textDim: "#8A95A8"
+  //   Blanco limpio   → bg: "#ffffff",  text: "#1C2438",  textDim: "#8A95A8"
   navbar: {
-    bg:       "#FAF5F0",   // Crema cálida — evoca papel de seda, lujo discreto
-    bgRaised: "#F0E6DB",   // Mega-menú — tono más profundo de la crema
+    bg:       "#F3E6D9",   // Crema Stilos — navbar limpio que combina con el fondo de página
+    bgRaised: "#EBD8C5",   // Crema más profunda — mega-menú y panel elevado
     bgFloat:  "#FFFFFF",   // Dropdown de usuario (siempre claro)
-    text:     "#1E0D07",   // Espresso — legible y cálido
-    textDim:  "#9B7B6A",   // Rosa-gris — links inactivos
+    text:     "#283149",   // Navy — legible y de marca
+    textDim:  "#7A8FA8",   // Azul-gris — links inactivos
   },
 
 
@@ -63,13 +61,12 @@ export const themeConfig = {
   // Afecta el pie de página, redes sociales y copyright.
   //
   // Ejemplos de combinaciones:
-  //   Espresso (actual) → bg: "#1E0D07",  text: "#FAF5F0",  textDim: "#9B7B6A"
-  //   Terracota oscuro  → bg: "#3D1F0F",  text: "#FAF5F0",  textDim: "#C4956A"
-  //   Crema             → bg: "#FAF5F0",  text: "#1E0D07",  textDim: "#9B7B6A"
+  //   Navy (actual)  → bg: "#283149",  text: "#F3E6D9",  textDim: "#8A95A8"
+  //   Crema          → bg: "#F3E6D9",  text: "#283149",  textDim: "#7A8FA8"
   footer: {
-    bg:      "#1E0D07",   // Espresso profundo — elegante y definido
-    text:    "#FAF5F0",   // Crema — texto principal del footer
-    textDim: "#9B7B6A",   // Rosa-gris — texto secundario y links
+    bg:      "#283149",   // Navy Stilos — footer sólido y de marca
+    text:    "#F3E6D9",   // Crema — texto principal del footer
+    textDim: "#8A95A8",   // Azul-gris — texto secundario y links
   },
 
 
@@ -77,13 +74,13 @@ export const themeConfig = {
   // Afecta el sidebar y la barra del backoffice. No afecta el frontend público.
   //
   // Ejemplos de combinaciones:
-  //   Espresso (actual) → bg: "#1A0C07",  bgRaised: "#261508",  text: "#F5EDE6",  textDim: "#8B6B5A"
-  //   Slate medio       → bg: "#1e293b",  bgRaised: "#334155",  text: "#f8fafc",  textDim: "#94a3b8"
+  //   Navy oscuro (actual) → bg: "#1C2438",  bgRaised: "#283149",  text: "#F3E6D9",  textDim: "#8A95A8"
+  //   Slate medio          → bg: "#1e293b",  bgRaised: "#334155",  text: "#f8fafc",  textDim: "#94a3b8"
   admin: {
-    bg:       "#1A0C07",   // Espresso profundo
-    bgRaised: "#261508",   // Sidebar activo, hover
-    text:     "#F5EDE6",   // Crema — texto del panel
-    textDim:  "#8B6B5A",   // Rosa-gris — texto secundario del panel
+    bg:       "#1C2438",   // Navy muy oscuro — sidebar profundo
+    bgRaised: "#283149",   // Navy Stilos — hover y activo
+    text:     "#F3E6D9",   // Crema — texto del panel
+    textDim:  "#8A95A8",   // Azul-gris — texto secundario del panel
   },
 
 
