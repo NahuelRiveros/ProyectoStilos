@@ -11,6 +11,7 @@ import { ordenesRouter }    from "./ordenes_routes.js";
 import { uploadRouter }     from "./upload_routes.js";
 import { homeConfigRouter }     from "./home_config_routes.js";
 import { whatsappConfigRouter } from "./whatsapp_config_routes.js";
+import { mediosPagoRouter }    from "./medios_pago_routes.js";
 
 import { verificarSuscripcion } from "../middleware/suscripcion_middleware.js";
 
@@ -68,7 +69,8 @@ router.use("/carrito",    carritoRouter);
 router.use("/ordenes",    ordenesRouter);
 router.use("/upload",     uploadRouter);
 router.use("/home-config",      homeConfigRouter);
-router.use("/config/whatsapp", whatsappConfigRouter);
+router.use("/config/whatsapp",     whatsappConfigRouter);
+router.use("/config/medios-pago",  mediosPagoRouter);
 
 // router.use("/personas", personasRouter);
 

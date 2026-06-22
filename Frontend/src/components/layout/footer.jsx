@@ -30,17 +30,17 @@ function LogoMastercard() {
   );
 }
 
-function LogoAmex() {
-  return (
-    <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="American Express">
-      <rect width="38" height="24" rx="3" fill="#2E77BC" />
-      <text x="19" y="16" textAnchor="middle" fill="white"
-        fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="8.5">
-        AMEX
-      </text>
-    </svg>
-  );
-}
+// function LogoAmex() {
+//   return (
+//     <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="American Express">
+//       <rect width="38" height="24" rx="3" fill="#2E77BC" />
+//       <text x="19" y="16" textAnchor="middle" fill="white"
+//         fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="8.5">
+//         AMEX
+//       </text>
+//     </svg>
+//   );
+// }
 
 function LogoNaranja() {
   return (
@@ -82,7 +82,7 @@ function LogoMercadoPago() {
 const LOGOS_TARJETAS = {
   visa:       LogoVisa,
   mastercard: LogoMastercard,
-  amex:       LogoAmex,
+  // amex:       LogoAmex,
   naranja:    LogoNaranja,
   cabal:      LogoCabal,
 };

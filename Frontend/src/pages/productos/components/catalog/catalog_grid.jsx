@@ -1,6 +1,6 @@
 import { PackageOpen } from "lucide-react";
-import ProductCard from "../../../components/home/product_card";
-import { storeConfig } from "../../../config/app_config";
+import ProductCard from "../../../../components/products/product_card";
+import { storeConfig } from "../../../../config/app_config";
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR");
@@ -14,13 +14,12 @@ function formatDiscount(p) {
 
 function SkeletonCard() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl bg-card">
-      <div className="aspect-3/4 animate-pulse bg-surface" />
-      <div className="space-y-2 px-4 pb-4 pt-3">
-        <div className="h-3 w-16 animate-pulse rounded bg-surface" />
-        <div className="h-4 w-32 animate-pulse rounded bg-surface" />
-        <div className="mt-3 h-3 w-20 animate-pulse rounded bg-surface" />
-        <div className="mt-2 h-9 w-full animate-pulse rounded bg-surface" />
+    <div className="flex flex-col overflow-hidden bg-card" style={{ boxShadow: "0 0 0 1px var(--color-line)" }}>
+      <div className="aspect-3/4 animate-pulse" style={{ background: "var(--color-surface)" }} />
+      <div className="space-y-2 px-3 pb-4 pt-2.5" style={{ borderTop: "1px solid var(--color-line)" }}>
+        <div className="h-2 w-12 animate-pulse bg-surface" />
+        <div className="h-3.5 w-28 animate-pulse bg-surface" />
+        <div className="mt-2 h-3 w-16 animate-pulse bg-surface" />
       </div>
     </div>
   );

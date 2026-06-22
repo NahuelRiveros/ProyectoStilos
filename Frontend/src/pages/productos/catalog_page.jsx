@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 
-import CatalogHeader  from "./components/catalog_header";
+import CatalogHeader  from "./components/catalog/catalog_header";
 import CatalogFilters, {
   FILTROS_DEFAULT,
   countActiveFiltros,
-} from "./components/catalog_filters";
-import CatalogGrid  from "./components/catalog_grid";
-import BrandStrip   from "./components/brand_strip";
+} from "./components/catalog/catalog_filters";
+import CatalogGrid  from "./components/catalog/catalog_grid";
+import BrandStrip   from "./components/catalog/brand_strip";
 
 import { getProductos }          from "../../api/producto_api";
 import { getCatalogoNavegacion, getCategorias, getGeneros, getMarcas } from "../../api/catalogo_api";

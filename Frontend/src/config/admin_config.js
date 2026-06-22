@@ -18,6 +18,7 @@ export const adminConfig = {
     stockAlerts:  true,   // Alertas de stock bajo
     home:         true,   // Editor de banners y sección home
     whatsapp:     true,   // Configuración de WhatsApp (número, mensaje, nota de entrega)
+    mediosPago:   true,   // Medios de pago y promociones de cuotas
     users:        true,   // Gestión de usuarios y roles
     subscription: true,   // Plan y suscripción del cliente
     orders:       false,  // Pedidos (requiere modo ecommerce)

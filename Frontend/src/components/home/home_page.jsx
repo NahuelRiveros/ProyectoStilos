@@ -10,7 +10,7 @@ import { getHomeConfig } from "../../api/home_config_api";
 import { getOfertasDestacadas, getProductos } from "../../api/producto_api";
 import AnnouncementBar from "./announcement_bar";
 import HomeCarousel from "./home_carousel";
-import ProductCard from "./product_card";
+import ProductCard from "../products/product_card";
 import PromoProductsSection from "./promo_products_section";
 
 const PERK_ICONS = {
