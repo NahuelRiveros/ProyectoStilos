@@ -5,11 +5,11 @@ export const brandConfig = {
 
   // ── Nombre y logo ─────────────────────────────────────────────────────────
   // Nombre completo — aparece en el menú y en el título del navegador
-  name: "Angar",
+  name: "Stilos",
   // Abreviación del nombre — se muestra cuando el espacio en el menú es reducido (celular)
-  shortName: "A",
+  shortName: "S",
   // Frase corta que describe el negocio — aparece en la home y ayuda al SEO
-  tagline: "Catálogo de productos",
+  tagline: "Moda y estilo",
   // URL del logo. null = se muestra el nombre en texto.
   // Subir el logo a Cloudinary y pegar la URL, o usar "/logo.png" dentro de /public
   logoUrl: null,
@@ -18,18 +18,18 @@ export const brandConfig = {
 
   // ── Panel de administración ────────────────────────────────────────────────
   // Nombre que aparece en el encabezado del backoffice
-  adminName: "Angar Backoffice",
+  adminName: "Stilos Backoffice",
 
   // ── Footer ─────────────────────────────────────────────────────────────────
-  footerName: "Angar",
+  footerName: "Stilos",
   // Frase debajo del nombre en el footer
-  footerSubtitle: "Base ecommerce modular",
+  footerSubtitle: "Moda y estilo",
   // Texto de copyright al pie de página
-  footerLicense: "Base ecommerce",
+  footerLicense: "Stilos",
 
   // Redes sociales — dejar vacío ("") para ocultar el ícono en el footer
   social: {
-    instagram: "https://www.instagram.com/angar.accesorios",
+    instagram: "",
     facebook: "",
     linkedin: "",
     github: "",
