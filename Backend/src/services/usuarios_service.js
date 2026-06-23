@@ -40,6 +40,7 @@ function _formatear(usuario) {
 export async function crearUsuario(data, { forzarRol } = {}) {
   const nombre    = normalizarTexto(data?.nombre);
   const apellido  = normalizarTexto(data?.apellido);
+  const documento = normalizarTexto(data?.documento) || null;
   const email     = normalizarEmail(data?.email);
   const password  = String(data?.password || "");
   const username  = normalizarTexto(data?.username) || derivarUsername(email);
@@ -77,6 +78,7 @@ export async function crearUsuario(data, { forzarRol } = {}) {
     const usuario = await Auth02Usuario.create({
       AUTH02_NOMBRE:     nombre,
       AUTH02_APELLIDO:   apellido,
+      AUTH02_DOCUMENTO:  documento,
       AUTH02_EMAIL:      email,
       AUTH02_CONTRASENA: passwordHash,
       AUTH02_USERNAME:   username,

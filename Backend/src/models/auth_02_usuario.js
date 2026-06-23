@@ -28,6 +28,11 @@ export const Auth02Usuario = sequelize.define(
       allowNull: false,
     },
 
+    AUTH02_DOCUMENTO: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+
     AUTH02_EMAIL: {
       type: DataTypes.STRING(150),
       allowNull: false,
