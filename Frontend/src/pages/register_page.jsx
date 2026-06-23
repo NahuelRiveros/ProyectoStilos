@@ -1,9 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../auth/auth_context";
-import { getEstadosCiviles } from "../api/estado_civil_api.js";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -15,18 +14,11 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm();
 
-  const [errorGeneral,  setErrorGeneral]  = useState("");
-  const [okMensaje,     setOkMensaje]     = useState("");
-  const [loading,       setLoading]       = useState(false);
-  const [estadosCiviles, setEstadosCiviles] = useState([]);
-  const [showPass,      setShowPass]      = useState(false);
-  const [showPassConf,  setShowPassConf]  = useState(false);
-
-  useEffect(() => {
-    getEstadosCiviles()
-      .then(res => setEstadosCiviles(res.data || []))
-      .catch(() => {});
-  }, []);
+  const [errorGeneral, setErrorGeneral] = useState("");
+  const [okMensaje,    setOkMensaje]    = useState("");
+  const [loading,      setLoading]      = useState(false);
+  const [showPass,     setShowPass]     = useState(false);
+  const [showPassConf, setShowPassConf] = useState(false);
 
   async function onSubmit(data) {
     setErrorGeneral("");
@@ -34,12 +26,11 @@ export default function RegisterPage() {
     setLoading(true);
 
     const payload = {
-      nombre:          data.nombre?.trim(),
-      apellido:        data.apellido?.trim(),
-      documento:       data.documento?.trim(),
-      estado_civil_id: data.estado_civil_id,
-      email:           data.email?.trim().toLowerCase(),
-      password:        data.password,
+      nombre:    data.nombre?.trim(),
+      apellido:  data.apellido?.trim(),
+      documento: data.documento?.trim(),
+      email:     data.email?.trim().toLowerCase(),
+      password:  data.password,
     };
 
     try {
@@ -220,8 +211,8 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Documento */}
-                <div>
-                  <label className="label-form">Documento</label>
+                <div className="sm:col-span-2">
+                  <label className="label-form">DNI</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -235,25 +226,6 @@ export default function RegisterPage() {
                     })}
                   />
                   {errors.documento && <p className="error-form">{errors.documento.message}</p>}
-                </div>
-
-                {/* Estado civil */}
-                <div>
-                  <label className="label-form">Estado civil</label>
-                  <select
-                    className="input-form"
-                    {...register("estado_civil_id", { required: "Seleccioná un estado civil" })}
-                  >
-                    <option value="">Seleccioná…</option>
-                    {estadosCiviles.map(ec => (
-                      <option key={ec.ID_USEPERS03} value={ec.ID_USEPERS03}>
-                        {ec.USEPERS03_DESCRI}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.estado_civil_id && (
-                    <p className="error-form">{errors.estado_civil_id.message}</p>
-                  )}
                 </div>
 
                 {/* Email — span 2 */}
