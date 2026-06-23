@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Save, Check, CreditCard, Plus, X } from "lucide-react";
+import { Save, Check, CreditCard, Plus, X, CheckCircle2, Landmark, Smartphone, BadgePercent } from "lucide-react";
 import { getMediosPago, saveMediosPago, DEFAULT_MEDIOS_PAGO } from "../../api/medios_pago_api";
 import { AdminSpinner } from "../../components/admin";
 
@@ -77,7 +77,7 @@ function CuotaGrid({ cuotas, onChange }) {
                     : { background: "transparent", color: "var(--color-muted)", borderColor: "var(--color-line)" }
                   }
                 >
-                  {si ? "✓ sin $" : "con $"}
+                  {si ? "✓ sin interés" : "en cuotas"}
                 </button>
               )}
             </div>
@@ -266,6 +266,126 @@ function MetodoCard({ metodo, tarjetasConfig, onChange }) {
   );
 }
 
+// ── Preview fiel al widget del producto ─────────────────────────────────────
+
+const ICONOS_METODO = {
+  mercadopago:   Smartphone,
+  go_cuotas:     BadgePercent,
+  transferencia: Landmark,
+  efectivo:      Landmark,
+};
+
+function PreviewWidget({ config, logoMap, activos }) {
+  const metodoTarjeta = activos.find(m => m.id === "tarjeta_credito");
+  const gruposActivos = (metodoTarjeta?.grupos ?? []).filter(
+    g => g.tarjetas?.length > 0 && g.cuotas?.length > 0
+  );
+  const gruposSI  = gruposActivos.filter(g => g.cuotas.some(c => c.sinInteres));
+  const todasSI   = [...new Map(
+    gruposActivos.flatMap(g => g.cuotas.filter(c => c.sinInteres)).map(c => [c.cantidad, c])
+  ).values()].sort((a, b) => a.cantidad - b.cantidad);
+  const otrosActivos = activos.filter(m => m.id !== "tarjeta_credito");
+
+  return (
+    <div className="overflow-hidden border border-line max-w-sm">
+      {/* Encabezado */}
+      <div className="px-4 py-2.5 border-b border-line bg-surface">
+        <span className="text-[8.5px] font-black uppercase tracking-[0.25em] text-muted">
+          Medios de pago
+        </span>
+      </div>
+
+      {/* Callout sin interés */}
+      {todasSI.length > 0 && (
+        <div className="px-4 py-3.5 border-b border-line"
+          style={{ borderLeft: "3px solid #059669", background: "color-mix(in srgb, #ecfdf5 55%, var(--color-card))" }}>
+          <div className="flex items-start gap-2.5">
+            <CheckCircle2 size={14} className="shrink-0 mt-px" style={{ color: "#059669" }} />
+            <div className="space-y-2 min-w-0">
+              <p className="text-[11px] font-black leading-tight" style={{ color: "#065f46" }}>
+                {listarCuotas(todasSI)} cuotas sin interés
+              </p>
+              <div className="space-y-1.5">
+                {gruposSI.map((g, i) => {
+                  const si = g.cuotas.filter(c => c.sinInteres).sort((a, b) => a.cantidad - b.cantidad);
+                  return (
+                    <div key={i} className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        {g.tarjetas.map((nombre, j) =>
+                          logoMap[nombre] ? (
+                            <img key={j} src={logoMap[nombre]} alt={nombre}
+                              className="object-contain shrink-0"
+                              style={{ height: 20, width: "auto", maxWidth: 42 }}
+                              onError={e => { e.target.style.display = "none"; }}
+                            />
+                          ) : (
+                            <span key={j} className="text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5 border"
+                              style={{ borderColor: "#6ee7b7", color: "#065f46" }}>{nombre}</span>
+                          )
+                        )}
+                      </div>
+                      {gruposSI.length > 1 && (
+                        <span className="text-[9px] font-semibold" style={{ color: "#059669" }}>
+                          {listarCuotas(si)}x
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sin grupos sin interés pero hay tarjeta habilitada */}
+      {todasSI.length === 0 && metodoTarjeta && gruposActivos.length > 0 && (
+        <div className="px-4 py-3 border-b border-line bg-card">
+          <div className="flex items-center gap-3">
+            {gruposActivos.flatMap(g => g.tarjetas).slice(0, 4).map((nombre, j) =>
+              logoMap[nombre] ? (
+                <img key={j} src={logoMap[nombre]} alt={nombre}
+                  className="object-contain shrink-0"
+                  style={{ height: 20, width: "auto", maxWidth: 42 }}
+                  onError={e => { e.target.style.display = "none"; }}
+                />
+              ) : null
+            )}
+            <span className="text-[10px] font-semibold text-muted">pago en cuotas</span>
+          </div>
+        </div>
+      )}
+
+      {/* Otros métodos */}
+      {otrosActivos.length > 0 && (
+        <div className="px-4 py-3 flex flex-wrap gap-x-4 gap-y-2 bg-surface">
+          {otrosActivos.map(m => {
+            const Icono = ICONOS_METODO[m.id] ?? CreditCard;
+            return (
+              <div key={m.id} className="flex items-center gap-1.5">
+                {m.logo
+                  ? <img src={m.logo} alt="" style={{ height: 13, width: "auto", objectFit: "contain" }}
+                      onError={e => { e.target.style.display = "none"; }} />
+                  : <Icono size={13} className="text-navy shrink-0" />
+                }
+                <span className="text-[10px] font-semibold" style={{ color: "var(--color-ink)", opacity: 0.75 }}>
+                  {m.nombre}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {config.nota && (
+        <div className="px-4 py-2 border-t border-line bg-surface">
+          <p className="text-[9px] text-muted">{config.nota}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Página principal ─────────────────────────────────────────────────────────
 
 export default function AdminMediosPagoPage() {
@@ -365,94 +485,13 @@ export default function AdminMediosPagoPage() {
         />
       </div>
 
-      {/* Vista previa */}
+      {/* Vista previa — idéntica al widget del producto */}
       {activos.length > 0 && (
         <div className="rounded-2xl border border-line bg-surface p-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">Vista previa</p>
-          <div className="space-y-3">
-            {activos.map(m => {
-              const grupos = m.id === "tarjeta_credito" ? (m.grupos ?? []) : null;
-
-              return (
-                <div key={m.id} className="flex gap-3 pb-3 border-b border-line last:border-0 last:pb-0">
-                  {/* Ícono método */}
-                  <div className="h-8 w-10 shrink-0 flex items-center justify-center overflow-hidden">
-                    {m.logo
-                      ? <img src={m.logo} alt="" className="h-5 w-full object-contain"
-                          onError={e => { e.target.style.display = "none"; }} />
-                      : <CreditCard size={14} className="text-muted/40" />}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-ink">{m.nombre}</p>
-                    {m.descripcion && <p className="text-xs text-muted mt-0.5">{m.descripcion}</p>}
-
-                    {/* Tarjeta crédito: mostrar por grupo */}
-                    {grupos && grupos.length > 0 && (
-                      <div className="mt-2 space-y-1.5">
-                        {grupos.map((g, gi) => {
-                          const si = g.cuotas.filter(c => c.sinInteres).sort((a, b) => a.cantidad - b.cantidad);
-                          const ci = g.cuotas.filter(c => !c.sinInteres && c.cantidad > 1).sort((a, b) => a.cantidad - b.cantidad);
-                          if (!g.tarjetas.length && !si.length && !ci.length) return null;
-                          return (
-                            <div key={gi} className="flex items-center gap-2 flex-wrap">
-                              {/* Logos del grupo */}
-                              {g.tarjetas.map((nombre, j) =>
-                                logoMap[nombre] ? (
-                                  <img key={j} src={logoMap[nombre]} alt={nombre} title={nombre}
-                                    className="object-contain"
-                                    style={{ height: 14, width: "auto", maxWidth: 28 }}
-                                    onError={e => { e.target.style.display = "none"; }} />
-                                ) : (
-                                  <span key={j} className="text-[10px] text-muted border border-line px-1 py-px">{nombre}</span>
-                                )
-                              )}
-                              {/* Chips cuotas */}
-                              {si.length > 0 && (
-                                <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
-                                  {listarCuotas(si)} sin interés
-                                </span>
-                              )}
-                              {ci.length > 0 && (
-                                <span className="inline-flex items-center rounded-full border border-line bg-card px-2 py-0.5 text-[10px] font-semibold text-muted">
-                                  {listarCuotas(ci)} con interés
-                                </span>
-                              )}
-                              {g.descripcion && (
-                                <span className="text-[10px] text-muted italic">{g.descripcion}</span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Otros métodos con cuotas (go_cuotas, etc.) */}
-                    {!grupos && (() => {
-                      const si = m.cuotas?.filter(c => c.sinInteres) ?? [];
-                      const ci = m.cuotas?.filter(c => !c.sinInteres && c.cantidad > 1) ?? [];
-                      if (!si.length && !ci.length) return null;
-                      return (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          {si.length > 0 && (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600">
-                              {listarCuotas(si)} sin interés
-                            </span>
-                          )}
-                          {ci.length > 0 && (
-                            <span className="inline-flex items-center rounded-full border border-line bg-card px-2.5 py-0.5 text-[11px] font-semibold text-muted">
-                              {listarCuotas(ci)} con interés
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {config.nota && <p className="mt-3 pt-3 border-t border-line text-[11px] text-muted">{config.nota}</p>}
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">
+            Vista previa (tal como ve el cliente en el producto)
+          </p>
+          <PreviewWidget config={config} logoMap={logoMap} activos={activos} />
         </div>
       )}
     </div>
