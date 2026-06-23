@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha de relevamiento ecommerce base</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --soft: #f7f8fb;
+      --brand: #9a7b4f;
+      --brand-dark: #4b3a24;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #eef2f7;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    main {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 24px auto;
+      background: white;
+      padding: 18mm;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 24px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+      color: var(--brand-dark);
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+
+    p { margin: 0 0 8px; }
+
+    .intro {
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .meta,
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 14px;
+    }
+
+    .field {
+      min-height: 30px;
+      border-bottom: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .field strong {
+      display: inline-block;
+      min-width: 130px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .wide { grid-column: 1 / -1; }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px 14px;
+      margin: 8px 0;
+    }
+
+    .check {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .box {
+      width: 13px;
+      height: 13px;
+      border: 1.5px solid var(--brand);
+      flex: 0 0 13px;
+    }
+
+    .lines {
+      min-height: 56px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      padding: 8px;
+      margin-top: 6px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .table th,
+    .table td {
+      border: 1px solid var(--line);
+      padding: 7px;
+      text-align: left;
+      height: 28px;
+    }
+
+    .table th {
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .codex {
+      white-space: pre-wrap;
+      border: 1px solid var(--line);
+      background: #fbfbfd;
+      padding: 12px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .page-break { break-before: page; }
+
+    @media print {
+      body { background: white; }
+      main {
+        width: auto;
+        min-height: auto;
+        margin: 0;
+        padding: 12mm;
+        box-shadow: none;
+      }
+      h2 { break-after: avoid; }
+      .section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Ficha de relevamiento para ecommerce base</h1>
+      <p class="intro">Usar esta ficha para entrevistar al cliente y obtener los datos necesarios para configurar la tienda.</p>
+      <div class="meta">
+        <div class="field"><strong>Fecha</strong></div>
+        <div class="field"><strong>Cliente</strong></div>
+        <div class="field"><strong>Responsable</strong></div>
+        <div class="field"><strong>Contacto</strong></div>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2>1. Identidad de marca</h2>
+      <div class="grid">
+        <div class="field"><strong>Nombre comercial</strong></div>
+        <div class="field"><strong>Nombre corto</strong></div>
+        <div class="field wide"><strong>Tagline</strong></div>
+        <div class="field"><strong>Logo URL/archivo</strong></div>
+        <div class="field"><strong>Instagram</strong></div>
+        <div class="field"><strong>Facebook</strong></div>
+        <div class="field"><strong>Otra red/sitio</strong></div>
+      </div>
+      <div class="lines"><strong>Notas visuales:</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>2. Datos del negocio</h2>
+      <div class="grid">
+        <div class="field"><strong>Razon social</strong></div>
+        <div class="field"><strong>CUIT/ID fiscal</strong></div>
+        <div class="field wide"><strong>Direccion</strong></div>
+        <div class="field"><strong>Ciudad/provincia</strong></div>
+        <div class="field"><strong>Pais</strong></div>
+        <div class="field"><strong>Horarios</strong></div>
+        <div class="field"><strong>Email soporte</strong></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. Modo de tienda</h2>
+      <div class="check-grid">
+        <label class="check"><span class="box"></span>Solo catalogo</label>
+        <label class="check"><span class="box"></span>Catalogo + WhatsApp</label>
+        <label class="check"><span class="box"></span>Ecommerce con checkout</label>
+        <label class="check"><span class="box"></span>Mostrar precios</label>
+        <label class="check"><span class="box"></span>Mostrar stock</label>
+        <label class="check"><span class="box"></span>Habilitar carrito</label>
+        <label class="check"><span class="box"></span>Habilitar checkout</label>
+        <label class="check"><span class="box"></span>Habilitar pagos online</label>
+      </div>
+      <div class="lines"><strong>Notas:</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>4. WhatsApp</h2>
+      <div class="grid">
+        <div class="field"><strong>Numero</strong></div>
+        <div class="field"><strong>Incluye precio/total</strong></div>
+        <div class="field wide"><strong>Mensaje inicial</strong></div>
+        <div class="field wide"><strong>Mensaje cierre</strong></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>5. Catalogo y navegacion</h2>
+      <div class="grid">
+        <div class="field"><strong>Label catalogo</strong></div>
+        <div class="field"><strong>Usa grupos/generos</strong></div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Grupo principal</th><th>Categorias padre</th><th>Subcategorias / filtros hijos</th></tr></thead>
+        <tbody>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="check-grid">
+        <label class="check"><span class="box"></span>Mostrar Home</label>
+        <label class="check"><span class="box"></span>Mostrar Productos</label>
+        <label class="check"><span class="box"></span>Dropdown por grupos</label>
+        <label class="check"><span class="box"></span>Mostrar Admin</label>
+      </div>
+    </section>
+
+    <section class="section page-break">
+      <h2>6. Home</h2>
+      <div class="check-grid">
+        <label class="check"><span class="box"></span>Carrusel</label>
+        <label class="check"><span class="box"></span>Categorias</label>
+        <label class="check"><span class="box"></span>Novedades</label>
+        <label class="check"><span class="box"></span>Ofertas</label>
+        <label class="check"><span class="box"></span>Productos destacados</label>
+        <label class="check"><span class="box"></span>Banner de marca</label>
+        <label class="check"><span class="box"></span>Beneficios</label>
+        <label class="check"><span class="box"></span>Anuncio superior</label>
+      </div>
+      <table class="table">
+        <thead><tr><th>Slide/seccion</th><th>Titulo</th><th>Texto</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td></td><td></td><td></td></tr>
+          <tr><td>2</td><td></td><td></td><td></td></tr>
+          <tr><td>3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>7. Productos</h2>
+      <div class="check-grid">
+        <label class="check"><span class="box"></span>Nombre</label>
+        <label class="check"><span class="box"></span>Descripcion</label>
+        <label class="check"><span class="box"></span>Precio</label>
+        <label class="check"><span class="box"></span>Precio anterior</label>
+        <label class="check"><span class="box"></span>Imagenes Cloudinary</label>
+        <label class="check"><span class="box"></span>Categoria/subcategoria</label>
+        <label class="check"><span class="box"></span>Marca</label>
+        <label class="check"><span class="box"></span>Talles/colores</label>
+        <label class="check"><span class="box"></span>Stock</label>
+        <label class="check"><span class="box"></span>Productos para ambos grupos</label>
+      </div>
+      <div class="lines"><strong>Notas de producto:</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>8. Admin y acceso</h2>
+      <div class="check-grid">
+        <label class="check"><span class="box"></span>Dashboard</label>
+        <label class="check"><span class="box"></span>Productos</label>
+        <label class="check"><span class="box"></span>Catalogos</label>
+        <label class="check"><span class="box"></span>Alertas stock</label>
+        <label class="check"><span class="box"></span>Home admin</label>
+        <label class="check"><span class="box"></span>Usuarios</label>
+        <label class="check"><span class="box"></span>Suscripcion</label>
+        <label class="check"><span class="box"></span>Pedidos/pagos/facturas</label>
+      </div>
+      <div class="grid">
+        <div class="field"><strong>Nombre backoffice</strong></div>
+        <div class="field"><strong>Registro publico</strong></div>
+      </div>
+      <div class="lines"><strong>Usuarios iniciales / roles:</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>9. Politicas, estilo y Cloudinary</h2>
+      <div class="grid">
+        <div class="field"><strong>Cambios</strong></div>
+        <div class="field"><strong>Envios/retiros</strong></div>
+        <div class="field"><strong>Color principal</strong></div>
+        <div class="field"><strong>Color acento</strong></div>
+        <div class="field"><strong>Estilo</strong></div>
+        <div class="field"><strong>Cloudinary</strong></div>
+      </div>
+      <div class="lines"><strong>Referencias visuales y observaciones:</strong></div>
+    </section>
+
+    <section class="section page-break">
+      <h2>10. Resumen para pegar a Codex</h2>
+      <p>Completar esta parte al final. Con esto se puede configurar la pagina automaticamente.</p>
+      <div class="codex">Cliente:
+Marca:
+Tagline:
+Logo:
+Redes:
+Modo tienda:
+Precios:
+Stock visible:
+Carrito:
+Checkout:
+Pagos:
+WhatsApp numero:
+WhatsApp mensaje inicial:
+WhatsApp mensaje cierre:
+Navbar:
+Catalogo grupos:
+Categorias:
+Subcategorias:
+Home secciones:
+Admin modulos:
+Datos legales:
+Politicas:
+Colores:
+Tipografia/estilo:
+Cloudinary:
+Notas:</div>
+    </section>
+  </main>
+</body>
+</html>
