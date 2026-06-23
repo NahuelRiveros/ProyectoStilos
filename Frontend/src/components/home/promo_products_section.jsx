@@ -135,18 +135,15 @@ function PromoProductsSection({
                   {
       /* CTA Button */
     }
-                  <button
-      onClick={(e) => {
-        e.preventDefault();
-      }}
-      className={[
-        "btn w-full text-xs uppercase tracking-widest",
-        isHovered ? "btn-primary" : "btn-secondary"
-      ].join(" ")}
-    >
+                  <span
+                    className={[
+                      "btn w-full text-xs uppercase tracking-widest pointer-events-none",
+                      isHovered ? "btn-primary" : "btn-secondary"
+                    ].join(" ")}
+                  >
                     <ShoppingBag size={13} />
                     Ver detalle
-                  </button>
+                  </span>
                 </div>
               </NavLink>;
   })}

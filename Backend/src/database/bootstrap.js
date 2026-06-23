@@ -18,6 +18,8 @@ import {
   Home01Config,
   Conf01Whatsapp,
   Conf02MediosPago,
+  Carr01Carrito,
+  Carr02Item,
 } from "../models/index.js";
 import { pers_01_persona } from "../models/personas/pers_01_persona.js";
 import { pers_02_tipo_documento } from "../models/personas/pers_02_tipo_documento.js";
@@ -71,6 +73,9 @@ async function sincronizar_modelos() {
     Home01Config,
     Conf01Whatsapp,
     Conf02MediosPago,
+    ////////
+    Carr01Carrito, // depende de Auth02Usuario
+    Carr02Item,    // depende de Carr01Carrito y Prod03Producto
   ];
 
   for (const model of modelos_en_orden) {
