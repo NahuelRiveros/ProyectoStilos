@@ -391,7 +391,24 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-card">
+    <div className="relative min-h-screen bg-card overflow-x-hidden">
+
+      {/* ── Watermarks S ─────────────────────────────────────────────── */}
+      <div aria-hidden="true" className="pointer-events-none select-none absolute inset-0 z-0 overflow-hidden">
+        <span className="absolute -top-24 -right-20 font-display italic font-light leading-none"
+          style={{ fontSize: "28rem", color: "rgba(40,49,73,0.038)", lineHeight: 1 }}>S</span>
+        <span className="absolute -bottom-28 -left-20 font-display italic font-light leading-none"
+          style={{ fontSize: "22rem", color: "rgba(40,49,73,0.032)", lineHeight: 1 }}>S</span>
+        <span className="absolute top-[38%] right-[4%] font-display italic font-light leading-none"
+          style={{ fontSize: "13rem", color: "rgba(40,49,73,0.025)", lineHeight: 1 }}>S</span>
+        <span className="absolute top-[18%] left-[6%] font-display italic font-light leading-none"
+          style={{ fontSize: "7rem", color: "rgba(40,49,73,0.022)", lineHeight: 1 }}>S</span>
+        <span className="absolute top-[62%] left-[22%] font-display italic font-light leading-none"
+          style={{ fontSize: "9rem", color: "rgba(40,49,73,0.025)", lineHeight: 1 }}>S</span>
+        <span className="absolute top-[82%] right-[18%] font-display italic font-light leading-none"
+          style={{ fontSize: "5.5rem", color: "rgba(40,49,73,0.02)", lineHeight: 1 }}>S</span>
+      </div>
+
       {config.announcement_activo !== false && (
         <AnnouncementBar items={config.announcement} />
       )}

@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "../layouts/app_layout";
 import ProtectedRoute from "./protected_route";
 
-import HomePage from "../pages/home_page";
+import HomePage from "../components/home/home_page";
 import LoginPage from "../pages/login_page";
 import RegisterPage from "../pages/register_page";
 import ForgotPasswordPage from "../pages/forgot_password_page";
