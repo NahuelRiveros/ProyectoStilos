@@ -1,20 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { getMediosPago } from "../../api/medios_pago_api";
-import { CreditCard, Smartphone, Banknote, BadgePercent } from "lucide-react";
+import { CreditCard, Smartphone, Landmark, BadgePercent, CheckCircle2 } from "lucide-react";
+
+// ── Íconos por método ────────────────────────────────────────────────────────
 
 const ICONOS_FALLBACK = {
   mercadopago:     Smartphone,
   tarjeta_credito: CreditCard,
   go_cuotas:       BadgePercent,
-  efectivo:        Banknote,
+  tarjeta_debito:  CreditCard,
+  transferencia:   Landmark,
+  efectivo:        Landmark,
 };
 
-// Ícono estilizado de tarjeta (débito o crédito genérica)
+// Ícono estilizado de tarjeta (SVG propio para débito/crédito sin logo)
 function IconoTarjeta({ size = 15, className = "" }) {
-  const w = Math.round(size * 1.55);
-  const h = size;
   return (
-    <svg width={w} height={h} viewBox="0 0 31 20" fill="none" aria-hidden="true" className={className}>
+    <svg
+      width={Math.round(size * 1.55)} height={size}
+      viewBox="0 0 31 20" fill="none" aria-hidden="true"
+      className={className}
+    >
       <rect x="0.5" y="0.5" width="30" height="19" rx="2.5"
         stroke="currentColor" strokeOpacity="0.35" />
       <rect y="5" width="31" height="5"
@@ -27,31 +33,33 @@ function IconoTarjeta({ size = 15, className = "" }) {
   );
 }
 
-function MetodoIcon({ metodo, size = 15, className = "" }) {
+function MetodoIcon({ metodo, size = 14 }) {
   if (metodo.logo) {
     return (
-      <img
-        src={metodo.logo}
-        alt={metodo.nombre}
-        className={["object-contain", className].join(" ")}
-        style={{ width: size * 1.8, height: size, minWidth: size * 1.8 }}
+      <img src={metodo.logo} alt={metodo.nombre}
+        className="object-contain shrink-0"
+        style={{ width: size * 1.8, height: size }}
         onError={e => { e.target.style.display = "none"; }}
       />
     );
   }
   if (metodo.id === "tarjeta_debito") {
-    return <IconoTarjeta size={size} className={["text-navy shrink-0", className].join(" ")} />;
+    return <IconoTarjeta size={size} className="text-navy shrink-0" />;
   }
   const Icono = ICONOS_FALLBACK[metodo.id] ?? CreditCard;
-  return <Icono size={size} className={["text-navy shrink-0", className].join(" ")} />;
+  return <Icono size={size} className="text-navy shrink-0" />;
 }
 
-// [3,6] → "3 y 6"  |  [3,6,12] → "3, 6 y 12"  |  [3] → "3"
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+// [3,6] → "3 y 6"  |  [3,6,12] → "3, 6 y 12"
 function listarCuotas(cuotas) {
   const ns = cuotas.map(c => c.cantidad);
   if (ns.length === 1) return `${ns[0]}`;
   return `${ns.slice(0, -1).join(", ")} y ${ns[ns.length - 1]}`;
 }
+
+// ── Componente principal ─────────────────────────────────────────────────────
 
 export default function PaymentMethods({ compact = false }) {
   const { data: config, isLoading } = useQuery({
@@ -70,127 +78,177 @@ export default function PaymentMethods({ compact = false }) {
     (config.tarjetasConfig ?? []).map(t => [t.nombre, t.logo]).filter(([, v]) => v)
   );
 
-  // ── Modo compacto (product detail) ──────────────────────────────────────────
+  // ── Modo compacto (product detail) ────────────────────────────────────────
   if (compact) {
-    const metodoTarjeta = activos.find(m => m.id === "tarjeta_credito");
-    const grupos = (metodoTarjeta?.grupos ?? []).filter(
+    const metodoTarjeta  = activos.find(m => m.id === "tarjeta_credito");
+    const gruposActivos  = (metodoTarjeta?.grupos ?? []).filter(
       g => g.tarjetas?.length > 0 && g.cuotas?.length > 0
     );
-    const otrosActivos = activos.filter(m => m.id !== "tarjeta_credito");
+    const otrosActivos   = activos.filter(m => m.id !== "tarjeta_credito");
+
+    // Todos los grupos que tienen al menos una cuota sin interés
+    const gruposSI = gruposActivos.filter(g => g.cuotas.some(c => c.sinInteres));
+
+    // Resumen global: máximas cuotas sin interés de cualquier grupo
+    const todasSI = [...new Map(
+      gruposActivos.flatMap(g => g.cuotas.filter(c => c.sinInteres))
+        .map(c => [c.cantidad, c])
+    ).values()].sort((a, b) => a.cantidad - b.cantidad);
 
     return (
-      <div className="space-y-2.5">
-        <p className="text-[9px] font-black uppercase tracking-[0.22em]"
-          style={{ color: "var(--color-muted)" }}>
-          Medios de pago
-        </p>
+      <div
+        className="space-y-0 overflow-hidden"
+        style={{ border: "1px solid var(--color-line)" }}
+      >
+        {/* ── Encabezado ── */}
+        <div
+          className="px-4 py-2.5 flex items-center gap-2"
+          style={{ borderBottom: "1px solid var(--color-line)", background: "var(--color-surface)" }}
+        >
+          <span
+            className="text-[8.5px] font-black uppercase tracking-[0.25em]"
+            style={{ color: "var(--color-muted)" }}
+          >
+            Medios de pago
+          </span>
+        </div>
 
-        {/* ── Tarjeta de crédito ── */}
-        {metodoTarjeta && (
+        {/* ── Callout principal: cuotas sin interés ── */}
+        {todasSI.length > 0 && (
           <div
-            className="overflow-hidden"
+            className="px-4 py-3.5"
             style={{
-              border: "1px solid var(--color-line)",
-              background: "var(--color-card)",
+              borderBottom: "1px solid var(--color-line)",
+              borderLeft: "3px solid #059669",
+              background: "color-mix(in srgb, #ecfdf5 55%, var(--color-card))",
             }}
           >
-            {grupos.length > 0 ? grupos.map((g, i) => {
-              const si = g.cuotas.filter(c => c.sinInteres).sort((a, b) => a.cantidad - b.cantidad);
-              const ci = g.cuotas.filter(c => !c.sinInteres && c.cantidad > 1).sort((a, b) => a.cantidad - b.cantidad);
-              return (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-3 px-3.5 py-2.5"
-                  style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : {}}
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 size={14} className="shrink-0 mt-px" style={{ color: "#059669" }} />
+              <div className="space-y-2 min-w-0">
+                <p
+                  className="text-[11px] font-black leading-tight"
+                  style={{ color: "#065f46" }}
                 >
-                  {/* Logos */}
-                  <div className="flex items-center gap-2.5 shrink-0">
-                    {g.tarjetas.map((nombre, j) =>
-                      logoMap[nombre] ? (
-                        <img key={j} src={logoMap[nombre]} alt={nombre} title={nombre}
-                          className="object-contain shrink-0"
-                          style={{ height: 22, width: "auto", maxWidth: 48 }}
-                          onError={e => { e.target.style.display = "none"; }}
-                        />
-                      ) : (
-                        <span key={j}
-                          className="text-[9px] font-black uppercase tracking-wide border px-1.5 py-px"
-                          style={{ color: "var(--color-muted)", borderColor: "var(--color-line)" }}>
-                          {nombre}
-                        </span>
-                      )
-                    )}
-                  </div>
+                  {listarCuotas(todasSI)} cuotas sin interés
+                </p>
 
-                  {/* Cuotas sin interés */}
-                  <div className="flex flex-wrap items-center gap-1 justify-end">
-                    {si.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold"
-                        style={{ color: "#059669" }}>
-                        <BadgePercent size={10} className="shrink-0" />
-                        {listarCuotas(si)} sin interés
-                      </span>
-                    )}
-                    {ci.length > 0 && si.length === 0 && (
-                      <span className="text-[10px] font-semibold"
-                        style={{ color: "var(--color-muted)" }}>
-                        {listarCuotas(ci)} cuotas
-                      </span>
-                    )}
-                  </div>
+                {/* Logos por grupo */}
+                <div className="space-y-1.5">
+                  {gruposSI.map((g, i) => {
+                    const si = g.cuotas.filter(c => c.sinInteres).sort((a, b) => a.cantidad - b.cantidad);
+                    return (
+                      <div key={i} className="flex items-center gap-2 flex-wrap">
+                        {/* Logos tarjetas */}
+                        <div className="flex items-center gap-2">
+                          {g.tarjetas.map((nombre, j) =>
+                            logoMap[nombre] ? (
+                              <img key={j} src={logoMap[nombre]} alt={nombre} title={nombre}
+                                className="object-contain shrink-0"
+                                style={{ height: 20, width: "auto", maxWidth: 42 }}
+                                onError={e => { e.target.style.display = "none"; }}
+                              />
+                            ) : (
+                              <span key={j}
+                                className="text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5 border"
+                                style={{ borderColor: "#6ee7b7", color: "#065f46", background: "transparent" }}
+                              >
+                                {nombre}
+                              </span>
+                            )
+                          )}
+                        </div>
+                        {/* Si hay más de un grupo, mostrar sus cuotas específicas */}
+                        {gruposSI.length > 1 && (
+                          <span className="text-[9px] font-semibold" style={{ color: "#059669" }}>
+                            {listarCuotas(si)}x
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            }) : (
-              /* Fallback sin grupos configurados */
-              <div className="flex items-center gap-3 px-3.5 py-2.5">
-                <div className="flex items-center gap-2.5">
-                  {(config.tarjetasConfig ?? []).map((t, j) =>
-                    t.logo ? (
-                      <img key={j} src={t.logo} alt={t.nombre} title={t.nombre}
-                        className="object-contain shrink-0"
-                        style={{ height: 22, width: "auto", maxWidth: 48 }}
-                        onError={e => { e.target.style.display = "none"; }}
-                      />
-                    ) : null
-                  )}
-                </div>
-                <span className="text-[10px] font-semibold" style={{ color: "var(--color-muted)" }}>
-                  pago en cuotas
-                </span>
               </div>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Sin grupos SI pero con tarjeta habilitada ── */}
+        {todasSI.length === 0 && metodoTarjeta && gruposActivos.length > 0 && (
+          <div
+            className="px-4 py-3"
+            style={{ borderBottom: "1px solid var(--color-line)", background: "var(--color-card)" }}
+          >
+            <div className="flex items-center gap-3">
+              {gruposActivos.flatMap(g => g.tarjetas).slice(0, 4).map((nombre, j) =>
+                logoMap[nombre] ? (
+                  <img key={j} src={logoMap[nombre]} alt={nombre}
+                    className="object-contain shrink-0"
+                    style={{ height: 20, width: "auto", maxWidth: 42 }}
+                    onError={e => { e.target.style.display = "none"; }}
+                  />
+                ) : null
+              )}
+              <span className="text-[10px] font-semibold" style={{ color: "var(--color-muted)" }}>
+                pago en cuotas
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ── Fallback: sin grupos configurados ── */}
+        {!metodoTarjeta && (
+          <div
+            className="px-4 py-3"
+            style={{ borderBottom: "1px solid var(--color-line)", background: "var(--color-card)" }}
+          >
+            <div className="flex items-center gap-3">
+              {(config.tarjetasConfig ?? []).map((t, j) =>
+                t.logo ? (
+                  <img key={j} src={t.logo} alt={t.nombre}
+                    className="object-contain shrink-0"
+                    style={{ height: 20, width: "auto", maxWidth: 42 }}
+                    onError={e => { e.target.style.display = "none"; }}
+                  />
+                ) : null
+              )}
+            </div>
           </div>
         )}
 
         {/* ── Otros métodos ── */}
         {otrosActivos.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div
+            className="px-4 py-3 flex flex-wrap gap-x-4 gap-y-2"
+            style={{ background: "var(--color-surface)" }}
+          >
             {otrosActivos.map(m => (
-              <div
-                key={m.id}
-                title={m.descripcion || m.nombre}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold"
-                style={{
-                  border: "1px solid var(--color-line)",
-                  background: "var(--color-card)",
-                  color: "var(--color-ink)",
-                }}
-              >
+              <div key={m.id} className="flex items-center gap-1.5">
                 <MetodoIcon metodo={m} size={13} />
-                {m.nombre}
+                <span
+                  className="text-[10px] font-semibold"
+                  style={{ color: "var(--color-ink)", opacity: 0.75 }}
+                >
+                  {m.nombre}
+                </span>
               </div>
             ))}
           </div>
         )}
 
         {config.nota && (
-          <p className="text-[10px]" style={{ color: "var(--color-muted)" }}>{config.nota}</p>
+          <div
+            className="px-4 py-2"
+            style={{ borderTop: "1px solid var(--color-line)", background: "var(--color-surface)" }}
+          >
+            <p className="text-[9px]" style={{ color: "var(--color-muted)" }}>{config.nota}</p>
+          </div>
         )}
       </div>
     );
   }
 
-  // ── Modo completo ─────────────────────────────────────────────────────────
+  // ── Modo completo (página de medios de pago o checkout) ───────────────────
   return (
     <div className="rounded-2xl border border-line bg-surface p-5 space-y-4">
       <p className="text-[11px] font-black uppercase tracking-widest text-muted">
@@ -199,15 +257,16 @@ export default function PaymentMethods({ compact = false }) {
 
       <div className="space-y-3">
         {activos.map(m => {
-          const grupos = m.id === "tarjeta_credito" ? (m.grupos ?? []) : null;
-          const cuotasSI = m.cuotas?.filter(c => c.sinInteres) ?? [];
-          const cuotasCI = m.cuotas?.filter(c => !c.sinInteres && c.cantidad > 1) ?? [];
+          const grupos    = m.id === "tarjeta_credito" ? (m.grupos ?? []) : null;
+          const cuotasSI  = m.cuotas?.filter(c => c.sinInteres) ?? [];
+          const cuotasCI  = m.cuotas?.filter(c => !c.sinInteres && c.cantidad > 1) ?? [];
 
           return (
             <div key={m.id} className="flex gap-3 pb-3 border-b border-line last:border-0 last:pb-0">
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card border border-line overflow-hidden p-1">
                 <MetodoIcon metodo={m} size={15} />
               </div>
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-ink">{m.nombre}</p>
                 {m.descripcion && (

@@ -45,7 +45,7 @@ export const DEFAULT_MEDIOS_PAGO = {
       cuotas: [{ cantidad: 24, sinInteres: true, tarjetas: ["Banco Nación"] }],
     },
     {
-      id: "efectivo", nombre: "Efectivo",
+      id: "transferencia", nombre: "Transferencia Bancaria",
       logo: "", habilitado: true, descripcion: "", cuotas: [],
     },
   ],

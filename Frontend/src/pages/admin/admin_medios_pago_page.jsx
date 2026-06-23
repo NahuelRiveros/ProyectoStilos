@@ -5,7 +5,7 @@ import { getMediosPago, saveMediosPago, DEFAULT_MEDIOS_PAGO } from "../../api/me
 import { AdminSpinner } from "../../components/admin";
 
 const CUOTAS_PRESET = [1, 3, 6, 12, 24];
-const SIN_CUOTAS    = ["efectivo", "tarjeta_debito"];
+const SIN_CUOTAS    = ["transferencia", "efectivo", "tarjeta_debito"];
 
 // ── Toggle switch ────────────────────────────────────────────────────────────
 
