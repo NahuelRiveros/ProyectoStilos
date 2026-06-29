@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Eye, EyeOff, ImageIcon, Plus, X } from "lucide-react";
+import {
+  ArrowRight, ChevronDown, ChevronUp,
+  Eye, EyeOff, ImageIcon, Plus, ShoppingBag, X,
+} from "lucide-react";
 import ImageUploader from "../../ui/image_uploader";
 import { urlToItem, itemToUrl } from "./home_config_helpers";
 
@@ -16,6 +19,151 @@ const TAG_PRESETS = [
   "Novedades", "Ofertas", "Temporada", "Premium",
   "Destacados", "Descuentos", "Stock", "Exclusivo",
 ];
+
+// ── Vista previa escalada del slide ───────────────────────────
+// Replica el layout real del HomeCarousel al 42% de tamaño.
+// pointer-events-none → no interfiere con el formulario.
+const PREVIEW_SCALE = 0.42;
+const SLIDE_REAL_H  = 560; // min-height del slide real en px
+
+function SlidePreview({ slide }) {
+  const outerH    = Math.round(SLIDE_REAL_H * PREVIEW_SCALE); // 235px
+  const innerW    = `${Math.round(100 / PREVIEW_SCALE)}%`;    // 238%
+
+  return (
+    <div className="mb-6">
+      {/* Encabezado del bloque */}
+      <div className="mb-2 flex items-center gap-2">
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted">
+          Así se ve en el sitio
+        </p>
+        <div className="h-px flex-1 bg-line" />
+        <span className="text-[9px] text-muted/40">Vista desktop · se actualiza en tiempo real</span>
+      </div>
+
+      {/* Contenedor escalado */}
+      <div
+        className="relative overflow-hidden rounded-xl border border-line bg-card shadow-sm"
+        style={{ height: `${outerH}px` }}
+      >
+        <div
+          className="pointer-events-none select-none"
+          style={{
+            transform:       `scale(${PREVIEW_SCALE})`,
+            transformOrigin: "top left",
+            width:           innerW,
+          }}
+        >
+          {/* Layout fiel al HomeCarousel (desktop 2 columnas) */}
+          <div
+            className="grid items-center gap-20 bg-card px-8 py-14"
+            style={{
+              height:              `${SLIDE_REAL_H}px`,
+              gridTemplateColumns: "1fr 0.85fr",
+            }}
+          >
+            {/* ── Columna texto ── */}
+            <div className="flex flex-col">
+              {slide.badge && (
+                <span
+                  className="mb-5 w-fit border-b pb-1.5 text-[10px] font-bold uppercase tracking-[0.22em]"
+                  style={{
+                    color:       "var(--color-champagne)",
+                    borderColor: "color-mix(in srgb, var(--color-champagne) 50%, transparent)",
+                  }}
+                >
+                  {slide.badge}
+                </span>
+              )}
+
+              <h2 className="font-display text-7xl font-bold leading-[1.04] tracking-tight text-ink">
+                {slide.title || (
+                  <span className="text-ink/20">Título del slide</span>
+                )}
+                {slide.titleAccent && (
+                  <span
+                    className="block font-bold italic"
+                    style={{ color: "var(--color-champagne)" }}
+                  >
+                    {slide.titleAccent}
+                  </span>
+                )}
+              </h2>
+
+              {slide.subtitle && (
+                <p className="mt-3 font-display text-xl font-medium italic text-muted">
+                  {slide.subtitle}
+                </p>
+              )}
+
+              {slide.description && (
+                <p className="mt-5 max-w-sm text-sm leading-7 text-muted">
+                  {slide.description}
+                </p>
+              )}
+
+              {slide.tags?.length > 0 && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {slide.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="border border-line px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-9 flex flex-wrap items-center gap-5">
+                {slide.primaryCta?.label && (
+                  <span className="inline-flex items-center gap-2.5 bg-navy px-7 py-3.5 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                    <ShoppingBag size={14} />
+                    {slide.primaryCta.label}
+                  </span>
+                )}
+                {slide.secondaryCta?.label && (
+                  <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-ink">
+                    {slide.secondaryCta.label}
+                    <ArrowRight size={13} style={{ color: "var(--color-champagne)" }} />
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* ── Columna imagen ── */}
+            <div className="relative">
+              {/* Marco decorativo offset */}
+              <div
+                className="absolute -bottom-3 -right-3 aspect-[3/4] w-full border"
+                style={{ borderColor: "color-mix(in srgb, var(--color-champagne) 35%, transparent)" }}
+              />
+              <div
+                className="relative mx-auto aspect-[3/4] w-full overflow-hidden"
+                style={{ maxHeight: "500px", backgroundColor: "var(--color-champagne-light)" }}
+              >
+                {slide.image ? (
+                  <img
+                    src={slide.image}
+                    alt={slide.imageAlt || ""}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex h-full w-full items-center justify-center"
+                    style={{ color: "color-mix(in srgb, var(--color-champagne) 20%, transparent)" }}
+                  >
+                    <ShoppingBag size={72} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Selector de destino de botones ────────────────────────────
 function DestinoSelect({ cta, onChange }) {
@@ -62,7 +210,6 @@ function TagsEditor({ tags, onChange }) {
 
   return (
     <div className="space-y-2.5">
-      {/* Presets */}
       <div className="flex flex-wrap gap-1.5">
         {TAG_PRESETS.map((tag) => {
           const on = tags.includes(tag);
@@ -84,7 +231,6 @@ function TagsEditor({ tags, onChange }) {
         })}
       </div>
 
-      {/* Chips personalizados activos */}
       {extra.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {extra.map((tag) => (
@@ -98,7 +244,6 @@ function TagsEditor({ tags, onChange }) {
         </div>
       )}
 
-      {/* Agregar chip personalizado */}
       <div className="flex gap-2">
         <input
           value={custom}
@@ -142,7 +287,7 @@ function SlideEditor({ slide, index, onChange }) {
       slide.activo ? "border border-navy/20" : "border border-line",
     ].join(" ")}>
 
-      {/* Línea de estado: visible cuando el slide está activo — firma visual */}
+      {/* Línea de estado: visible cuando el slide está activo */}
       <div
         className="h-0.75 transition-all duration-300"
         style={{ background: slide.activo ? "var(--color-accent)" : "transparent" }}
@@ -155,7 +300,6 @@ function SlideEditor({ slide, index, onChange }) {
         className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-surface/40 transition-colors"
       >
         <div className="flex min-w-0 items-center gap-3">
-          {/* Número de slide */}
           <div className={[
             "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
             slide.activo ? "bg-navy text-surface" : "bg-line text-muted",
@@ -163,7 +307,6 @@ function SlideEditor({ slide, index, onChange }) {
             {index + 1}
           </div>
 
-          {/* Mini-preview del slide en tiempo real */}
           <div className="min-w-0">
             {slide.activo && (badge || slide.title || slide.titleAccent) ? (
               <div className="flex flex-wrap items-baseline gap-2">
@@ -209,6 +352,9 @@ function SlideEditor({ slide, index, onChange }) {
       {/* Cuerpo expandible */}
       {open && (
         <div className="space-y-6 border-t border-line px-5 pb-6 pt-5">
+
+          {/* ── Vista previa ── */}
+          <SlidePreview slide={slide} />
 
           {/* ── Imagen ── */}
           <div>
