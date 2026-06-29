@@ -22,40 +22,40 @@
   --font-promo:   "Rubik One", "Impact", sans-serif;
 
   /* acento → theme_config.js: accent, accentOn, accentLight, accentDark */
-  --color-accent:          #C9A87C;
-  --color-accent-on:       #1C2438;
-  --color-champagne:       #C9A87C;   /* alias accent */
-  --color-champagne-light: #F5EAD8;
-  --color-champagne-dark:  #8A6B3A;
+  --color-accent:          #AF9273;   /* siena cálido — manual de marca */
+  --color-accent-on:       #2E394B;   /* navy oficial sobre acento */
+  --color-champagne:       #AF9273;   /* alias accent */
+  --color-champagne-light: #F2E4D5;
+  --color-champagne-dark:  #7A5C44;
 
   /* acento secundario → theme_config.js: accentSecondary, accentSecondaryOn */
-  --color-accent-secondary:    #283149;
-  --color-accent-secondary-on: #F3E6D9;
+  --color-accent-secondary:    #2E394B;   /* navy oficial */
+  --color-accent-secondary-on: #EDDAC7;   /* crema oficial */
 
   /* contenido → theme_config.js: content.* */
-  --color-navy:    #283149;
-  --color-ink:     #1C2438;
+  --color-navy:    #2E394B;   /* navy oficial — manual de marca */
+  --color-ink:     #1E2D3D;   /* navy oscuro — texto principal */
   --color-muted:   #8A95A8;
-  --color-surface: #F3E6D9;
+  --color-surface: #EDDAC7;   /* crema oficial — manual de marca */
   --color-card:    #ffffff;
-  --color-line:    #E2D3C4;
+  --color-line:    #D8C3AC;   /* borde beige-cálido derivado del crema */
 
   /* navbar → theme_config.js: navbar.* */
-  --color-shell:          #F3E6D9;
-  --color-shell-raised:   #EBD8C5;
+  --color-shell:          #EDDAC7;
+  --color-shell-raised:   #DFC7AE;
   --color-shell-float:    #ffffff;
-  --color-shell-text:     #283149;
+  --color-shell-text:     #2E394B;
   --color-shell-text-dim: #7A8FA8;
 
   /* footer → theme_config.js: footer.* */
-  --color-footer:          #283149;
-  --color-footer-text:     #F3E6D9;
+  --color-footer:          #2E394B;
+  --color-footer-text:     #EDDAC7;
   --color-footer-text-dim: #8A95A8;
 
   /* admin → theme_config.js: admin.* */
-  --color-admin:          #1C2438;
-  --color-admin-raised:   #283149;
-  --color-admin-text:     #F3E6D9;
+  --color-admin:          #1E2D3D;
+  --color-admin-raised:   #2E394B;
+  --color-admin-text:     #EDDAC7;
   --color-admin-text-dim: #8A95A8;
 
   /* trust → theme_config.js: trust.secure  |  mp: fijo, no exponer */

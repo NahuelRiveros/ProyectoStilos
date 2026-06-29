@@ -1,49 +1,204 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, ImageIcon, Plus, X } from "lucide-react";
 import ImageUploader from "../../ui/image_uploader";
 import { urlToItem, itemToUrl } from "./home_config_helpers";
-const LABELS = ["Slide 1 \u2014 Novedades", "Slide 2 \u2014 Ofertas", "Slide 3 \u2014 Premium"];
-function SlideEditor({
-  slide,
-  index,
-  onChange
-}) {
+
+// Secciones de la tienda disponibles para los botones
+const DESTINOS = [
+  { label: "Catálogo completo", to: "/catalogo" },
+  { label: "Damas",             to: "/damas"    },
+  { label: "Hombre",            to: "/hombre"   },
+  { label: "Calzado",           to: "/calzado"  },
+];
+
+// Chips sugeridos para el slide
+const TAG_PRESETS = [
+  "Novedades", "Ofertas", "Temporada", "Premium",
+  "Destacados", "Descuentos", "Stock", "Exclusivo",
+];
+
+// ── Selector de destino de botones ────────────────────────────
+function DestinoSelect({ cta, onChange }) {
+  const isCustom = !DESTINOS.find((d) => d.to === cta.to);
+  return (
+    <div className="flex gap-2">
+      <select
+        value={isCustom ? "__custom__" : cta.to}
+        onChange={(e) => {
+          if (e.target.value !== "__custom__") onChange({ ...cta, to: e.target.value });
+        }}
+        className="input-form min-w-0 flex-1"
+      >
+        {DESTINOS.map((d) => (
+          <option key={d.to} value={d.to}>{d.label}</option>
+        ))}
+        {isCustom && <option value="__custom__">Personalizado</option>}
+      </select>
+      <input
+        value={cta.label}
+        onChange={(e) => onChange({ ...cta, label: e.target.value })}
+        className="input-form w-36 shrink-0"
+        placeholder="Texto del botón"
+      />
+    </div>
+  );
+}
+
+// ── Chips interactivos de tags ────────────────────────────────
+function TagsEditor({ tags, onChange }) {
+  const [custom, setCustom] = useState("");
+
+  function toggle(tag) {
+    onChange(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]);
+  }
+
+  function addCustom() {
+    const t = custom.trim();
+    if (t && !tags.includes(t)) onChange([...tags, t]);
+    setCustom("");
+  }
+
+  const extra = tags.filter((t) => !TAG_PRESETS.includes(t));
+
+  return (
+    <div className="space-y-2.5">
+      {/* Presets */}
+      <div className="flex flex-wrap gap-1.5">
+        {TAG_PRESETS.map((tag) => {
+          const on = tags.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => toggle(tag)}
+              className={[
+                "rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all",
+                on
+                  ? "bg-navy text-surface"
+                  : "border border-line bg-surface text-muted hover:border-navy/30 hover:text-ink",
+              ].join(" ")}
+            >
+              {on && "✓ "}{tag}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Chips personalizados activos */}
+      {extra.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {extra.map((tag) => (
+            <span key={tag} className="flex items-center gap-1 rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy">
+              {tag}
+              <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))}>
+                <X size={9} className="text-navy/50 hover:text-rose-500" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Agregar chip personalizado */}
+      <div className="flex gap-2">
+        <input
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+          className="input-form flex-1"
+          placeholder="Agregar chip personalizado…"
+        />
+        <button
+          type="button"
+          onClick={addCustom}
+          disabled={!custom.trim()}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line text-muted hover:border-navy/30 hover:text-navy disabled:opacity-40 transition-colors"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted">{children}</p>
+  );
+}
+
+// ── SlideEditor ───────────────────────────────────────────────
+function SlideEditor({ slide, index, onChange }) {
   const [open, setOpen] = useState(index === 0);
+
   function set(k, v) {
     onChange({ ...slide, [k]: v });
   }
-  return <div className="rounded-2xl border border-line bg-card overflow-hidden">
+
+  const badge = slide.badge?.trim();
+
+  return (
+    <div className={[
+      "overflow-hidden rounded-2xl bg-card transition-all",
+      slide.activo ? "border border-navy/20" : "border border-line",
+    ].join(" ")}>
+
+      {/* Línea de estado: visible cuando el slide está activo — firma visual */}
+      <div
+        className="h-0.75 transition-all duration-300"
+        style={{ background: slide.activo ? "var(--color-accent)" : "transparent" }}
+      />
+
+      {/* Cabecera del acordeón */}
       <button
-    type="button"
-    onClick={() => setOpen((o) => !o)}
-    className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-surface/60 transition-colors"
-  >
-        <div className="flex items-center gap-3">
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-surface/40 transition-colors"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Número de slide */}
           <div className={[
-    "flex h-7 w-7 items-center justify-center rounded-full text-xs font-black",
-    slide.activo ? "bg-navy text-white" : "bg-line text-muted"
-  ].join(" ")}>
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
+            slide.activo ? "bg-navy text-surface" : "bg-line text-muted",
+          ].join(" ")}>
             {index + 1}
           </div>
-          <div>
-            <p className="text-sm font-bold text-ink">{LABELS[index]}</p>
-            <p className="text-[11px] text-muted truncate max-w-xs">
-              {slide.activo ? `"${slide.badge}" \xB7 "${slide.title} ${slide.titleAccent}"` : "Desactivado"}
-            </p>
+
+          {/* Mini-preview del slide en tiempo real */}
+          <div className="min-w-0">
+            {slide.activo && (badge || slide.title || slide.titleAccent) ? (
+              <div className="flex flex-wrap items-baseline gap-2">
+                {badge && (
+                  <span
+                    className="shrink-0 rounded-full px-2 py-px text-[9px] font-black uppercase tracking-widest text-white"
+                    style={{ background: "var(--color-accent)" }}
+                  >
+                    {badge}
+                  </span>
+                )}
+                <span className="font-display text-sm font-bold text-ink leading-tight truncate max-w-55">
+                  {slide.title && <span>{slide.title} </span>}
+                  <span style={{ color: "var(--color-accent)" }}>{slide.titleAccent}</span>
+                </span>
+              </div>
+            ) : (
+              <p className="text-sm font-semibold text-muted">
+                {slide.activo ? "Slide sin contenido — completá los textos" : "Desactivado"}
+              </p>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="ml-3 flex shrink-0 items-center gap-2">
           <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      set("activo", !slide.activo);
-    }}
-    className={[
-      "flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-colors",
-      slide.activo ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-line text-muted hover:bg-line/80"
-    ].join(" ")}
-  >
+            type="button"
+            onClick={(e) => { e.stopPropagation(); set("activo", !slide.activo); }}
+            className={[
+              "flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-colors",
+              slide.activo
+                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                : "bg-line text-muted hover:bg-line/80",
+            ].join(" ")}
+          >
             {slide.activo ? <Eye size={11} /> : <EyeOff size={11} />}
             {slide.activo ? "Activo" : "Oculto"}
           </button>
@@ -51,75 +206,157 @@ function SlideEditor({
         </div>
       </button>
 
-      {open && <div className="border-t border-line px-5 pb-6 pt-5 space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label-form">Badge</label>
-              <input value={slide.badge} onChange={(e) => set("badge", e.target.value)} className="input-form" placeholder="Nueva Colección" />
-            </div>
-            <div>
-              <label className="label-form">Subtítulo</label>
-              <input value={slide.subtitle} onChange={(e) => set("subtitle", e.target.value)} className="input-form" placeholder="Otoño — Invierno 2026" />
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label-form">Título</label>
-              <input value={slide.title} onChange={(e) => set("title", e.target.value)} className="input-form" placeholder="Vestite con" />
-            </div>
-            <div>
-              <label className="label-form">Título resaltado</label>
-              <input value={slide.titleAccent} onChange={(e) => set("titleAccent", e.target.value)} className="input-form" placeholder="tu estilo." />
-            </div>
-          </div>
+      {/* Cuerpo expandible */}
+      {open && (
+        <div className="space-y-6 border-t border-line px-5 pb-6 pt-5">
+
+          {/* ── Imagen ── */}
           <div>
-            <label className="label-form">Descripción</label>
-            <textarea
-    value={slide.description}
-    onChange={(e) => set("description", e.target.value)}
-    rows={2}
-    className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted/60 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/20 transition resize-none"
-  />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="label-form">Botón principal</label>
-              <input value={slide.primaryCta.label} onChange={(e) => set("primaryCta", { ...slide.primaryCta, label: e.target.value })} className="input-form" placeholder="Ver colección" />
-              <input value={slide.primaryCta.to} onChange={(e) => set("primaryCta", { ...slide.primaryCta, to: e.target.value })} className="input-form" placeholder="/catalogo" />
-            </div>
-            <div className="space-y-2">
-              <label className="label-form">Botón secundario</label>
-              <input value={slide.secondaryCta.label} onChange={(e) => set("secondaryCta", { ...slide.secondaryCta, label: e.target.value })} className="input-form" placeholder="Explorar categorías" />
-              <input value={slide.secondaryCta.to} onChange={(e) => set("secondaryCta", { ...slide.secondaryCta, to: e.target.value })} className="input-form" placeholder="/categorias" />
-            </div>
-          </div>
-          <div>
-            <label className="label-form">Tags <span className="font-normal text-muted/60">(separados por coma)</span></label>
-            <input value={slide.tags.join(", ")} onChange={(e) => set("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))} className="input-form" placeholder="Abrigos, Sweaters, Botas" />
-          </div>
-          <div>
-            <label className="label-form">
-              Imagen <span className="font-normal text-muted/60">(vacía = usa imagen del producto marcado)</span>
-            </label>
+            <SectionLabel>Imagen</SectionLabel>
             <ImageUploader
-    value={urlToItem(slide.image, slide.imageAlt)}
-    onChange={(items) => {
-      const url = itemToUrl(items);
-      const alt = items[0]?.alt ?? slide.imageAlt;
-      onChange({ ...slide, image: url, imageAlt: alt });
-    }}
-    max={1}
-  />
-            {slide.image && <input
-    value={slide.imageAlt}
-    onChange={(e) => set("imageAlt", e.target.value)}
-    className="input-form mt-2"
-    placeholder="Texto alternativo de la imagen"
-  />}
+              value={urlToItem(slide.image, slide.imageAlt)}
+              onChange={(items) => {
+                const url = itemToUrl(items);
+                const alt = items[0]?.alt ?? slide.imageAlt;
+                onChange({ ...slide, image: url, imageAlt: alt });
+              }}
+              max={1}
+            />
+            {slide.image ? (
+              <input
+                value={slide.imageAlt}
+                onChange={(e) => set("imageAlt", e.target.value)}
+                className="input-form mt-2"
+                placeholder="Descripción de la imagen (accesibilidad)"
+              />
+            ) : (
+              <div className="mt-2 flex items-start gap-2 rounded-xl border border-line bg-surface px-3 py-2.5">
+                <ImageIcon size={13} className="mt-0.5 shrink-0 text-muted" />
+                <p className="text-[11px] leading-relaxed text-muted">
+                  Sin imagen. Se usará automáticamente la foto del producto marcado como{" "}
+                  <strong className="font-bold text-ink">Carrusel</strong> en el catálogo.
+                </p>
+              </div>
+            )}
           </div>
-        </div>}
-    </div>;
+
+          {/* ── Textos ── */}
+          <div>
+            <SectionLabel>Textos</SectionLabel>
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold text-muted">
+                    Etiqueta{" "}
+                    <span className="font-normal">(chip pequeño, ej: "Nueva Colección")</span>
+                  </label>
+                  <input
+                    value={slide.badge}
+                    onChange={(e) => set("badge", e.target.value)}
+                    className="input-form"
+                    placeholder="Nueva Colección"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold text-muted">
+                    Temporada o fecha{" "}
+                    <span className="font-normal">(ej: "Otoño — Invierno 2026")</span>
+                  </label>
+                  <input
+                    value={slide.subtitle}
+                    onChange={(e) => set("subtitle", e.target.value)}
+                    className="input-form"
+                    placeholder="Otoño — Invierno 2026"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold text-muted">Título</label>
+                  <input
+                    value={slide.title}
+                    onChange={(e) => set("title", e.target.value)}
+                    className="input-form"
+                    placeholder="Vestite con"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="mb-1 block text-[10px] font-semibold"
+                    style={{ color: "var(--color-accent)" }}
+                  >
+                    Palabra destacada{" "}
+                    <span className="font-normal text-muted">(se muestra en dorado)</span>
+                  </label>
+                  <input
+                    value={slide.titleAccent}
+                    onChange={(e) => set("titleAccent", e.target.value)}
+                    className="input-form transition-colors"
+                    placeholder="tu estilo."
+                    style={slide.titleAccent ? { borderColor: "var(--color-accent)" } : {}}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold text-muted">
+                  Texto de apoyo
+                </label>
+                <textarea
+                  value={slide.description}
+                  onChange={(e) => set("description", e.target.value)}
+                  rows={2}
+                  className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted/60 transition focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy/20"
+                  placeholder="Una frase corta que acompañe el slide…"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Botones de acción ── */}
+          <div>
+            <SectionLabel>Botones de acción</SectionLabel>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-semibold text-muted">
+                  Botón principal — ¿a dónde lleva?
+                </label>
+                <DestinoSelect
+                  cta={slide.primaryCta}
+                  onChange={(v) => set("primaryCta", v)}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-semibold text-muted">
+                  Botón secundario — ¿a dónde lleva?
+                </label>
+                <DestinoSelect
+                  cta={slide.secondaryCta}
+                  onChange={(v) => set("secondaryCta", v)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Chips decorativos ── */}
+          <div>
+            <SectionLabel>
+              Chips decorativos{" "}
+              <span className="normal-case font-normal tracking-normal">
+                — pequeñas etiquetas que se muestran en el slide
+              </span>
+            </SectionLabel>
+            <TagsEditor
+              tags={slide.tags}
+              onChange={(tags) => set("tags", tags)}
+            />
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
 }
-export {
-  SlideEditor
-};
+
+export { SlideEditor };

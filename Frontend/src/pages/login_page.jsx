@@ -226,7 +226,12 @@ export default function LoginPage() {
           message="Sesión iniciada correctamente."
           user={userWelcome ?? undefined}
           confirmLabel="Continuar"
-          onFinish={() => { setShowWelcome(false); navigate("/dashboard", { replace: true }); }}
+          onFinish={() => {
+            setShowWelcome(false);
+            const roles = userWelcome?.roles_abr ?? [];
+            const dest  = (roles.includes("ADM") || roles.includes("SADM")) ? "/admin" : "/";
+            navigate(dest, { replace: true });
+          }}
           delayMs={4000}
         />
       )}

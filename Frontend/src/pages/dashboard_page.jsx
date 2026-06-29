@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Navigate } from "react-router-dom";
 import {
   Users, FileText, BarChart3, Shield,
   Settings, ArrowRight, HelpCircle,
@@ -51,9 +51,12 @@ function ModuloCard({ icon: Icon, label, desc, to, color }) {
 
 export default function DashboardPage() {
   const { usuario } = useAuth();
-  const isAdmin = usuario?.roles_abr?.includes("ADM");
+  const roles   = usuario?.roles_abr ?? [];
+  const isAdmin = roles.includes("ADM") || roles.includes("SADM");
 
-  const nombre = usuario?.nombre ?? usuario?.username ?? "Usuario";
+  if (isAdmin) return <Navigate to="/admin" replace />;
+
+  const nombre  = usuario?.nombre ?? usuario?.username ?? "Usuario";
   const hora = new Date().getHours();
   const saludo = hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches";
 
