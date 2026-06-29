@@ -20,7 +20,7 @@ function Toggle({ checked, onChange }) {
         checked ? "translate-x-4" : "translate-x-0.5"].join(" ")} />
     </div>
   );
-}
+} 
 
 // ── Cuotas — botones preset ──────────────────────────────────────────────────
 
