@@ -17,7 +17,7 @@ import AdminUsuariosPage from "../pages/admin/admin_usuarios_page";
 import AdminSuscripcionPage from "../pages/admin/admin_suscripcion_page";
 import AdminProductsPage from "../pages/admin/admin_products_page";
 import AdminProductFormPage from "../pages/admin/admin_product_form_page";
-import AdminCatalogsPage from "../pages/admin/admin_catalogs_page";
+import AdminCatalogsPage from "../pages/admin/catalogs/index";
 import AdminStockAlertsPage from "../pages/admin/admin_stock_alerts_page";
 import AdminHomeConfigPage      from "../pages/admin/admin_home_config_page";
 import AdminWhatsappConfigPage  from "../pages/admin/admin_whatsapp_config_page";
