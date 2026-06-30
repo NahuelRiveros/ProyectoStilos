@@ -505,6 +505,169 @@ export async function stockBajo(req, res) {
 }
 
 // =============================================================
+// POST /productos/importar-csv  [Admin]
+// Importación masiva desde archivo CSV (multipart/form-data, campo "csv").
+//
+// Formato CSV — una fila por variante, misma cod_ref agrupa variantes:
+//   nombre, cod_ref, descripcion, precio, precio_anterior, descuento_etiqueta,
+//   categoria_slug, genero_slug, marca_nombre, badge, home_seccion,
+//   talle, color, cantidad
+//
+// Respuesta: { importados: N, fallidos: [{ clave, motivo }] }
+// =============================================================
+
+export async function importarProductosCSV(req, res) {
+  try {
+    if (!req.file) return badRequestResponse(res, { mensaje: "Se requiere un archivo CSV (campo 'csv')." });
+
+    // 1. Parsear CSV
+    let filas;
+    try {
+      const { parse } = await import("csv-parse/sync");
+      filas = parse(req.file.buffer, {
+        columns:          true,
+        skip_empty_lines: true,
+        trim:             true,
+        bom:              true,
+      });
+    } catch {
+      return badRequestResponse(res, { mensaje: "El archivo CSV no es válido o tiene formato incorrecto." });
+    }
+
+    if (!filas.length) return badRequestResponse(res, { mensaje: "El CSV está vacío." });
+
+    // 2. Cargar catálogos en memoria (una query por tabla)
+    const [categorias, generos, marcas, talles, colores] = await Promise.all([
+      Prod01Categoria.findAll({ attributes: ["ID_PROD01", "PROD01_SLUG"] }),
+      Prod02Genero.findAll({    attributes: ["ID_PROD02", "PROD02_SLUG"] }),
+      Prod07Marca.findAll({     attributes: ["ID_PROD07", "PROD07_NOMBRE"] }),
+      Prod04Talle.findAll({     where: { PROD04_FECHABAJA: null }, attributes: ["ID_PROD04", "PROD04_NOMBRE"] }),
+      Prod06Color.findAll({     where: { PROD06_FECHABAJA: null }, attributes: ["ID_PROD06", "PROD06_NOMBRE"] }),
+    ]);
+
+    const mapCat   = Object.fromEntries(categorias.map(c => [c.PROD01_SLUG?.toLowerCase(), c.ID_PROD01]));
+    const mapGen   = Object.fromEntries(generos.map(g    => [g.PROD02_SLUG?.toLowerCase(), g.ID_PROD02]));
+    const mapMarca = Object.fromEntries(marcas.map(m     => [m.PROD07_NOMBRE?.toLowerCase(), m.ID_PROD07]));
+    const mapTalle = Object.fromEntries(talles.map(t     => [t.PROD04_NOMBRE?.toLowerCase(), t.ID_PROD04]));
+    const mapColor = Object.fromEntries(colores.map(c    => [c.PROD06_NOMBRE?.toLowerCase(), c.ID_PROD06]));
+
+    // 3. Agrupar filas por cod_ref (o nombre si no hay cod_ref)
+    const grupos = new Map();
+    for (const fila of filas) {
+      const clave = fila.cod_ref?.trim() || fila.nombre?.trim();
+      if (!clave) continue;
+      if (!grupos.has(clave)) grupos.set(clave, []);
+      grupos.get(clave).push(fila);
+    }
+
+    // 4. Procesar cada grupo → 1 producto + N variantes de stock
+    const importados = [];
+    const fallidos   = [];
+
+    for (const [clave, grupo] of grupos) {
+      const base = grupo[0]; // Primera fila tiene los datos del producto
+
+      // Validar obligatorios
+      if (!base.nombre?.trim())         { fallidos.push({ clave, motivo: "Falta el nombre" });          continue; }
+      if (!base.precio?.trim())         { fallidos.push({ clave, motivo: "Falta el precio" });          continue; }
+      if (!base.categoria_slug?.trim()) { fallidos.push({ clave, motivo: "Falta categoria_slug" });     continue; }
+      if (!base.genero_slug?.trim())    { fallidos.push({ clave, motivo: "Falta genero_slug" });        continue; }
+
+      // Resolver IDs de catálogos
+      const catId   = mapCat[base.categoria_slug.trim().toLowerCase()];
+      const genId   = mapGen[base.genero_slug.trim().toLowerCase()];
+      const marcaId = base.marca_nombre?.trim()
+        ? mapMarca[base.marca_nombre.trim().toLowerCase()] ?? null
+        : null;
+
+      if (!catId) { fallidos.push({ clave, motivo: `Categoría '${base.categoria_slug}' no encontrada` });   continue; }
+      if (!genId) { fallidos.push({ clave, motivo: `Género '${base.genero_slug}' no encontrado` });         continue; }
+      if (base.marca_nombre?.trim() && !marcaId) {
+        fallidos.push({ clave, motivo: `Marca '${base.marca_nombre}' no encontrada` }); continue;
+      }
+
+      const precio = parseFloat(base.precio);
+      if (isNaN(precio) || precio <= 0) { fallidos.push({ clave, motivo: "Precio inválido" }); continue; }
+
+      // Construir variantes de stock
+      const stockRows   = [];
+      const colorIdsSet = new Set();
+      const erroresStock = [];
+
+      for (const fila of grupo) {
+        const talleNombre = fila.talle?.trim();
+        const colorNombre = fila.color?.trim();
+        const cantidad    = parseInt(fila.cantidad ?? "0", 10);
+
+        const talleId = talleNombre ? mapTalle[talleNombre.toLowerCase()] ?? null : null;
+        const colorId = colorNombre ? mapColor[colorNombre.toLowerCase()] ?? null : null;
+
+        if (talleNombre && !talleId) { erroresStock.push(`Talle '${talleNombre}' no encontrado`); continue; }
+        if (colorNombre && !colorId) { erroresStock.push(`Color '${colorNombre}' no encontrado`); continue; }
+
+        stockRows.push({ talle_id: talleId, color_id: colorId, cantidad: isNaN(cantidad) ? 0 : cantidad });
+        if (colorId) colorIdsSet.add(colorId);
+      }
+
+      if (erroresStock.length) {
+        fallidos.push({ clave, motivo: erroresStock.join("; ") });
+        continue;
+      }
+
+      // Crear producto + stock en una transacción
+      try {
+        await sequelize.transaction(async (t) => {
+          const hoy = new Date().toISOString().split("T")[0];
+
+          const producto = await Prod03Producto.create({
+            PROD03_NOMBRE:          base.nombre.trim(),
+            PROD03_DESCRIPCION:     base.descripcion?.trim()          || null,
+            PROD03_COD_REF:         base.cod_ref?.trim()              || null,
+            PROD03_PRECIO:          precio,
+            PROD03_PRECIO_ANTERIOR: base.precio_anterior?.trim()
+              ? parseFloat(base.precio_anterior) : null,
+            PROD03_DESCUENTO:       base.descuento_etiqueta?.trim()   || null,
+            PROD03_BADGE:           base.badge?.trim()                || null,
+            PROD03_HOME_SECCION:    base.home_seccion?.trim()         || null,
+            PROD03_IMAGENES:        [],
+            PROD03_COLORES:         [...colorIdsSet],
+            RELA_PROD01:            catId,
+            RELA_PROD02:            genId,
+            RELA_PROD07:            marcaId,
+            PROD03_FECHAALTA:       hoy,
+          }, { transaction: t });
+
+          if (stockRows.length) {
+            await Prod05Stock.bulkCreate(
+              stockRows.map(({ talle_id, color_id, cantidad }) => ({
+                RELA_PROD03:     producto.ID_PROD03,
+                RELA_PROD04:     talle_id,
+                RELA_PROD06:     color_id,
+                PROD05_STOCK:    cantidad,
+                PROD05_FECHAALTA: hoy,
+              })),
+              { transaction: t }
+            );
+          }
+        });
+
+        importados.push({ clave, nombre: base.nombre.trim() });
+      } catch (err) {
+        fallidos.push({ clave, motivo: `Error al guardar: ${err.message}` });
+      }
+    }
+
+    return okResponse(res, {
+      data:    { importados: importados.length, fallidos },
+      mensaje: `${importados.length} producto(s) importado(s). ${fallidos.length} con error(es).`,
+    });
+
+  } catch (error) {
+    return errorResponse(res, { mensaje: "Error en la importación CSV", error });
+  }
+}
+
+// =============================================================
 // GET /productos/ofertas/destacadas
 // Retorna 3 productos al azar que tengan descuento (precio_anterior no null)
 // =============================================================

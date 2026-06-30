@@ -70,3 +70,13 @@ export async function getStockBajo(umbral = 1) {
   const { data } = await http.get("/productos/stock-bajo", { params: { umbral } });
   return data.data;
 }
+
+// POST /api/productos/importar-csv
+export async function importarProductosCSV(archivo) {
+  const form = new FormData();
+  form.append("csv", archivo);
+  const { data } = await http.post("/productos/importar-csv", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}

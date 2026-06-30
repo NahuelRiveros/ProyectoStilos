@@ -22,6 +22,7 @@ import AdminStockAlertsPage from "../pages/admin/admin_stock_alerts_page";
 import AdminHomeConfigPage      from "../pages/admin/admin_home_config_page";
 import AdminWhatsappConfigPage  from "../pages/admin/admin_whatsapp_config_page";
 import AdminMediosPagoPage     from "../pages/admin/admin_medios_pago_page";
+import AdminImportPage         from "../pages/admin/admin_import_page";
 
 import CatalogPage from "../pages/productos/catalog_page";
 import ProductDetailPage from "../pages/productos/product_detail_page";
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
           ...(adminConfig.modules.home ? [{ path: "home", element: <AdminHomeConfigPage /> }] : []),
           ...(adminConfig.modules.whatsapp    ? [{ path: "whatsapp",    element: <AdminWhatsappConfigPage /> }] : []),
           ...(adminConfig.modules.mediosPago ? [{ path: "medios-pago", element: <AdminMediosPagoPage />    }] : []),
+          ...(adminConfig.modules.import    ? [{ path: "importar",    element: <AdminImportPage />         }] : []),
         ],
       }] : []),
 

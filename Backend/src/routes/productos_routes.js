@@ -19,9 +19,11 @@ import {
   actualizarStock,
   stockBajo,
   obtenerOfertasDestacadas,
+  importarProductosCSV,
 } from "../controllers/productos_controller.js";
 
 import { requireAuth, requireRole, requireNivel } from "../middleware/auth_middleware.js";
+import { uploadCSV } from "../middleware/upload_middleware.js";
 import { ACCESS, NIVELES } from "./access_roles.js";
 
 export const productosRouter = Router();
@@ -50,6 +52,7 @@ productosRouter.get("/:id",                obtenerProducto);
 // PUT    /productos/:id/reactivar
 // =============================================================
 
+productosRouter.post(  "/importar-csv",   requireAuth, requireNivel(NIVELES.ADMIN), uploadCSV, importarProductosCSV);
 productosRouter.post(  "/",               requireAuth, requireNivel(NIVELES.ADMIN), crearProducto);
 productosRouter.put(   "/:id",            requireAuth, requireNivel(NIVELES.ADMIN), actualizarProducto);
 productosRouter.delete("/:id",            requireAuth, requireNivel(NIVELES.ADMIN), darDeBajaProducto);

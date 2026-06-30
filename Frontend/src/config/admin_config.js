@@ -21,6 +21,7 @@ export const adminConfig = {
     mediosPago:   true,   // Medios de pago y promociones de cuotas
     users:        true,   // Gestión de usuarios y roles
     subscription: true,   // Plan y suscripción del cliente
+    import:       true,   // Importación masiva de productos via CSV
     orders:       false,  // Pedidos (requiere modo ecommerce)
     invoices:     false,  // Facturación (requiere modo ecommerce)
     payments:     false,  // Reportes de pagos (requiere modo ecommerce)

@@ -2,7 +2,7 @@ import { NavLink, Outlet, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard, Users, CreditCard, ChevronRight,
-  AlertTriangle, Package, Tags, Boxes, Home, ShieldCheck, MessageCircle, Wallet,
+  AlertTriangle, Package, Tags, Boxes, Home, ShieldCheck, MessageCircle, Wallet, Upload,
 } from "lucide-react";
 
 import { getSuscripcion } from "../../api/admin_api";
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { module: "home",         to: "/admin/home",           label: "Home",        icon: Home },
   { module: "whatsapp",    to: "/admin/whatsapp",        label: "WhatsApp",    icon: MessageCircle },
   { module: "mediosPago",  to: "/admin/medios-pago",     label: "Medios pago", icon: Wallet },
+  { module: "import",        to: "/admin/importar",        label: "Importar",    icon: Upload },
   { module: "users",        to: "/admin/usuarios",       label: "Usuarios",    icon: Users },
   { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard, soloSADM: true },
 ];
