@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
 import { storeConfig } from "../../config/app_config";
 
 export default function ProductCard({
@@ -19,19 +19,38 @@ export default function ProductCard({
 }) {
   const [currentImg, setCurrentImg] = useState(0);
   const [wishlisted, setWishlisted] = useState(false);
-  const isSoldOut = badge === "agotado";
-  const hasImages  = images.length > 0;
+  const [isHovering, setIsHovering] = useState(false);
+  const [autoKey,    setAutoKey]    = useState(0);
+  const isSoldOut   = badge === "agotado";
+  const hasImages   = images.length > 0;
   const hasMultiple = images.length > 1;
 
+  // Auto-avanza cada 1.8s mientras hay hover. autoKey resetea el timer al navegar manualmente.
+  useEffect(() => {
+    if (!isHovering || !hasMultiple) return;
+    const id = setInterval(() => setCurrentImg((i) => (i + 1) % images.length), 1800);
+    return () => clearInterval(id);
+  }, [isHovering, hasMultiple, images.length, autoKey]);
+
   function stop(e) { e.preventDefault(); e.stopPropagation(); }
-  function goTo(e, i) { stop(e); setCurrentImg(i); }
+  function goTo(e, i) { stop(e); setCurrentImg(i); setAutoKey((k) => k + 1); }
   function toggleWish(e) {
     stop(e);
     setWishlisted((v) => { onWishlist?.(id, !v); return !v; });
   }
+  function prevImg(e) {
+    stop(e);
+    setCurrentImg((i) => (i === 0 ? images.length - 1 : i - 1));
+    setAutoKey((k) => k + 1);
+  }
+  function nextImg(e) {
+    stop(e);
+    setCurrentImg((i) => (i + 1) % images.length);
+    setAutoKey((k) => k + 1);
+  }
 
-  function onMouseEnter() { if (hasMultiple) setCurrentImg(1); }
-  function onMouseLeave() { setCurrentImg(0); }
+  function onMouseEnter() { setIsHovering(true);  if (hasMultiple) setCurrentImg(1); }
+  function onMouseLeave() { setIsHovering(false); setCurrentImg(0); }
 
   const card = (
     <article
@@ -202,6 +221,28 @@ export default function ProductCard({
               <div className="h-px w-4" style={{ background: "var(--color-accent)" }} />
             </div>
           </div>
+        )}
+
+        {/* Flechas de navegación */}
+        {hasMultiple && (
+          <>
+            <button
+              onClick={prevImg}
+              className="absolute left-1.5 top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:scale-110"
+              style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(4px)" }}
+              aria-label="Foto anterior"
+            >
+              <ChevronLeft size={13} className="text-ink" />
+            </button>
+            <button
+              onClick={nextImg}
+              className="absolute right-1.5 top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:scale-110"
+              style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(4px)" }}
+              aria-label="Foto siguiente"
+            >
+              <ChevronRight size={13} className="text-ink" />
+            </button>
+          </>
         )}
 
         {/* Image dots (above overlay area) */}
