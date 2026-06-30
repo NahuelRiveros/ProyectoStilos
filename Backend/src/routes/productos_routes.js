@@ -18,6 +18,7 @@ import {
   obtenerStock,
   actualizarStock,
   stockBajo,
+  catalogoCSVReferencia,
   obtenerOfertasDestacadas,
   importarProductosCSV,
 } from "../controllers/productos_controller.js";
@@ -42,6 +43,7 @@ export const productosRouter = Router();
 productosRouter.get("/",                  listarProductos);
 productosRouter.get("/ofertas/destacadas", obtenerOfertasDestacadas);
 productosRouter.get("/stock-bajo",         requireAuth, requireNivel(NIVELES.ADMIN), stockBajo);
+productosRouter.get("/catalogo-csv",       requireAuth, requireNivel(NIVELES.ADMIN), catalogoCSVReferencia);
 productosRouter.get("/:id",                obtenerProducto);
 
 // =============================================================

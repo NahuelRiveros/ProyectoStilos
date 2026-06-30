@@ -536,11 +536,11 @@ export async function importarProductosCSV(req, res) {
 
     if (!filas.length) return badRequestResponse(res, { mensaje: "El CSV está vacío." });
 
-    // 2. Cargar catálogos en memoria (una query por tabla)
+    // 2. Cargar catálogos en memoria (una query por tabla, solo registros activos)
     const [categorias, generos, marcas, talles, colores] = await Promise.all([
-      Prod01Categoria.findAll({ attributes: ["ID_PROD01", "PROD01_SLUG"] }),
-      Prod02Genero.findAll({    attributes: ["ID_PROD02", "PROD02_SLUG"] }),
-      Prod07Marca.findAll({     attributes: ["ID_PROD07", "PROD07_NOMBRE"] }),
+      Prod01Categoria.findAll({ where: { PROD01_FECHABAJA: null }, attributes: ["ID_PROD01", "PROD01_SLUG"] }),
+      Prod02Genero.findAll({    where: { PROD02_FECHABAJA: null }, attributes: ["ID_PROD02", "PROD02_SLUG"] }),
+      Prod07Marca.findAll({     where: { PROD07_FECHABAJA: null }, attributes: ["ID_PROD07", "PROD07_NOMBRE"] }),
       Prod04Talle.findAll({     where: { PROD04_FECHABAJA: null }, attributes: ["ID_PROD04", "PROD04_NOMBRE"] }),
       Prod06Color.findAll({     where: { PROD06_FECHABAJA: null }, attributes: ["ID_PROD06", "PROD06_NOMBRE"] }),
     ]);
@@ -664,6 +664,36 @@ export async function importarProductosCSV(req, res) {
 
   } catch (error) {
     return errorResponse(res, { mensaje: "Error en la importación CSV", error });
+  }
+}
+
+// =============================================================
+// GET /productos/catalogo-csv  [Admin]
+// Devuelve valores activos del catálogo para armar el CSV de importación:
+// slugs de categorías y géneros, nombres de marcas, talles y colores.
+// =============================================================
+
+export async function catalogoCSVReferencia(req, res) {
+  try {
+    const [categorias, generos, marcas, talles, colores] = await Promise.all([
+      Prod01Categoria.findAll({ where: { PROD01_FECHABAJA: null }, attributes: ["PROD01_SLUG", "PROD01_NOMBRE"], order: [["PROD01_NOMBRE", "ASC"]] }),
+      Prod02Genero.findAll({    where: { PROD02_FECHABAJA: null }, attributes: ["PROD02_SLUG", "PROD02_NOMBRE"] }),
+      Prod07Marca.findAll({     where: { PROD07_FECHABAJA: null }, attributes: ["PROD07_NOMBRE"], order: [["PROD07_NOMBRE", "ASC"]] }),
+      Prod04Talle.findAll({     where: { PROD04_FECHABAJA: null }, attributes: ["PROD04_NOMBRE"], order: [["PROD04_ORDEN", "ASC"]] }),
+      Prod06Color.findAll({     where: { PROD06_FECHABAJA: null }, attributes: ["PROD06_NOMBRE", "PROD06_HEX"], order: [["PROD06_ORDEN", "ASC"]] }),
+    ]);
+
+    return okResponse(res, {
+      data: {
+        categorias: categorias.map((c) => ({ slug: c.PROD01_SLUG, nombre: c.PROD01_NOMBRE })),
+        generos:    generos.map((g)    => ({ slug: g.PROD02_SLUG, nombre: g.PROD02_NOMBRE })),
+        marcas:     marcas.map((m)     => m.PROD07_NOMBRE),
+        talles:     talles.map((t)     => t.PROD04_NOMBRE),
+        colores:    colores.map((c)    => ({ nombre: c.PROD06_NOMBRE, hex: c.PROD06_HEX })),
+      },
+    });
+  } catch (error) {
+    return errorResponse(res, { mensaje: "No se pudo obtener el catálogo de referencia", error });
   }
 }
 

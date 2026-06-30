@@ -71,6 +71,12 @@ export async function getStockBajo(umbral = 1) {
   return data.data;
 }
 
+// GET /api/productos/catalogo-csv
+export async function getCatalogoCSV() {
+  const { data } = await http.get("/productos/catalogo-csv");
+  return data.data;
+}
+
 // POST /api/productos/importar-csv
 export async function importarProductosCSV(archivo) {
   const form = new FormData();
