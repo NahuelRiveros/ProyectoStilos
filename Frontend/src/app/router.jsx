@@ -71,13 +71,13 @@ export const router = createBrowserRouter([
       ...(adminConfig.enabled ? [{
         path: "admin",
         element: (
-          <ProtectedRoute nivel={100}>
+          <ProtectedRoute nivel={50}>
             <AdminLayout />
           </ProtectedRoute>
         ),
         children: [
           { index: true, element: <AdminDashboardPage /> },
-          ...(adminConfig.modules.users ? [{ path: "usuarios", element: <AdminUsuariosPage /> }] : []),
+          ...(adminConfig.modules.users ? [{ path: "usuarios", element: <ProtectedRoute nivel={100}><AdminUsuariosPage /></ProtectedRoute> }] : []),
           ...(adminConfig.modules.subscription ? [{
             path: "suscripcion",
             element: (
@@ -88,8 +88,8 @@ export const router = createBrowserRouter([
           }] : []),
           ...(adminConfig.modules.products ? [
             { path: "productos", element: <AdminProductsPage /> },
-            { path: "productos/nuevo", element: <AdminProductFormPage /> },
-            { path: "productos/:id/editar", element: <AdminProductFormPage /> },
+            { path: "productos/nuevo",        element: <ProtectedRoute nivel={100}><AdminProductFormPage /></ProtectedRoute> },
+            { path: "productos/:id/editar",   element: <ProtectedRoute nivel={100}><AdminProductFormPage /></ProtectedRoute> },
           ] : []),
           ...(adminConfig.modules.catalogs ? [{ path: "catalogos", element: <AdminCatalogsPage /> }] : []),
           ...(adminConfig.modules.stockAlerts ? [{ path: "stock-alertas", element: <AdminStockAlertsPage /> }] : []),

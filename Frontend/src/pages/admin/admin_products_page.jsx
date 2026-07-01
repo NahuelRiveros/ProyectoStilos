@@ -6,6 +6,7 @@ import { getMarcas, getCategorias, getGeneros } from "../../api/catalogo_api";
 import { http } from "../../api/http";
 import DataGrid from "../../components/data/data_grid";
 import { AdminPageHeader } from "../../components/admin";
+import { useAuth } from "../../auth/auth_context";
 
 const fmt = (n) =>
   `$ ${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 0 })}`;
@@ -144,6 +145,9 @@ function countFiltros(f) {
 
 export default function AdminProductsPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const esAdmin = (usuario?.nivel ?? 0) >= 100;
+
   const [productos,   setProductos]   = useState([]);
   const [marcas,      setMarcas]      = useState([]);
   const [categorias,  setCategorias]  = useState([]);
@@ -226,6 +230,7 @@ export default function AdminProductsPage() {
       icon:     Edit2,
       variant:  "ghost",
       iconOnly: true,
+      hidden:   () => !esAdmin,
       onClick:  (row) => navigate(`/admin/productos/${row._id}/editar`),
     },
     {
@@ -234,7 +239,7 @@ export default function AdminProductsPage() {
       icon:     RefreshCw,
       variant:  "ghost",
       iconOnly: true,
-      hidden:   (row) => row._badge !== "agotado",
+      hidden:   (row) => !esAdmin || row._badge !== "agotado",
       onClick:  handleReactivar,
     },
     {
@@ -243,7 +248,7 @@ export default function AdminProductsPage() {
       icon:     Trash2,
       variant:  "danger",
       iconOnly: true,
-      hidden:   (row) => row._badge === "agotado",
+      hidden:   (row) => !esAdmin || row._badge === "agotado",
       onClick:  handleBaja,
     },
   ];
@@ -259,12 +264,14 @@ export default function AdminProductsPage() {
             : `${productos.length} producto${productos.length !== 1 ? "s" : ""} en total`
         }
         action={
-          <button
-            onClick={() => navigate("/admin/productos/nuevo")}
-            className="inline-flex items-center gap-2 rounded-xl bg-champagne px-4 py-2.5 text-sm font-black text-navy shadow-sm shadow-champagne/20 ring-1 ring-champagne/40 transition hover:bg-champagne-light active:scale-[0.98]"
-          >
-            <Plus size={16} /> Nuevo producto
-          </button>
+          esAdmin && (
+            <button
+              onClick={() => navigate("/admin/productos/nuevo")}
+              className="inline-flex items-center gap-2 rounded-xl bg-champagne px-4 py-2.5 text-sm font-black text-navy shadow-sm shadow-champagne/20 ring-1 ring-champagne/40 transition hover:bg-champagne-light active:scale-[0.98]"
+            >
+              <Plus size={16} /> Nuevo producto
+            </button>
+          )
         }
       />
 

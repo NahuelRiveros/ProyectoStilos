@@ -42,7 +42,7 @@ export const productosRouter = Router();
 
 productosRouter.get("/",                  listarProductos);
 productosRouter.get("/ofertas/destacadas", obtenerOfertasDestacadas);
-productosRouter.get("/stock-bajo",         requireAuth, requireNivel(NIVELES.ADMIN), stockBajo);
+productosRouter.get("/stock-bajo",         requireAuth, requireNivel(NIVELES.STAFF), stockBajo);
 productosRouter.get("/catalogo-csv",       requireAuth, requireNivel(NIVELES.ADMIN), catalogoCSVReferencia);
 productosRouter.get("/:id",                obtenerProducto);
 
@@ -66,5 +66,5 @@ productosRouter.put(   "/:id/reactivar",  requireAuth, requireNivel(NIVELES.ADMI
 // PUT /productos/:id/stock   → upsert masivo [{ talle_id, cantidad }]
 // =============================================================
 
-productosRouter.get("/:id/stock", requireAuth, requireNivel(NIVELES.ADMIN), obtenerStock);
-productosRouter.put("/:id/stock", requireAuth, requireNivel(NIVELES.ADMIN), actualizarStock);
+productosRouter.get("/:id/stock", requireAuth, requireNivel(NIVELES.STAFF), obtenerStock);
+productosRouter.put("/:id/stock", requireAuth, requireNivel(NIVELES.STAFF), actualizarStock);

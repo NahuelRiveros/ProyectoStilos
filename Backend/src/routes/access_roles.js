@@ -33,6 +33,7 @@ export const NIVELES = {
 export const ROLES = {
   SUPER_ADMIN: "SADM",
   ADMIN:       "ADM",
+  VENDEDOR:    "VND",
   USR:         "USR",
 };
 
@@ -134,7 +135,7 @@ export const ACCESS = {
   PRODUCTOS_CREATE: [ROLES.ADMIN],
   PRODUCTOS_UPDATE: [ROLES.ADMIN],
   PRODUCTOS_DELETE: [ROLES.ADMIN],
-  PRODUCTOS_STOCK:  [ROLES.ADMIN],
+  PRODUCTOS_STOCK:  { nivel: NIVELES.STAFF }, // VND (nivel 50) puede ver y actualizar stock
 
   // ─── UPLOAD ────────────────────────────────────────────
   UPLOAD_CREATE: [ROLES.ADMIN],

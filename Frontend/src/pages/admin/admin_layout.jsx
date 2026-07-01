@@ -10,24 +10,28 @@ import { adminConfig, brandConfig } from "../../config/app_config";
 import { useAuth } from "../../auth/auth_context";
 
 const NAV_ITEMS = [
-  { module: "dashboard",    to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true },
-  { module: "products",     to: "/admin/productos",      label: "Productos",   icon: Package },
-  { module: "catalogs",     to: "/admin/catalogos",      label: "Catalogos",   icon: Tags },
-  { module: "stockAlerts",  to: "/admin/stock-alertas",  label: "Stock",       icon: Boxes },
-  { module: "home",         to: "/admin/home",           label: "Home",        icon: Home },
-  { module: "whatsapp",    to: "/admin/whatsapp",        label: "WhatsApp",    icon: MessageCircle },
-  { module: "mediosPago",  to: "/admin/medios-pago",     label: "Medios pago", icon: Wallet },
-  { module: "import",        to: "/admin/importar",        label: "Importar",    icon: Upload },
-  { module: "users",        to: "/admin/usuarios",       label: "Usuarios",    icon: Users },
-  { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard, soloSADM: true },
+  { module: "dashboard",    to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true,  nivelMin: 50  },
+  { module: "products",     to: "/admin/productos",      label: "Productos",   icon: Package,                     nivelMin: 50  },
+  { module: "stockAlerts",  to: "/admin/stock-alertas",  label: "Stock",       icon: Boxes,                       nivelMin: 50  },
+  { module: "catalogs",     to: "/admin/catalogos",      label: "Catalogos",   icon: Tags,                        nivelMin: 100 },
+  { module: "home",         to: "/admin/home",           label: "Home",        icon: Home,                        nivelMin: 100 },
+  { module: "whatsapp",     to: "/admin/whatsapp",       label: "WhatsApp",    icon: MessageCircle,               nivelMin: 100 },
+  { module: "mediosPago",   to: "/admin/medios-pago",    label: "Medios pago", icon: Wallet,                      nivelMin: 100 },
+  { module: "import",       to: "/admin/importar",       label: "Importar",    icon: Upload,                      nivelMin: 100 },
+  { module: "users",        to: "/admin/usuarios",       label: "Usuarios",    icon: Users,                       nivelMin: 100 },
+  { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard, soloSADM: true,  nivelMin: 100 },
 ];
 const ESTADOS_BLOQUEADOS = ["VENCIDO", "SIN_SUSCRIPCION"];
 
 function useNavItems() {
   const { usuario } = useAuth();
-  const esSADM = usuario?.roles_abr?.includes("SADM") ?? false;
+  const esSADM  = usuario?.roles_abr?.includes("SADM") ?? false;
+  const nivel   = usuario?.nivel ?? 0;
   return NAV_ITEMS.filter(
-    (item) => adminConfig.modules[item.module] && (!item.soloSADM || esSADM)
+    (item) =>
+      adminConfig.modules[item.module] &&
+      (!item.soloSADM || esSADM) &&
+      nivel >= (item.nivelMin ?? 0)
   );
 }
 
