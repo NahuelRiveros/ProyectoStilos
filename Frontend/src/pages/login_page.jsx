@@ -36,56 +36,41 @@ export default function LoginPage() {
 
   return (
     <>
-      <div
-        className="flex min-h-[calc(100vh-60px)] items-center justify-center p-4"
-        style={{ background: "var(--color-surface)" }}
-      >
+      <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface p-4">
         <div
-          className="w-full max-w-[860px] flex rounded-3xl overflow-hidden"
-          style={{ boxShadow: "0 32px 80px rgba(28,36,56,0.16), 0 4px 16px rgba(28,36,56,0.08)" }}
+          className="flex w-full max-w-215 overflow-hidden rounded-3xl"
+          style={{ boxShadow: "var(--shadow-auth)" }}
         >
           {/* ── PANEL IZQUIERDO — marca ─────────────────────────── */}
-          <div
-            className="hidden md:flex md:w-[42%] relative flex-col justify-between p-12 overflow-hidden select-none"
-            style={{ background: "#283149" }}
-          >
+          <div className="relative hidden select-none flex-col justify-between overflow-hidden bg-navy p-12 md:flex md:w-[42%]">
             {/* Watermark S */}
             <div
-              className="absolute -right-10 top-1/2 -translate-y-[55%] font-display italic font-light leading-none pointer-events-none"
-              style={{ fontSize: "30rem", color: "rgba(243,230,217,0.045)", lineHeight: 1 }}
+              className="pointer-events-none absolute -right-10 top-1/2 translate-y-[-55%] font-display italic font-light leading-none text-champagne-light/5"
+              style={{ fontSize: "30rem", lineHeight: 1 }}
             >
               S
             </div>
 
             {/* Círculo decorativo inferior */}
             <div
-              className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full pointer-events-none"
-              style={{ background: "rgba(243,230,217,0.04)" }}
+              className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full"
+              style={{ background: "color-mix(in srgb, var(--color-champagne-light) 4%, transparent)" }}
             />
 
             {/* Contenido superior */}
             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-10">
-                <div className="h-px w-6" style={{ background: "rgba(243,230,217,0.25)" }} />
-                <span
-                  className="text-[10px] tracking-[0.28em] uppercase"
-                  style={{ color: "rgba(243,230,217,0.45)" }}
-                >
+              <div className="mb-10 flex items-center gap-2">
+                <div className="h-px w-6 bg-champagne-light/25" />
+                <span className="text-[10px] uppercase tracking-[0.28em] text-champagne-light/45">
                   Bienvenido
                 </span>
               </div>
 
-              <h1
-                className="font-display italic font-light leading-[0.88] mb-5"
-                style={{ fontSize: "5rem", color: "#F3E6D9" }}
-              >
+              <h1 className="mb-5 font-display italic font-light leading-[0.88] text-champagne-light" style={{ fontSize: "5rem" }}>
                 Stilo's
               </h1>
 
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: "rgba(243,230,217,0.45)" }}
-              >
+              <p className="text-sm leading-relaxed text-champagne-light/45">
                 Tu espacio de moda y estilo.<br />
                 Iniciá sesión para continuar.
               </p>
@@ -93,40 +78,28 @@ export default function LoginPage() {
 
             {/* Pie */}
             <div className="relative z-10">
-              <div className="h-px mb-5" style={{ background: "rgba(243,230,217,0.1)" }} />
-              <p
-                className="text-[10px] tracking-[0.2em] uppercase"
-                style={{ color: "rgba(243,230,217,0.25)" }}
-              >
+              <div className="mb-5 h-px bg-champagne-light/10" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-champagne-light/25">
                 Moda · Estilo · Tendencias
               </p>
             </div>
           </div>
 
           {/* ── PANEL DERECHO — formulario ─────────────────────── */}
-          <div
-            className="flex-1 flex flex-col justify-center px-8 py-10 md:px-12"
-            style={{ background: "#ffffff" }}
-          >
+          <div className="flex flex-1 flex-col justify-center bg-card px-8 py-10 md:px-12">
             {/* Logo mobile */}
-            <div className="md:hidden mb-8 text-center">
-              <span
-                className="font-display italic font-light"
-                style={{ fontSize: "3.5rem", color: "#283149" }}
-              >
+            <div className="mb-8 text-center md:hidden">
+              <span className="font-display italic font-light text-navy" style={{ fontSize: "3.5rem" }}>
                 Stilo's
               </span>
             </div>
 
-            <div className="max-w-[340px] mx-auto w-full">
+            <div className="mx-auto w-full max-w-85">
               <div className="mb-8">
-                <h2
-                  className="text-[1.625rem] font-black tracking-tight mb-1"
-                  style={{ color: "#1C2438" }}
-                >
+                <h2 className="mb-1 text-[1.625rem] font-black tracking-tight text-ink">
                   Iniciá sesión
                 </h2>
-                <p className="text-sm" style={{ color: "#8A95A8" }}>
+                <p className="text-sm text-muted">
                   Ingresá tus credenciales para acceder
                 </p>
               </div>
@@ -142,9 +115,7 @@ export default function LoginPage() {
                     className="input-form"
                     {...register("email", { required: "El email es obligatorio" })}
                   />
-                  {errors.email && (
-                    <p className="error-form">{errors.email.message}</p>
-                  )}
+                  {errors.email && <p className="error-form">{errors.email.message}</p>}
                 </div>
 
                 {/* Contraseña */}
@@ -162,16 +133,13 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPass(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                      style={{ color: "var(--color-muted)" }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors"
                       tabIndex={-1}
                     >
                       {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                  {errors.password && (
-                    <p className="error-form">{errors.password.message}</p>
-                  )}
+                  {errors.password && <p className="error-form">{errors.password.message}</p>}
                 </div>
 
                 {/* Error general */}
@@ -182,11 +150,10 @@ export default function LoginPage() {
                 )}
 
                 {/* Olvidé contraseña */}
-                <div className="flex justify-end -mt-1">
+                <div className="-mt-1 flex justify-end">
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-semibold transition hover:underline"
-                    style={{ color: "#8A95A8" }}
+                    className="text-xs font-semibold text-muted transition hover:underline"
                   >
                     ¿Olvidaste tu contraseña?
                   </Link>
@@ -196,20 +163,15 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-55 mt-1"
-                  style={{ background: "#283149", color: "#F3E6D9" }}
+                  className="mt-1 w-full rounded-xl bg-navy py-3 text-sm font-bold tracking-wide text-champagne-light transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-55"
                 >
                   {loading ? "Ingresando…" : "Iniciar sesión"}
                 </button>
 
                 {/* Registro */}
-                <p className="text-center text-sm pt-1" style={{ color: "#8A95A8" }}>
+                <p className="pt-1 text-center text-sm text-muted">
                   ¿No tenés cuenta?{" "}
-                  <Link
-                    to="/register"
-                    className="font-bold transition hover:underline"
-                    style={{ color: "#283149" }}
-                  >
+                  <Link to="/register" className="font-bold text-navy transition hover:underline">
                     Registrate
                   </Link>
                 </p>

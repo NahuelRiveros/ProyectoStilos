@@ -23,14 +23,14 @@ const MODAL_CONFIG = {
   },
   warning: {
     icon: AlertTriangle,
-    iconClass: "text-amber-600",
-    iconBoxClass: "border-amber-100 bg-amber-50",
+    iconClass: "text-warning",
+    iconBoxClass: "border-warning-border bg-warning-surface",
     defaultTitle: "Atención",
   },
   info: {
     icon: Info,
-    iconClass: "text-blue-600",
-    iconBoxClass: "border-blue-100 bg-blue-50",
+    iconClass: "text-info",
+    iconBoxClass: "border-info-border bg-info-surface",
     defaultTitle: "Información",
   },
 };

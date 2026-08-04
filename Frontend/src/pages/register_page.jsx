@@ -54,56 +54,44 @@ export default function RegisterPage() {
   }
 
   return (
-    <div
-      className="flex min-h-[calc(100vh-60px)] items-center justify-center p-4"
-      style={{ background: "var(--color-surface)" }}
-    >
+    <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-surface p-4">
       <div
-        className="w-full max-w-240 flex rounded-3xl overflow-hidden"
-        style={{ boxShadow: "0 32px 80px rgba(28,36,56,0.16), 0 4px 16px rgba(28,36,56,0.08)" }}
+        className="flex w-full max-w-240 overflow-hidden rounded-3xl"
+        style={{ boxShadow: "var(--shadow-auth)" }}
       >
         {/* ── PANEL IZQUIERDO — marca ─────────────────────────── */}
-        <div
-          className="hidden lg:flex lg:w-[36%] relative flex-col justify-between p-12 overflow-hidden select-none"
-          style={{ background: "#283149" }}
-        >
+        <div className="relative hidden select-none flex-col justify-between overflow-hidden bg-navy p-12 lg:flex lg:w-[36%]">
           {/* Watermark S */}
           <div
-            className="absolute -right-16 top-1/2 translate-y-[-52%] font-display italic font-light leading-none pointer-events-none"
-            style={{ fontSize: "28rem", color: "rgba(243,230,217,0.045)", lineHeight: 1 }}
+            className="pointer-events-none absolute -right-16 top-1/2 translate-y-[-52%] font-display italic font-light leading-none text-champagne-light/5"
+            style={{ fontSize: "28rem", lineHeight: 1 }}
           >
             S
           </div>
 
+          {/* Círculo decorativo */}
           <div
-            className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full pointer-events-none"
-
-            style={{ background: "rgba(243,230,217,0.04)" }}
+            className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full"
+            style={{ background: "color-mix(in srgb, var(--color-champagne-light) 4%, transparent)" }}
           />
 
           {/* Contenido */}
           <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-10">
-              <div className="h-px w-6" style={{ background: "rgba(243,230,217,0.25)" }} />
-              <span
-                className="text-[10px] tracking-[0.28em] uppercase"
-                style={{ color: "rgba(243,230,217,0.45)" }}
-              >
+            <div className="mb-10 flex items-center gap-2">
+              <div className="h-px w-6 bg-champagne-light/25" />
+              <span className="text-[10px] uppercase tracking-[0.28em] text-champagne-light/45">
                 Nueva cuenta
               </span>
             </div>
 
             <h1
-              className="font-display italic font-light leading-[0.88] mb-5"
-              style={{ fontSize: "4.5rem", color: "#F3E6D9" }}
+              className="mb-5 font-display italic font-light leading-[0.88] text-champagne-light"
+              style={{ fontSize: "4.5rem" }}
             >
               Stilo's
             </h1>
 
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: "rgba(243,230,217,0.45)" }}
-            >
+            <p className="text-sm leading-relaxed text-champagne-light/45">
               Creá tu cuenta y accedé a todo el catálogo de moda.
             </p>
           </div>
@@ -112,55 +100,41 @@ export default function RegisterPage() {
           <div className="relative z-10 space-y-3">
             {["Completá tus datos", "Confirmá tu cuenta", "Explorá el catálogo"].map((paso, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div
-                  className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                  style={{ background: "rgba(243,230,217,0.12)", color: "rgba(243,230,217,0.6)" }}
-                >
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-champagne-light/12 text-[10px] font-bold text-champagne-light/60">
                   {i + 1}
                 </div>
-                <span className="text-xs" style={{ color: "rgba(243,230,217,0.4)" }}>
-                  {paso}
-                </span>
+                <span className="text-xs text-champagne-light/40">{paso}</span>
               </div>
             ))}
           </div>
 
           {/* Pie */}
           <div className="relative z-10">
-            <div className="h-px mb-5" style={{ background: "rgba(243,230,217,0.1)" }} />
-            <p
-              className="text-[10px] tracking-[0.2em] uppercase"
-              style={{ color: "rgba(243,230,217,0.25)" }}
-            >
+            <div className="mb-5 h-px bg-champagne-light/10" />
+            <p className="text-[10px] uppercase tracking-[0.2em] text-champagne-light/25">
               Moda · Estilo · Tendencias
             </p>
           </div>
         </div>
 
         {/* ── PANEL DERECHO — formulario ─────────────────────── */}
-        <div
-          className="flex-1 flex flex-col justify-center px-8 py-10 md:px-12"
-          style={{ background: "#ffffff" }}
-        >
+        <div className="flex flex-1 flex-col justify-center bg-card px-8 py-10 md:px-12">
           {/* Logo mobile */}
-          <div className="lg:hidden mb-6 text-center">
+          <div className="mb-6 text-center lg:hidden">
             <span
-              className="font-display italic font-light"
-              style={{ fontSize: "3rem", color: "#283149" }}
+              className="font-display italic font-light text-navy"
+              style={{ fontSize: "3rem" }}
             >
               Stilo's
             </span>
           </div>
 
-          <div className="max-w-140 mx-auto w-full">
+          <div className="mx-auto w-full max-w-140">
             <div className="mb-7">
-              <h2
-                className="text-[1.5rem] font-black tracking-tight mb-1"
-                style={{ color: "#1C2438" }}
-              >
+              <h2 className="mb-1 text-[1.5rem] font-black tracking-tight text-ink">
                 Crear cuenta
               </h2>
-              <p className="text-sm" style={{ color: "#8A95A8" }}>
+              <p className="text-sm text-muted">
                 Completá la información para registrarte
               </p>
             </div>
@@ -177,8 +151,7 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Grid 2 columnas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                 {/* Nombre */}
                 <div>
@@ -222,13 +195,13 @@ export default function RegisterPage() {
                       required: "El documento es obligatorio",
                       minLength: { value: 6, message: "Mínimo 6 dígitos" },
                       maxLength: { value: 12, message: "Máximo 12 dígitos" },
-                      pattern:  { value: /^[0-9]+$/, message: "Solo números" },
+                      pattern:   { value: /^[0-9]+$/, message: "Solo números" },
                     })}
                   />
                   {errors.documento && <p className="error-form">{errors.documento.message}</p>}
                 </div>
 
-                {/* Email — span 2 */}
+                {/* Email */}
                 <div className="sm:col-span-2">
                   <label className="label-form">Email</label>
                   <input
@@ -259,8 +232,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPass(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                      style={{ color: "var(--color-muted)" }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors"
                       tabIndex={-1}
                     >
                       {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -288,8 +260,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassConf(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                      style={{ color: "var(--color-muted)" }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors"
                       tabIndex={-1}
                     >
                       {showPassConf ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -305,20 +276,15 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-6 w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-55"
-                style={{ background: "#283149", color: "#F3E6D9" }}
+                className="mt-6 w-full rounded-xl bg-navy py-3 text-sm font-bold tracking-wide text-champagne-light transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-55"
               >
                 {loading ? "Registrando…" : "Crear cuenta"}
               </button>
 
               {/* Link login */}
-              <p className="mt-5 text-center text-sm" style={{ color: "#8A95A8" }}>
+              <p className="mt-5 text-center text-sm text-muted">
                 ¿Ya tenés cuenta?{" "}
-                <Link
-                  to="/login"
-                  className="font-bold transition hover:underline"
-                  style={{ color: "#283149" }}
-                >
+                <Link to="/login" className="font-bold text-navy transition hover:underline">
                   Iniciá sesión
                 </Link>
               </p>

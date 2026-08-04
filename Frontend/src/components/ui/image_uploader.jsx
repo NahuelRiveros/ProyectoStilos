@@ -100,7 +100,7 @@ export default function ImageUploader({ value, onChange, max = 10 }) {
             "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-10 transition-all duration-200",
             uploading
               ? "cursor-default border-navy/30 bg-navy/5"
-              : "border-line bg-white/50 hover:border-navy/50 hover:bg-navy/5 hover:shadow-sm",
+              : "border-line bg-card/50 hover:border-navy/50 hover:bg-navy/5 hover:shadow-sm",
           ].join(" ")}
         >
           {uploading ? (

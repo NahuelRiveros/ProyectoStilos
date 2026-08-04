@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
   if (estado === "verificando") {
     return (
       <div className="flex min-h-[calc(100vh-120px)] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
@@ -77,25 +77,25 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50">
-          <KeyRound size={22} className="text-amber-500" />
+      <div className="w-full max-w-md rounded-2xl border border-line bg-card p-8 shadow-sm">
+        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-warning-surface">
+          <KeyRound size={22} className="text-warning" />
         </div>
-        <h1 className="mb-1 text-xl font-black text-slate-900">Nueva contraseña</h1>
-        <p className="mb-6 text-sm text-slate-500">Ingresá y confirmá tu nueva contraseña.</p>
+        <h1 className="mb-1 text-xl font-black text-ink">Nueva contraseña</h1>
+        <p className="mb-6 text-sm text-muted">Ingresá y confirmá tu nueva contraseña.</p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {[
-            { label: "Nueva contraseña",      val: pass,    set: setPass },
-            { label: "Confirmar contraseña",   val: confirm, set: setConfirm },
+            { label: "Nueva contraseña",    val: pass,    set: setPass },
+            { label: "Confirmar contraseña", val: confirm, set: setConfirm },
           ].map(({ label, val, set }) => (
             <div key={label}>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-600">{label}</label>
+              <label className="label-form">{label}</label>
               <input
                 type="password"
                 value={val}
                 onChange={(e) => set(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                className="input-form"
               />
             </div>
           ))}
@@ -109,14 +109,14 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-amber-400 py-2.5 text-sm font-bold text-slate-950 transition-all hover:bg-amber-300 active:scale-95 disabled:opacity-60"
+            className="w-full rounded-xl bg-navy py-2.5 text-sm font-bold text-champagne-light transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
           >
             {loading ? "Guardando…" : "Establecer nueva contraseña"}
           </button>
         </form>
 
         <div className="mt-5 text-center">
-          <Link to="/login" className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800">
+          <Link to="/login" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink">
             <ArrowLeft size={13} /> Volver al inicio de sesión
           </Link>
         </div>

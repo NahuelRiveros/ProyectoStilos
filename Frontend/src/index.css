@@ -91,7 +91,35 @@
 
   /* ── Especiales ──────────────────────────────────────────── */
   --color-trust-secure: #22c55e;   /* Verde — sello compra segura */
+  --color-trust-dark:   #059669;   /* Verde oscuro — checkmarks y énfasis */
+  --color-trust-text:   #065F46;   /* Verde muy oscuro — texto "Habilitado" */
+  --color-trust-border: #6EE7B7;   /* Verde claro — bordes de confianza */
   --color-mp:           #009EE3;   /* MercadoPago — color de marca fijo */
+
+  /* ── Feedback semántico ──────────────────────────────────── */
+  /* Colores de estado para toasts, modales, banners y badges.
+     NO son parte de la paleta de marca — son señales de sistema.
+     Para cambiar el tema de la marca: NO tocar esta sección.      */
+  --color-warning:         #F59E0B;   /* Amber 500 — ícono advertencia */
+  --color-warning-surface: #FFFBEB;   /* Amber 50  — fondo */
+  --color-warning-border:  #FDE68A;   /* Amber 200 — borde */
+  --color-warning-text:    #78350F;   /* Amber 900 — texto */
+
+  --color-info:            #3B82F6;   /* Blue 500  — ícono información */
+  --color-info-surface:    #EFF6FF;   /* Blue 50   — fondo */
+  --color-info-border:     #BFDBFE;   /* Blue 200  — borde */
+  --color-info-text:       #1E40AF;   /* Blue 800  — texto */
+
+  /* ── Estados de pedido ───────────────────────────────────── */
+  /* Estados del ciclo de vida de un pedido. Independientes del tema. */
+  --color-status-pending-surface:  #FEF3C7;   /* Pendiente  — fondo */
+  --color-status-pending-text:     #B45309;   /* Pendiente  — texto */
+  --color-status-paid-surface:     #DBEAFE;   /* Pagado     — fondo */
+  --color-status-paid-text:        #1D4ED8;   /* Pagado     — texto */
+  --color-status-prep-surface:     #E0E7FF;   /* Preparando — fondo */
+  --color-status-prep-text:        #4338CA;   /* Preparando — texto */
+  --color-status-shipped-surface:  #E0F2FE;   /* Enviado    — fondo */
+  --color-status-shipped-text:     #0369A1;   /* Enviado    — texto */
 
   /* ── Radios ──────────────────────────────────────────────── */
   /* Genera: rounded-xs · rounded-sm · rounded-md · rounded-lg · rounded-xl · rounded-2xl · rounded-pill
@@ -101,8 +129,9 @@
   --radius-sm:   0.5rem;     /* Nav items, íconos de categoría, badges footer */
   --radius-md:   0.75rem;    /* Inputs, admin items, botones sm */
   --radius-lg:   0.875rem;   /* Botones estándar del sitio */
-  --radius-xl:   1rem;       /* Cards, panels, modales, product-gallery */
+  --radius-xl:   1rem;       /* Cards, panels, product-gallery */
   --radius-2xl:  1.25rem;    /* Cards grandes, hero sections */
+  --radius-3xl:  1.5rem;     /* Modales, tablas, wrappers de auth */
   --radius-pill: 9999px;     /* Badges, avatares, icon-btn */
 
   /* ── Z-index ─────────────────────────────────────────────── */
@@ -128,7 +157,7 @@
   --duration-moderate: 0.35s;
 }
 
-/* ── Sombras y alto del navbar ────────────────────────────────── */
+/* ── Sombras, alto del navbar y sombra de auth ────────────────── */
 /* Se definen fuera de @theme para no pisar las shadow-utilities de
    Tailwind. Se consumen exclusivamente via var() en @layer components.
    Para cambiar el navbar de 60px → 56px: editar --nav-height aquí
@@ -139,7 +168,8 @@
   --shadow-md: 0 4px 14px rgba(15,23,42,0.10);
   --shadow-lg: 0 12px 28px rgba(15,23,42,0.12);
   --shadow-xl: 0 24px 60px rgba(15,23,42,0.22);
-  --nav-height: 3.75rem;   /* 60px — sincronizar con h-15 en navbar.jsx */
+  --nav-height:  3.75rem;   /* 60px — sincronizar con h-15 en navbar.jsx */
+  --shadow-auth: 0 32px 80px rgba(28,36,56,0.16), 0 4px 16px rgba(28,36,56,0.08);   /* Panel auth */
 }
 
 /* ── Reset base ─────────────────────────────────────────────── */

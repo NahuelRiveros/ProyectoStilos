@@ -15,7 +15,7 @@ const UI_CAROUSEL = {
   tags: "mt-5 flex flex-wrap gap-2",
   tag: "border border-line px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted",
   ctaRow: "mt-9 flex flex-wrap items-center gap-5",
-  ctaPrimary: "inline-flex items-center gap-2.5 bg-navy px-7 py-3.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-navy-dark hover:shadow-lg hover:shadow-navy/20",
+  ctaPrimary: "inline-flex items-center gap-2.5 bg-navy px-7 py-3.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-ink hover:shadow-lg hover:shadow-navy/20",
   ctaSecondary: "group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-ink transition-colors hover:text-navy",
   ctaArrow: "text-champagne transition-transform duration-200 group-hover:translate-x-0.5",
   // Image column

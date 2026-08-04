@@ -119,16 +119,16 @@ export default function PaymentMethods({ compact = false }) {
             className="px-4 py-3.5"
             style={{
               borderBottom: "1px solid var(--color-line)",
-              borderLeft: "3px solid #059669",
-              background: "color-mix(in srgb, #ecfdf5 55%, var(--color-card))",
+              borderLeft: "3px solid var(--color-trust-dark)",
+              background: "color-mix(in srgb, var(--color-trust-dark) 6%, var(--color-card))",
             }}
           >
             <div className="flex items-start gap-2.5">
-              <CheckCircle2 size={14} className="shrink-0 mt-px" style={{ color: "#059669" }} />
+              <CheckCircle2 size={14} className="shrink-0 mt-px" style={{ color: "var(--color-trust-dark)" }} />
               <div className="space-y-2 min-w-0">
                 <p
                   className="text-[11px] font-black leading-tight"
-                  style={{ color: "#065f46" }}
+                  style={{ color: "var(--color-trust-text)" }}
                 >
                   {listarCuotas(todasSI)} cuotas sin interés
                 </p>
@@ -151,7 +151,7 @@ export default function PaymentMethods({ compact = false }) {
                             ) : (
                               <span key={j}
                                 className="text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5 border"
-                                style={{ borderColor: "#6ee7b7", color: "#065f46", background: "transparent" }}
+                                style={{ borderColor: "var(--color-trust-border)", color: "var(--color-trust-text)", background: "transparent" }}
                               >
                                 {nombre}
                               </span>
@@ -160,7 +160,7 @@ export default function PaymentMethods({ compact = false }) {
                         </div>
                         {/* Si hay más de un grupo, mostrar sus cuotas específicas */}
                         {gruposSI.length > 1 && (
-                          <span className="text-[9px] font-semibold" style={{ color: "#059669" }}>
+                          <span className="text-[9px] font-semibold" style={{ color: "var(--color-trust-dark)" }}>
                             {listarCuotas(si)}x
                           </span>
                         )}

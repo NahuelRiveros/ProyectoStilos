@@ -27,7 +27,7 @@ export default function WhatsAppFloatingButton() {
     <>
       {/* Panel */}
       {panelOpen && (
-        <div className="fixed bottom-24 right-4 z-50 w-80 overflow-hidden rounded-2xl border border-line bg-card shadow-2xl shadow-black/15 sm:right-6">
+        <div className="fixed bottom-24 right-4 z-50 w-80 overflow-hidden rounded-2xl border border-line bg-card shadow-2xl shadow-navy/15 sm:right-6">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
             <div className="flex items-center gap-2">

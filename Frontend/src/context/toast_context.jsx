@@ -4,9 +4,9 @@ const ToastContext = createContext(null);
 
 const STYLES = {
   success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  error: "border-rose-200 bg-rose-50 text-rose-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-800",
-  info: "border-slate-200 bg-white text-slate-700",
+  error:   "border-rose-200   bg-rose-50   text-rose-700",
+  warning: "border-warning-border bg-warning-surface text-warning-text",
+  info:    "border-info-border    bg-info-surface    text-info-text",
 };
 
 export function ToastProvider({ children }) {
@@ -33,12 +33,12 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed right-4 top-20 z-[100] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
+      <div className="fixed right-4 top-20 z-100 flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
         {items.map((item) => (
           <div
             key={item.id}
             className={[
-              "rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg shadow-slate-900/10",
+              "rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg shadow-navy/10",
               STYLES[item.type] ?? STYLES.info,
             ].join(" ")}
           >

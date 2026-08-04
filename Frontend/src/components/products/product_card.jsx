@@ -163,7 +163,7 @@ export default function ProductCard({
           <div
             className="absolute inset-x-0 bottom-0 z-10 translate-y-full transition-transform duration-380 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-y-0"
             style={{
-              background: "linear-gradient(to top, rgba(40,49,73,0.95) 0%, rgba(40,49,73,0.78) 50%, transparent 100%)",
+              background: "linear-gradient(to top, color-mix(in srgb, var(--color-navy) 95%, transparent) 0%, color-mix(in srgb, var(--color-navy) 78%, transparent) 50%, transparent 100%)",
               paddingTop: "3rem",
               paddingBottom: "0.875rem",
               paddingLeft: "0.875rem",
@@ -300,7 +300,7 @@ export default function ProductCard({
   return to ? (
     <NavLink
       to={to}
-      className="block transition-shadow duration-300 hover:shadow-[0_8px_32px_rgba(40,49,73,0.13)]"
+      className="block transition-shadow duration-300 hover:shadow-[0_8px_32px_color-mix(in_srgb,var(--color-navy)_13%,transparent)]"
     >
       {card}
     </NavLink>

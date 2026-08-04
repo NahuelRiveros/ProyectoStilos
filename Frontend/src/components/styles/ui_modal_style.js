@@ -13,7 +13,7 @@ const UI_MODAL = {
   userName: "mt-1 text-base font-semibold text-ink",
   hint: "mt-5 text-xs text-muted",
   actions: "mt-7 flex justify-center",
-  btnPrimary: "inline-flex items-center justify-center gap-2 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-navy-dark hover:shadow-md"
+  btnPrimary: "inline-flex items-center justify-center gap-2 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-ink hover:shadow-md"
 };
 export {
   UI_MODAL

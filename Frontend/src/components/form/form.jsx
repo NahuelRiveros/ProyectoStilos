@@ -12,9 +12,9 @@ const PADDING = { sm: "p-4", md: "p-6", lg: "p-8" };
 const RADIUS  = { md: "rounded-2xl", xl: "rounded-3xl" };
 
 const VARIANT_CLASS = {
-  elevated: "relative overflow-hidden bg-white/95 border border-slate-200 shadow-xl shadow-slate-200/60 backdrop-blur-sm",
-  flat:     "relative overflow-hidden bg-white border border-slate-200",
-  ghost:    "relative overflow-hidden bg-white/60 backdrop-blur-sm",
+  elevated: "relative overflow-hidden bg-card/95 border border-line shadow-xl shadow-navy/8 backdrop-blur-sm",
+  flat:     "relative overflow-hidden bg-card border border-line",
+  ghost:    "relative overflow-hidden bg-card/60 backdrop-blur-sm",
   minimal:  "",
 };
 
@@ -148,7 +148,7 @@ export default function Form({
       {...props}
     >
       {variant !== "minimal" && (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_35%)]" />
+        <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at top right, color-mix(in srgb, var(--color-navy) 6%, transparent), transparent 35%)" }} />
       )}
 
       <div className="relative z-10">
@@ -165,12 +165,12 @@ export default function Form({
               </div>
             )}
             {title && (
-              <h2 className="text-2xl font-black tracking-tight text-slate-900">
+              <h2 className="text-2xl font-black tracking-tight text-ink">
                 {title}
               </h2>
             )}
             {subtitle && (
-              <p className="mt-2 text-sm leading-6 text-slate-600">{subtitle}</p>
+              <p className="mt-2 text-sm leading-6 text-muted">{subtitle}</p>
             )}
           </div>
         )}
