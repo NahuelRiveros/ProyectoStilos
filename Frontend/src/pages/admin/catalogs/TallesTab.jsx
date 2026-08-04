@@ -9,21 +9,28 @@ import { useConfirmDelete, CatalogForm, AddButton, TabLoader } from "./catalog_s
 function TalleForm({ nombre, setNombre, orden, setOrden, onSave, onCancel, saving }) {
   return (
     <CatalogForm onSave={onSave} onCancel={onCancel} saving={saving}>
-      <input
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        className="input-form w-28"
-        placeholder="Ej: XL"
-        autoFocus
-      />
-      <input
-        type="number"
-        value={orden}
-        onChange={(e) => setOrden(e.target.value)}
-        className="input-form w-20"
-        placeholder="Orden"
-        min="0"
-      />
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] font-semibold text-muted uppercase tracking-wide">Talle</span>
+        <input
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          className="input-form w-28"
+          placeholder="Ej: XL"
+          autoFocus
+        />
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] font-semibold text-muted uppercase tracking-wide">Nivel</span>
+        <input
+          type="number"
+          value={orden}
+          onChange={(e) => setOrden(e.target.value)}
+          className="input-form w-20"
+          placeholder="0"
+          min="0"
+          title="Número que controla el orden de visualización — menor = primero"
+        />
+      </div>
     </CatalogForm>
   );
 }
@@ -88,6 +95,9 @@ export default function TallesTab() {
               className="group relative flex items-center gap-2 rounded-lg border border-line bg-card px-3 py-2 transition-all hover:border-navy/40 hover:shadow-sm"
             >
               <span className="text-sm font-black text-ink">{t.nombre}</span>
+              <span className="text-[9px] font-medium text-muted" title="Nivel de orden">
+                #{t.orden}
+              </span>
 
               {del.pendingId === t.id ? (
                 <div className="flex items-center gap-1 ml-1">
