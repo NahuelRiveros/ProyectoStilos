@@ -131,16 +131,20 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
             className="nav-brand"
           >
-            <div className="nav-brand-mark">
-              {navbar_config.brand.fallbackLetter}
-            </div>
             {navbar_config.brand.logoUrl ? (
-              <img src={navbar_config.brand.logoUrl} alt={navbar_config.brand.titulo} className="h-7 w-auto" />
+              <img
+                src={navbar_config.brand.logoUrl}
+                alt={navbar_config.brand.titulo}
+                className="h-8 w-8 rounded-lg"
+              />
             ) : (
-              <span className="nav-brand-text">
-                {navbar_config.brand.titulo}
-              </span>
+              <div className="nav-brand-mark">
+                {navbar_config.brand.fallbackLetter}
+              </div>
             )}
+            <span className="nav-brand-text">
+              {navbar_config.brand.titulo}
+            </span>
           </NavLink>
 
           {/* Desktop nav */}
@@ -201,7 +205,7 @@ export default function Navbar() {
         </AnimatePresence>
       </header>
 
-      <div className="h-[60px]" />
+      <div className="h-15" />
 
       {/* Mega menu backdrop */}
       <AnimatePresence>

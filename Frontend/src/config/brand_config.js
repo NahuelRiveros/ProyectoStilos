@@ -12,7 +12,7 @@ export const brandConfig = {
   tagline: "Moda y estilo",
   // URL del logo. null = se muestra el nombre en texto.
   // Subir el logo a Cloudinary y pegar la URL, o usar "/logo.png" dentro de /public
-  logoUrl: null,
+  logoUrl: "/logo.svg",
   // Ruta de destino al hacer clic en el logo
   homePath: "/",
 
