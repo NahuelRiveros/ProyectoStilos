@@ -303,19 +303,19 @@ body {
   .nav-list            { display: none; min-width: 0; flex: 1; align-items: center; justify-content: center; gap: 0.125rem; }
   .nav-link, .nav-trigger { display: inline-flex; align-items: center; gap: 0.375rem; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.84375rem; font-weight: 600; letter-spacing: 0.01em; color: var(--color-shell-text-dim); transition: color var(--duration-base) ease, background-color var(--duration-base) ease, box-shadow var(--duration-base) ease; }
   .nav-link:hover, .nav-trigger:hover { background-color: color-mix(in srgb, var(--color-accent) 18%, transparent); color: var(--color-shell-text); }
-  .nav-link-active, .nav-trigger-active { background-color: color-mix(in srgb, var(--color-accent) 26%, transparent); color: var(--color-shell-text); font-weight: 700; box-shadow: inset 0 -2px 0 0 var(--color-accent); }
+  .nav-link-active, .nav-trigger-active { background-color: color-mix(in srgb, var(--color-accent) 26%, transparent); color: var(--color-champagne-dark); font-weight: 700; box-shadow: inset 0 -2px 0 0 var(--color-accent); }
   .nav-mobile-toggle   { display: flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: var(--radius-sm); color: var(--color-shell-text-dim); transition: color var(--duration-base) ease, background-color var(--duration-base) ease; }
   .nav-mobile-toggle:hover { background-color: color-mix(in srgb, var(--color-shell-text) 10%, transparent); color: var(--color-shell-text); }
   .nav-mega            { border-top: 1px solid color-mix(in srgb, var(--color-shell-text) 10%, transparent); background-color: var(--color-shell-raised); box-shadow: var(--shadow-xl); }
   .nav-mega-inner      { width: min(100%, 90rem); margin-inline: auto; padding: 1.25rem 1.5rem; }
   .nav-mega-item       { display: flex; align-items: center; gap: 0.5rem; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-weight: 600; color: var(--color-shell-text-dim); transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
   .nav-mega-item:hover  { background-color: color-mix(in srgb, var(--color-accent) 18%, transparent); color: var(--color-shell-text); }
-  .nav-mega-item-active { background-color: color-mix(in srgb, var(--color-accent) 26%, transparent); color: var(--color-shell-text); font-weight: 700; box-shadow: inset 0 -2px 0 0 var(--color-accent); }
+  .nav-mega-item-active { background-color: color-mix(in srgb, var(--color-accent) 26%, transparent); color: var(--color-champagne-dark); font-weight: 700; box-shadow: inset 0 -2px 0 0 var(--color-accent); }
   .nav-mobile-panel    { position: fixed; inset-inline: 0; top: var(--nav-height); z-index: var(--z-nav); max-height: calc(100vh - var(--nav-height)); overflow-y: auto; border-top: 1px solid color-mix(in srgb, var(--color-shell-text) 8%, transparent); background-color: var(--color-shell); }
   .nav-mobile-card     { overflow: hidden; border-radius: var(--radius-xl); border: 1px solid color-mix(in srgb, var(--color-shell-text) 8%, transparent); background-color: color-mix(in srgb, var(--color-shell-text) 3%, transparent); }
   .nav-mobile-item        { display: flex; align-items: center; gap: 0.625rem; border-radius: var(--radius-md); padding: 0.625rem 0.75rem; font-size: 0.875rem; font-weight: 600; color: var(--color-shell-text-dim); transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
   .nav-mobile-item:hover  { background-color: color-mix(in srgb, var(--color-accent) 18%, transparent); color: var(--color-shell-text); }
-  .nav-mobile-item-active { background-color: color-mix(in srgb, var(--color-accent) 22%, transparent); color: var(--color-shell-text); font-weight: 700; box-shadow: inset 3px 0 0 0 var(--color-accent); }
+  .nav-mobile-item-active { background-color: color-mix(in srgb, var(--color-accent) 22%, transparent); color: var(--color-champagne-dark); font-weight: 700; box-shadow: inset 3px 0 0 0 var(--color-accent); }
   .nav-backdrop        { position: fixed; inset: var(--nav-height) 0 0; z-index: var(--z-backdrop); background-color: rgba(0,0,0,0.52); backdrop-filter: blur(2px); }
 
   /* ── Admin panel ─────────────────────────────────────────── */
