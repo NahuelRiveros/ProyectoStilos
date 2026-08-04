@@ -60,7 +60,7 @@ export default function ProductCard({
       onMouseLeave={onMouseLeave}
     >
       {/* ── IMAGE FRAME ─────────────────────────────────────── */}
-      <div className="relative aspect-[3/4] overflow-hidden" style={{ background: "var(--color-surface)" }}>
+      <div className="relative aspect-3/4 overflow-hidden" style={{ background: "var(--color-surface)" }}>
 
         {/* Images */}
         {hasImages ? (
@@ -70,7 +70,7 @@ export default function ProductCard({
               src={img.src}
               alt={img.alt ?? name}
               className={[
-                "absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[650ms] ease-out",
+                "absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-650ms ease-out",
                 i === currentImg ? "opacity-100" : "opacity-0 scale-[1.04]",
               ].join(" ")}
               style={{
@@ -93,7 +93,7 @@ export default function ProductCard({
         {/* Image scale layer on hover */}
         {hasImages && !isSoldOut && (
           <div
-            className="absolute inset-0 transition-transform duration-[650ms] ease-out group-hover:scale-[1.04] pointer-events-none"
+            className="absolute inset-0 transition-transform duration-650 ease-out group-hover:scale-[1.04] pointer-events-none"
             style={{ background: "transparent" }}
           />
         )}
@@ -161,7 +161,7 @@ export default function ProductCard({
         {/* ── HOVER OVERLAY — rises from bottom like a curtain ── */}
         {!isSoldOut && (
           <div
-            className="absolute inset-x-0 bottom-0 z-10 translate-y-full transition-transform duration-[380ms] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-y-0"
+            className="absolute inset-x-0 bottom-0 z-10 translate-y-full transition-transform duration-380 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-y-0"
             style={{
               background: "linear-gradient(to top, rgba(40,49,73,0.95) 0%, rgba(40,49,73,0.78) 50%, transparent 100%)",
               paddingTop: "3rem",

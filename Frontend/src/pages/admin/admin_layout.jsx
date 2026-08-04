@@ -1,38 +1,32 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  LayoutDashboard, Users, CreditCard, ChevronRight,
-  AlertTriangle, Package, Tags, Boxes, Home, ShieldCheck, MessageCircle, Wallet, Upload,
-} from "lucide-react";
+import { ChevronRight, AlertTriangle, ShieldCheck } from "lucide-react";
 
 import { getSuscripcion } from "../../api/admin_api";
 import { adminConfig, brandConfig } from "../../config/app_config";
 import { useAuth } from "../../auth/auth_context";
+import { ADMIN_ROUTES } from "../../app/routes_config";
 
-const NAV_ITEMS = [
-  { module: "dashboard",    to: "/admin",               label: "Dashboard",   icon: LayoutDashboard, end: true,  nivelMin: 50  },
-  { module: "products",     to: "/admin/productos",      label: "Productos",   icon: Package,                     nivelMin: 50  },
-  { module: "stockAlerts",  to: "/admin/stock-alertas",  label: "Stock",       icon: Boxes,                       nivelMin: 50  },
-  { module: "catalogs",     to: "/admin/catalogos",      label: "Catalogos",   icon: Tags,                        nivelMin: 100 },
-  { module: "home",         to: "/admin/home",           label: "Home",        icon: Home,                        nivelMin: 100 },
-  { module: "whatsapp",     to: "/admin/whatsapp",       label: "WhatsApp",    icon: MessageCircle,               nivelMin: 100 },
-  { module: "mediosPago",   to: "/admin/medios-pago",    label: "Medios pago", icon: Wallet,                      nivelMin: 100 },
-  { module: "import",       to: "/admin/importar",       label: "Importar",    icon: Upload,                      nivelMin: 100 },
-  { module: "users",        to: "/admin/usuarios",       label: "Usuarios",    icon: Users,                       nivelMin: 100 },
-  { module: "subscription", to: "/admin/suscripcion",    label: "Suscripcion", icon: CreditCard, soloSADM: true,  nivelMin: 100 },
-];
 const ESTADOS_BLOQUEADOS = ["VENCIDO", "SIN_SUSCRIPCION"];
 
 function useNavItems() {
   const { usuario } = useAuth();
-  const esSADM  = usuario?.roles_abr?.includes("SADM") ?? false;
-  const nivel   = usuario?.nivel ?? 0;
-  return NAV_ITEMS.filter(
-    (item) =>
-      adminConfig.modules[item.module] &&
-      (!item.soloSADM || esSADM) &&
-      nivel >= (item.nivelMin ?? 0)
-  );
+  const nivel  = usuario?.nivel ?? 0;
+  const esSADM = usuario?.roles_abr?.includes("SADM") ?? false;
+
+  return ADMIN_ROUTES
+    .filter((r) =>
+      r.nav &&
+      adminConfig.modules[r.module] &&
+      (!r.soloSADM || esSADM) &&
+      nivel >= (r.nivelMin ?? 0)
+    )
+    .map((r) => ({
+      to:    r.index ? "/admin" : `/admin/${r.path}`,
+      end:   r.nav.end,
+      label: r.nav.label,
+      icon:  r.nav.icon,
+    }));
 }
 
 function SuscripcionBanner({ estado, esSADM }) {
@@ -77,11 +71,11 @@ export default function AdminLayout() {
 
         <div className="px-5 py-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 ring-1 ring-accent/20">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/25 ring-1 ring-accent/40">
               <ShieldCheck size={13} className="text-accent" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/80">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
                 Panel Admin
               </p>
               <p className="text-[9px] leading-tight text-admin-text-dim">
@@ -100,10 +94,10 @@ export default function AdminLayout() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `admin-nav-item${isActive ? " admin-nav-item-active" : ""}`
+                `group admin-nav-item${isActive ? " admin-nav-item-active" : ""}`
               }
             >
-              <Icon size={15} className="shrink-0 opacity-80" />
+              <Icon size={15} className="shrink-0" />
               <span className="flex-1">{label}</span>
               <ChevronRight size={11} className="shrink-0 opacity-0 transition-opacity group-hover:opacity-30" />
             </NavLink>
@@ -112,10 +106,15 @@ export default function AdminLayout() {
 
         <div className="admin-sidebar-divider" />
         <div className="px-5 py-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] text-admin-text-dim">{adminConfig.restrictedLabel}</p>
-            <span className="rounded-md bg-accent/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-accent/70">
-              ADM
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-semibold text-admin-text/80">
+                {usuario?.nombre} {usuario?.apellido}
+              </p>
+              <p className="text-[9px] leading-tight text-admin-text-dim">{adminConfig.restrictedLabel}</p>
+            </div>
+            <span className="shrink-0 rounded-md bg-accent/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-accent">
+              {usuario?.roles_abr?.[0] ?? "USR"}
             </span>
           </div>
         </div>
