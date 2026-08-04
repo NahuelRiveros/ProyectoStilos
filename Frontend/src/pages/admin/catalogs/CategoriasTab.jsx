@@ -8,6 +8,17 @@ import {
 } from "../../../api/catalogo_api";
 import { slugify, useConfirmDelete, CatalogRow, AddButton, TabLoader } from "./catalog_shared";
 
+// Subcategorías con el mismo nombre bajo distintos padres generan slugs duplicados.
+// Prefijando con el slug del padre el slug queda globalmente único:
+//   "Lisas" bajo "Remeras"  → remeras-lisas
+//   "Lisas" bajo "Chombas"  → chombas-lisas
+function buildSlug(nombre, padreId, items) {
+  const base = slugify(nombre);
+  if (!padreId && padreId !== 0) return base;
+  const padre = items.find((c) => c.id === Number(padreId));
+  return padre ? `${padre.slug}-${base}` : base;
+}
+
 export default function CategoriasTab() {
   const [items,     setItems]     = useState([]);
   const [generos,   setGeneros]   = useState([]);
@@ -73,8 +84,8 @@ export default function CategoriasTab() {
 
   async function handleSave() {
     if (!nombre.trim()) return;
-    const s = slug || slugify(nombre);
     const padre = padreId === "" ? null : Number(padreId);
+    const s = slug.trim() || buildSlug(nombre, padreId, items);
     setSaving(true);
     try {
       if (typeof formOpen === "number") {
@@ -93,8 +104,14 @@ export default function CategoriasTab() {
         toast.success("Categoría creada");
       }
       cancelForm();
-    } catch {
-      toast.error("Error al guardar la categoría");
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg    = err?.response?.data?.mensaje ?? "";
+      if (status === 409 || msg.toLowerCase().includes("exist") || msg.toLowerCase().includes("slug")) {
+        toast.error(`El slug "${s}" ya existe. Cambiá el nombre o editá el slug manualmente.`);
+      } else {
+        toast.error(msg || "Error al guardar la categoría");
+      }
     } finally { setSaving(false); }
   }
 
@@ -113,7 +130,10 @@ export default function CategoriasTab() {
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={nombre}
-            onChange={(e) => { setNombre(e.target.value); setSlug(slugify(e.target.value)); }}
+            onChange={(e) => {
+              setNombre(e.target.value);
+              setSlug(buildSlug(e.target.value, padreId, items));
+            }}
             className="input-form max-w-xs flex-1"
             placeholder="Nombre (ej: Pantalones)"
             autoFocus
@@ -121,8 +141,9 @@ export default function CategoriasTab() {
           <input
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            className="input-form w-36 font-mono text-xs"
-            placeholder="slug"
+            className="input-form w-40 font-mono text-xs"
+            placeholder="slug (auto)"
+            title="Se genera automáticamente. Podés editarlo si necesitás."
           />
         </div>
 
@@ -133,6 +154,7 @@ export default function CategoriasTab() {
             onChange={(e) => {
               const val = e.target.value === "" ? "" : Number(e.target.value);
               setPadreId(val);
+              if (nombre.trim()) setSlug(buildSlug(nombre, val, items));
               if (val !== "") {
                 const generosDelPadre = asignados[Number(val)] ?? [];
                 setSelGeneros((prev) => prev.filter((g) => generosDelPadre.includes(g)));
