@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Users } from "lucide-react";
+import { useToast } from "../../../context/toast_context";
 import {
   getGeneros, createGenero, updateGenero, deleteGenero,
 } from "../../../api/catalogo_api";
@@ -13,14 +14,20 @@ export default function GenerosTab() {
   const [saving,  setSaving]  = useState(false);
   const [nombre,  setNombre]  = useState("");
   const [slug,    setSlug]    = useState("");
+  const toast = useToast();
 
   useEffect(() => {
     getGeneros().then(setItems).finally(() => setLoading(false));
   }, []);
 
   const del = useConfirmDelete(async (id) => {
-    await deleteGenero(id).catch(() => {});
-    setItems((p) => p.filter((i) => i.id !== id));
+    try {
+      await deleteGenero(id);
+      setItems((p) => p.filter((i) => i.id !== id));
+      toast.success("Género eliminado");
+    } catch {
+      toast.error("No se pudo eliminar el género");
+    }
   });
 
   function startAdd()  { setAdding(true); setNombre(""); setSlug(""); setEditId(null); }
@@ -35,12 +42,16 @@ export default function GenerosTab() {
       if (editId) {
         const updated = await updateGenero(editId, nombre.trim(), s);
         setItems((p) => p.map((i) => (i.id === editId ? updated : i)));
+        toast.success("Género actualizado");
       } else {
         const created = await createGenero(nombre.trim(), s);
         setItems((p) => [...p, created]);
+        toast.success("Género creado");
       }
       cancelForm();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch {
+      toast.error("Error al guardar el género");
+    } finally { setSaving(false); }
   }
 
   const formFields = (

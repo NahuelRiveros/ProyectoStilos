@@ -1,9 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { useToast } from "../../../context/toast_context";
 import {
   getTalles, createTalle, updateTalle, deleteTalle,
 } from "../../../api/catalogo_api";
 import { useConfirmDelete, CatalogForm, AddButton, TabLoader } from "./catalog_shared";
+
+function TalleForm({ nombre, setNombre, orden, setOrden, onSave, onCancel, saving }) {
+  return (
+    <CatalogForm onSave={onSave} onCancel={onCancel} saving={saving}>
+      <input
+        value={nombre}
+        onChange={(e) => setNombre(e.target.value)}
+        className="input-form w-28"
+        placeholder="Ej: XL"
+        autoFocus
+      />
+      <input
+        type="number"
+        value={orden}
+        onChange={(e) => setOrden(e.target.value)}
+        className="input-form w-20"
+        placeholder="Orden"
+        min="0"
+      />
+    </CatalogForm>
+  );
+}
 
 export default function TallesTab() {
   const [items,   setItems]   = useState([]);
@@ -13,6 +36,7 @@ export default function TallesTab() {
   const [saving,  setSaving]  = useState(false);
   const [nombre,  setNombre]  = useState("");
   const [orden,   setOrden]   = useState("0");
+  const toast = useToast();
 
   const load = useCallback(() => {
     getTalles().then(setItems).finally(() => setLoading(false));
@@ -21,11 +45,16 @@ export default function TallesTab() {
   useEffect(() => { load(); }, [load]);
 
   const del = useConfirmDelete(async (id) => {
-    await deleteTalle(id).catch(() => {});
-    setItems((p) => p.filter((i) => i.id !== id));
+    try {
+      await deleteTalle(id);
+      setItems((p) => p.filter((i) => i.id !== id));
+      toast.success("Talle eliminado");
+    } catch {
+      toast.error("No se pudo eliminar el talle");
+    }
   });
 
-  function startAdd()  { setAdding(true); setNombre(""); setOrden(String(items.length * 10)); setEditId(null); }
+  function startAdd()   { setAdding(true); setNombre(""); setOrden(String(items.length * 10)); setEditId(null); }
   function startEdit(t) { setEditId(t.id); setNombre(t.nombre); setOrden(String(t.orden)); setAdding(false); }
   function cancelForm() { setAdding(false); setEditId(null); }
 
@@ -36,12 +65,16 @@ export default function TallesTab() {
       if (editId) {
         const updated = await updateTalle(editId, nombre.trim(), Number(orden));
         setItems((p) => p.map((i) => (i.id === editId ? updated : i)));
+        toast.success("Talle actualizado");
       } else {
         const created = await createTalle(nombre.trim(), Number(orden));
         setItems((p) => [...p, created].sort((a, b) => a.orden - b.orden));
+        toast.success("Talle creado");
       }
       cancelForm();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch {
+      toast.error("Error al guardar el talle");
+    } finally { setSaving(false); }
   }
 
   if (loading) return <TabLoader />;
@@ -93,43 +126,19 @@ export default function TallesTab() {
       </div>
 
       {editId !== null && (
-        <CatalogForm onSave={handleSave} onCancel={cancelForm} saving={saving}>
-          <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="input-form w-28"
-            placeholder="Ej: XL"
-            autoFocus
-          />
-          <input
-            type="number"
-            value={orden}
-            onChange={(e) => setOrden(e.target.value)}
-            className="input-form w-20"
-            placeholder="Orden"
-            min="0"
-          />
-        </CatalogForm>
+        <TalleForm
+          nombre={nombre} setNombre={setNombre}
+          orden={orden}   setOrden={setOrden}
+          onSave={handleSave} onCancel={cancelForm} saving={saving}
+        />
       )}
 
       {adding ? (
-        <CatalogForm onSave={handleSave} onCancel={cancelForm} saving={saving}>
-          <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="input-form w-28"
-            placeholder="Ej: XL"
-            autoFocus
-          />
-          <input
-            type="number"
-            value={orden}
-            onChange={(e) => setOrden(e.target.value)}
-            className="input-form w-20"
-            placeholder="Orden"
-            min="0"
-          />
-        </CatalogForm>
+        <TalleForm
+          nombre={nombre} setNombre={setNombre}
+          orden={orden}   setOrden={setOrden}
+          onSave={handleSave} onCancel={cancelForm} saving={saving}
+        />
       ) : (
         <AddButton onClick={startAdd} label="Agregar talle" />
       )}

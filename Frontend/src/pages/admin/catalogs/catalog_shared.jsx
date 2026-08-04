@@ -44,7 +44,7 @@ export function CatalogRow({
   saving,
 }) {
   return (
-    <div className="group flex items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-surface">
+    <div className="group flex items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-admin-surface">
       <div className="flex-1 min-w-0">{children}</div>
       {isConfirmingDelete ? (
         <div className="flex items-center gap-1.5 animate-in fade-in duration-150">

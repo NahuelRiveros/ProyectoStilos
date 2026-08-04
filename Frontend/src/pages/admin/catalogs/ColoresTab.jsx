@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { useToast } from "../../../context/toast_context";
 import {
   getColores, createColor, updateColor, deleteColor,
 } from "../../../api/catalogo_api";
@@ -66,6 +67,7 @@ export default function ColoresTab() {
   const [nombre,  setNombre]  = useState("");
   const [hex,     setHex]     = useState("#000000");
   const [orden,   setOrden]   = useState("0");
+  const toast = useToast();
 
   const load = useCallback(() => {
     getColores().then(setItems).finally(() => setLoading(false));
@@ -74,8 +76,13 @@ export default function ColoresTab() {
   useEffect(() => { load(); }, [load]);
 
   const del = useConfirmDelete(async (id) => {
-    await deleteColor(id).catch(() => {});
-    setItems((p) => p.filter((i) => i.id !== id));
+    try {
+      await deleteColor(id);
+      setItems((p) => p.filter((i) => i.id !== id));
+      toast.success("Color eliminado");
+    } catch {
+      toast.error("No se pudo eliminar el color");
+    }
   });
 
   function startAdd()  { setAdding(true); setNombre(""); setHex("#000000"); setOrden("0"); setEditId(null); }
@@ -89,12 +96,16 @@ export default function ColoresTab() {
       if (editId) {
         const updated = await updateColor(editId, nombre.trim(), hex || null, Number(orden));
         setItems((p) => p.map((i) => (i.id === editId ? updated : i)));
+        toast.success("Color actualizado");
       } else {
         const created = await createColor(nombre.trim(), hex || null, Number(orden));
         setItems((p) => [...p, created]);
+        toast.success("Color creado");
       }
       cancelForm();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch {
+      toast.error("Error al guardar el color");
+    } finally { setSaving(false); }
   }
 
   const formFields = (

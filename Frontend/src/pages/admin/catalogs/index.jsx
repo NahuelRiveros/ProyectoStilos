@@ -25,7 +25,7 @@ export default function AdminCatalogsPage() {
 
       {/* Encabezado */}
       <div className="mb-6 flex items-start gap-3">
-        <div className="mt-1 h-8 w-1 shrink-0 rounded-full" style={{ background: "var(--color-accent)" }} />
+        <div className="mt-1 h-8 w-1 shrink-0 rounded-full bg-accent" />
         <div>
           <h1 className="font-display text-2xl font-black text-ink">Catálogos</h1>
           <p className="mt-0.5 text-sm text-muted">
@@ -36,7 +36,7 @@ export default function AdminCatalogsPage() {
 
       {/* Navegación tipo pill */}
       <div className="mb-5 overflow-x-auto">
-        <div className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1 min-w-max">
+        <div className="inline-flex gap-1 rounded-xl border border-line bg-card p-1 min-w-max">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}

@@ -70,8 +70,8 @@ function LogoInput({ value, onChange }) {
             isDragging
               ? "border-navy bg-navy/8 scale-[1.03]"
               : uploading
-              ? "border-line bg-surface opacity-70 cursor-not-allowed"
-              : "border-line bg-surface hover:border-navy/50 hover:bg-navy/5",
+              ? "border-line bg-card opacity-70 cursor-not-allowed"
+              : "border-line bg-card hover:border-navy/50 hover:bg-navy/5",
           ].join(" ")}
         >
           {uploading ? (
@@ -187,7 +187,7 @@ function MarcaForm({ nombre, setNombre, slug, setSlug, logo, setLogo, onSave, on
 function BrandCard({ marca, onEdit, onDelete, isPending, onConfirm, onCancel }) {
   return (
     <div className="group relative rounded-xl border border-line bg-card overflow-hidden transition-all hover:border-navy/30 hover:shadow-md hover:-translate-y-0.5">
-      <div className="flex h-20 items-center justify-center bg-surface border-b border-line px-4">
+      <div className="flex h-20 items-center justify-center bg-admin-surface border-b border-line px-4">
         {marca.logo ? (
           <img
             src={marca.logo}

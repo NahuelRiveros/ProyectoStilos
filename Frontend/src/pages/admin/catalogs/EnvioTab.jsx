@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Truck, BadgeCheck } from "lucide-react";
+import { useToast } from "../../../context/toast_context";
 import {
   getOpcionesEnvio, createOpcionEnvio, updateOpcionEnvio, deleteOpcionEnvio,
 } from "../../../api/catalogo_api";
@@ -12,6 +13,7 @@ export default function EnvioTab() {
   const [loading, setLoading] = useState(true);
   const [mode,    setMode]    = useState("idle");
   const [saving,  setSaving]  = useState(false);
+  const toast = useToast();
 
   const EMPTY = { nombre: "", descripcion: "", precio: "", tiempo_estimado: "", gratis_desde: "" };
   const [form, setForm] = useState(EMPTY);
@@ -21,8 +23,13 @@ export default function EnvioTab() {
   }, []);
 
   const del = useConfirmDelete(async (id) => {
-    await deleteOpcionEnvio(id).catch(() => {});
-    setItems((p) => p.filter((i) => i.id !== id));
+    try {
+      await deleteOpcionEnvio(id);
+      setItems((p) => p.filter((i) => i.id !== id));
+      toast.success("Opción de envío eliminada");
+    } catch {
+      toast.error("No se pudo eliminar la opción de envío");
+    }
   });
 
   function startEdit(e) {
@@ -53,12 +60,16 @@ export default function EnvioTab() {
       if (typeof mode === "number") {
         const updated = await updateOpcionEnvio(mode, data);
         setItems((p) => p.map((i) => (i.id === mode ? updated : i)));
+        toast.success("Opción de envío actualizada");
       } else {
         const created = await createOpcionEnvio(data);
         setItems((p) => [...p, created]);
+        toast.success("Opción de envío creada");
       }
       cancelForm();
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch {
+      toast.error("Error al guardar la opción de envío");
+    } finally { setSaving(false); }
   }
 
   function f(field) {
