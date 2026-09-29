@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { mensajeDeError } from "@/api/http.js";
+import { estaEnMenu } from "@/clientes/index.js";
 import { useToast } from "@/componentes/toast/toast_context.jsx";
 import Boton from "@/componentes/ui/boton.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
@@ -32,7 +33,7 @@ function NodoCategoria({ nodo, nivel, cerrados, alternar, acciones }) {
           <span className="w-5" aria-hidden="true" />
         )}
         <span className="flex-1 font-medium">{nodo.nombre}</span>
-        {nodo.en_menu && <Insignia tono="info">En el menú</Insignia>}
+        {estaEnMenu(nodo) && <Insignia tono="info">En el menú</Insignia>}
         <span className="text-xs text-texto-suave">
           {total} producto{total === 1 ? "" : "s"}
         </span>

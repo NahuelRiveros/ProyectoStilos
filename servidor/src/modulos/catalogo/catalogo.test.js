@@ -1,5 +1,6 @@
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { proyecto } from "compartido/proyecto.js";
 import { crearApp } from "../../app.js";
 import { sequelize } from "../../nucleo/db/sequelize.js";
 import { autorizacion, crearRoles, crearUsuario, vaciarTablas } from "../../../tests/ayudantes.js";
@@ -140,7 +141,7 @@ describe("Productos: alta y validaciones", () => {
   it("exige al menos una presentación y valida precios", async () => {
     const sinVariantes = await api.post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "X", variantes: [] });
     expect(sinVariantes.status).toBe(400);
-    expect(sinVariantes.body.detalles[0].mensaje).toBe("Agregá al menos una presentación");
+    expect(sinVariantes.body.detalles[0].mensaje).toBe(`El producto necesita al menos 1 ${proyecto.catalogo.etiqueta_variante.toLowerCase()}`);
 
     const precios = await api.post("/api/catalogo/productos", {
       categoria_id: categoria.id,

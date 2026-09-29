@@ -45,8 +45,8 @@ export const productoSchema = z
     activo: z.boolean().optional().default(true),
     publicado: z.boolean().optional().default(true),
     variantes: z
-      .array(varianteSchema, { error: `Agregá al menos una ${etiqueta_variante.toLowerCase()}` })
-      .min(1, `Agregá al menos una ${etiqueta_variante.toLowerCase()}`)
+      .array(varianteSchema, { error: `El producto necesita al menos 1 ${etiqueta_variante.toLowerCase()}` })
+      .min(1, `El producto necesita al menos 1 ${etiqueta_variante.toLowerCase()}`)
       .max(100, `Máximo 100 ${etiqueta_variantes.toLowerCase()} por producto`),
   })
   .superRefine((producto, ctx) => {

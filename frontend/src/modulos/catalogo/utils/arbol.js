@@ -58,3 +58,32 @@ export function rutaCategoria(categorias = [], id) {
 export function totalConSubcategorias(nodo) {
   return nodo.cantidad_productos + nodo.hijos.reduce((suma, hijo) => suma + totalConSubcategorias(hijo), 0);
 }
+
+/**
+ * Lo que muestra el filtro "por niveles" del catálogo para la categoría elegida (id o "" = ninguna):
+ *   ruta     → de la principal a la elegida (Mujer › Jeans), para el camino de migas.
+ *   padre    → la categoría cuyas subcategorías se listan (null = se listan las principales).
+ *   opciones → esas subcategorías, solo las que tienen productos.
+ * Si la elegida no tiene subcategorías con productos, se listan sus hermanas (queda marcada entre ellas).
+ */
+export function nivelDeCategoria(categorias = [], id) {
+  const raices = armarArbol(categorias);
+  const porId = new Map();
+  const indexar = (nodos) => {
+    for (const n of nodos) {
+      porId.set(n.id, n);
+      indexar(n.hijos);
+    }
+  };
+  indexar(raices);
+  const conProductos = (nodos) => nodos.filter((n) => totalConSubcategorias(n) > 0);
+
+  const actual = porId.get(Number(id));
+  const ruta = [];
+  for (let n = actual; n && ruta.length < 20; n = porId.get(n.padre_id)) ruta.unshift(n);
+
+  if (!actual) return { ruta, padre: null, opciones: conProductos(raices) };
+  if (conProductos(actual.hijos).length > 0) return { ruta, padre: actual, opciones: conProductos(actual.hijos) };
+  const padre = porId.get(actual.padre_id) ?? null;
+  return { ruta, padre, opciones: conProductos(padre ? padre.hijos : raices) };
+}

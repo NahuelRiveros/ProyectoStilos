@@ -21,7 +21,7 @@ const categorias = (lista) => servidorMock.use(mock.get(`${API}/catalogo/categor
 describe("Menú por categorías · escritorio", () => {
   it("muestra las categorías marcadas; las que tienen subcategorías se despliegan (sin las vacías)", async () => {
     categorias(ROPA);
-    renderizar(<MenuCategorias variante="escritorio" />);
+    renderizar(<MenuCategorias modo="marcadas" variante="escritorio" />);
 
     const mujer = await screen.findByRole("button", { name: "Mujer" });
     expect(screen.getByRole("link", { name: "Hombre" })).toHaveAttribute("href", "/catalogo?categoria=4");
@@ -40,7 +40,7 @@ describe("Menú por categorías · escritorio", () => {
 
   it("con muchas categorías, las que no entran van en 'Más'", async () => {
     categorias(Array.from({ length: 8 }, (_, i) => cat(i + 1, `Cat ${i + 1}`, { en_menu: true })));
-    renderizar(<MenuCategorias variante="escritorio" />);
+    renderizar(<MenuCategorias modo="marcadas" variante="escritorio" />);
 
     expect(await screen.findByRole("link", { name: "Cat 6" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Cat 7" })).not.toBeInTheDocument();
@@ -51,8 +51,31 @@ describe("Menú por categorías · escritorio", () => {
 
   it("si todavía no hay categorías marcadas, muestra el link de productos", async () => {
     categorias([cat(1, "Almacén")]);
-    renderizar(<MenuCategorias variante="escritorio" />);
+    renderizar(<MenuCategorias modo="marcadas" variante="escritorio" />);
     expect(await screen.findByRole("link", { name: nombreProductos })).toHaveAttribute("href", "/catalogo");
+  });
+});
+
+describe("Menú con las categorías principales (categorias_en_menu: 'principales')", () => {
+  it("muestra todas las principales solas, sin importar la casilla, y las subcategorías con productos", async () => {
+    categorias(ROPA);
+    renderizar(<MenuCategorias modo="principales" variante="escritorio" />);
+
+    const mujer = await screen.findByRole("button", { name: "Mujer" });
+    expect(screen.getByRole("link", { name: "Hombre" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Liquidación" })).toBeInTheDocument();
+
+    await userEvent.click(mujer);
+    expect(screen.getByRole("link", { name: "Remeras" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Vestidos" })).not.toBeInTheDocument();
+  });
+
+  it("una subcategoría tildada no sube a la barra", async () => {
+    categorias([cat(1, "Mujer"), cat(2, "Remeras", { padre_id: 1, en_menu: true })]);
+    renderizar(<MenuCategorias modo="principales" variante="escritorio" />);
+
+    await screen.findByRole("button", { name: "Mujer" });
+    expect(screen.queryByRole("link", { name: "Remeras" })).not.toBeInTheDocument();
   });
 });
 
@@ -60,7 +83,7 @@ describe("Menú por categorías · celular", () => {
   it("cada categoría es un grupo que se abre, y elegir una cierra el menú", async () => {
     categorias(ROPA);
     const onNavegar = vi.fn();
-    renderizar(<MenuCategorias variante="celular" onNavegar={onNavegar} />);
+    renderizar(<MenuCategorias modo="marcadas" variante="celular" onNavegar={onNavegar} />);
 
     const mujer = await screen.findByRole("button", { name: "Mujer" });
     expect(screen.queryByRole("link", { name: "Remeras" })).not.toBeInTheDocument();

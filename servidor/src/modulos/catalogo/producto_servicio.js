@@ -210,7 +210,7 @@ export async function actualizarProducto(id, datos) {
     const ajena = datos.variantes.find((v) => v.id && !actualesPorId.has(v.id));
     if (ajena) {
       throw new DatosInvalidos("Revisá los datos ingresados.", [
-        { campo: "variantes", mensaje: `La ${proyecto.catalogo.etiqueta_variante.toLowerCase()} ${ajena.id} no pertenece a este producto` },
+        { campo: "variantes", mensaje: `${proyecto.catalogo.etiqueta_variante} ${ajena.id} no pertenece a este producto` },
       ]);
     }
 

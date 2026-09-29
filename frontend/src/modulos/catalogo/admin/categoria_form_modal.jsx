@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { categoriaSchema } from "compartido/schemas/catalogo.js";
-import { cliente } from "@/clientes/index.js";
+import { categoriasPrincipalesEnMenu, menuPorCategorias } from "@/clientes/index.js";
 import Boton from "@/componentes/ui/boton.jsx";
 import CheckboxField from "@/componentes/ui/checkbox_field.jsx";
 import FormError from "@/componentes/ui/form_error.jsx";
@@ -59,8 +59,8 @@ export default function CategoriaFormModal({ categoria, padreInicial = null, cat
           error={errors.padre_id?.message}
         />
         <InputField label="Orden" name="orden" type="number" min={0} register={register} error={errors.orden?.message} ayuda="Las de menor número aparecen primero." />
-        {/* Solo importa si la tienda muestra las categorías en el menú (clientes/<id>/navbar.js) */}
-        {cliente.navbar.menu_productos === "categorias" && (
+        {/* Solo si el menú muestra las categorías tildadas (clientes/<id>/navbar.js); con "principales" van solas */}
+        {menuPorCategorias && !categoriasPrincipalesEnMenu && (
           <CheckboxField
             label="Mostrar en el menú de la tienda"
             name="en_menu"

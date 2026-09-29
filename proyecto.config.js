@@ -23,7 +23,7 @@ const MEDIOS_PAGO = [
 
 export const proyecto = {
   // Carpeta de frontend/src/clientes/ con marca, tema, Home, navbar y footer.
-  cliente: "demo",
+  cliente: "stilos",
 
   // Define "qué día" es un cobro o un movimiento (un cobro a las 23:30 no pasa al día siguiente).
   zona_horaria: "America/Argentina/Buenos_Aires",
@@ -46,8 +46,8 @@ export const proyecto = {
 
   catalogo: {
     // Cómo se llama "lo que se compra" en este rubro: "Presentación", "Variante", "Talle y color"...
-    etiqueta_variante: "Presentación",
-    etiqueta_variantes: "Presentaciones",
+    etiqueta_variante: "Talle y color",
+    etiqueta_variantes: "Talles y colores",
     iva_por_defecto: 21,
     alicuotas_iva: [21, 10.5, 27, 0],
     productos_por_pagina: 24,
@@ -58,6 +58,9 @@ export const proyecto = {
   tienda: {
     catalogo_publico: true,
     carrito_invitado: true,
+    // Filtro de categorías del catálogo: "arbol" = el árbol completo (distribuidoras, pocas categorías);
+    // "niveles" = solo el nivel donde se está, con camino de migas y chips en el celular (indumentaria).
+    filtro_categorias: "niveles",
     precios_con_iva: true,
     max_lineas_carrito: 200,
     max_cantidad_item: 9999,

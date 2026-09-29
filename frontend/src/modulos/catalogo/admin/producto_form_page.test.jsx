@@ -3,10 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { http as mock, HttpResponse } from "msw";
 import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
+import { proyecto } from "compartido/proyecto.js";
 import { API, servidorMock } from "@/test/servidor_mock.js";
 import { renderizar } from "@/test/renderizar.jsx";
 import { categoriasEjemplo, productoEjemplo } from "@/test/datos_catalogo.js";
 import ProductoFormPage from "./producto_form_page.jsx";
+
+// El nombre de la variante depende del rubro ("Presentación", "Talle y color"...).
+const VARIANTE = proyecto.catalogo.etiqueta_variante;
 
 function renderizarFormulario(ruta) {
   return renderizar(
@@ -48,13 +52,13 @@ describe("Admin · Formulario de producto", () => {
     await userEvent.type(within(datos).getByLabelText(/^Nombre/), "Yerba Playadito");
     await userEvent.selectOptions(within(datos).getByLabelText(/^Categoría/), "3");
 
-    const primera = screen.getByRole("listitem", { name: "Presentación 1" });
+    const primera = screen.getByRole("listitem", { name: `${VARIANTE} 1` });
     await userEvent.type(within(primera).getByLabelText(/^Nombre/), "500 g");
     await userEvent.type(within(primera).getByLabelText(/^Precio neto/), "1000,5");
     expect(within(primera).getByText("$ 1.210,61", { normalizer: (t) => t.replace(/\s/g, " ") })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Agregar presentación" }));
-    const segunda = screen.getByRole("listitem", { name: "Presentación 2" });
+    await userEvent.click(screen.getByRole("button", { name: `Agregar ${VARIANTE.toLowerCase()}` }));
+    const segunda = screen.getByRole("listitem", { name: `${VARIANTE} 2` });
     await userEvent.type(within(segunda).getByLabelText(/^Nombre/), "1 kg");
     await userEvent.type(within(segunda).getByLabelText(/^Precio neto/), "1900");
     await userEvent.selectOptions(within(segunda).getByLabelText(/^IVA/), "10.5");
@@ -87,7 +91,7 @@ describe("Admin · Formulario de producto", () => {
     );
     renderizarFormulario("/admin/catalogo/productos/10");
 
-    const segunda = await screen.findByRole("listitem", { name: "Presentación 2" });
+    const segunda = await screen.findByRole("listitem", { name: `${VARIANTE} 2` });
     expect(within(segunda).getByLabelText(/^Código/)).toHaveValue("ORE-300");
 
     await userEvent.click(screen.getByRole("button", { name: "Guardar producto" }));
@@ -98,6 +102,6 @@ describe("Admin · Formulario de producto", () => {
   it("no deja quitar la única presentación", async () => {
     servidorMock.use(categorias());
     renderizarFormulario("/admin/catalogo/productos/nuevo");
-    expect(await screen.findByRole("button", { name: "Quitar presentación 1" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: `Quitar ${VARIANTE.toLowerCase()} 1` })).toBeDisabled();
   });
 });

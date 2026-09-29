@@ -44,9 +44,9 @@ npm run cliente:nuevo -- <id> --nombre "<Nombre comercial>" --activar
 |---|---|
 | `assets/` | Copiar el logo (ej. `logo.svg`) y actualizar el `import logo` de `marca.js`. Borrar el logo de demo copiado. |
 | `marca.js` | nombre, nombre_corto, razon_social, rubro, tagline |
-| `tema.js` | `primario`, `primario-hover` (un poco más oscuro), `primario-texto`, `acento`, `fondo`; fuente de títulos si tiene una |
+| `tema.js` | `primario`, `primario-hover` (un poco más oscuro), `primario-texto`, `acento`, `fondo`; fuentes de títulos/cuerpo si tiene, y si son web (Google Fonts) su hoja en `fuentes_url` |
 | `home.js` | Secciones (`hero`, `pilares`, `pasos`, `contacto`) con textos del rubro. Iconos: `src/componentes/ui/icono.jsx` |
-| `navbar.js` | Links propios (los de catálogo/tienda los agregan los módulos solos); `productos` (nombre de la sección), `menu_productos` (`"enlace"` o `"categorias"`), `novedades`, `ofertas`. Con `"categorias"` conviene `mostrar_rubro: false` y pocos links propios (la barra se llena rápido) |
+| `navbar.js` | Links propios (los de catálogo/tienda los agregan los módulos solos); `productos` (nombre de la sección), `menu_productos` (`"enlace"`, `"categorias"` o `"desplegable"`: "Tienda ▾" con Mujer / Hombre en columnas), `categorias_en_menu` (`"marcadas"` o `"principales"`: las principales solas, sin tildarlas), `novedades`, `ofertas`. Con `"categorias"` conviene `mostrar_rubro: false` y pocos links propios (la barra se llena rápido) |
 | `footer.js` | Columnas, contacto real, redes, `legal.titular` |
 
 **Contraste**: `primario-texto` sobre `primario` tiene que leerse (WCAG AA, relación ≥ 4.5:1). Calcularlo;
@@ -56,6 +56,7 @@ sobre `fondo` (se usa en textos destacados).
 ## Paso 4 — Configuración del negocio (`proyecto.config.js`)
 - `modulos`: prender solo lo contratado (`catalogo`, `stock`, `tienda`, `caja`).
 - `catalogo.etiqueta_variante` / `etiqueta_variantes` según el rubro.
+- `tienda.filtro_categorias`: `"arbol"` (distribuidora) o `"niveles"` (indumentaria: Mujer › Jeans, chips en el celular).
 - `tienda.modalidades_entrega` (envío / retiro), `tienda.pedido_minimo`, `usuarios.registro_publico`.
 - `pagos`: son solo los **valores iniciales**. Los reales (CBU, cuotas, promociones) los carga el
   cliente en el panel → **Configuración**. Si ya los pasó, cargarlos ahí después del primer arranque.

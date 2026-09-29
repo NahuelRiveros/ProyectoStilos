@@ -6,10 +6,9 @@ import Paginacion from "@/componentes/ui/paginacion.jsx";
 import SearchField from "@/componentes/ui/search_field.jsx";
 import SelectField from "@/componentes/ui/select_field.jsx";
 import { Cargando, ErrorCarga, Vacio } from "@/componentes/ui/estado_carga.jsx";
-import { cn } from "@/utils/cn.js";
-import CategoriaSelect from "../componentes/categoria_select.jsx";
 import { useCategorias, useProductos } from "../hooks/use_catalogo.js";
-import { armarArbol, totalConSubcategorias } from "../utils/arbol.js";
+import FiltroCategoriasArbol from "./filtro_categorias_arbol.jsx";
+import FiltroCategoriasNiveles from "./filtro_categorias_niveles.jsx";
 import ProductoCard from "./producto_card.jsx";
 
 const ORDENES = [
@@ -18,30 +17,8 @@ const ORDENES = [
   { valor: "reciente", etiqueta: "Más nuevos" },
 ];
 
-function ArbolFiltro({ nodos, seleccionada, onElegir, nivel = 0 }) {
-  return (
-    <ul className={cn(nivel > 0 && "ml-3 border-l border-borde pl-2")}>
-      {nodos
-        .filter((n) => totalConSubcategorias(n) > 0)
-        .map((n) => (
-          <li key={n.id}>
-            <button
-              type="button"
-              onClick={() => onElegir(String(n.id))}
-              aria-current={seleccionada === String(n.id) ? "true" : undefined}
-              className={cn(
-                "w-full rounded-lg px-2 py-1.5 text-left text-sm hover:bg-fondo",
-                seleccionada === String(n.id) && "bg-primario/10 font-semibold text-primario",
-              )}
-            >
-              {n.nombre}
-            </button>
-            {n.hijos.length > 0 && <ArbolFiltro nodos={n.hijos} seleccionada={seleccionada} onElegir={onElegir} nivel={nivel + 1} />}
-          </li>
-        ))}
-    </ul>
-  );
-}
+// "arbol" (el de siempre, para distribuidoras) o "niveles" (tiendas con muchas subcategorías por sección).
+const FiltroCategorias = proyecto.tienda.filtro_categorias === "niveles" ? FiltroCategoriasNiveles : FiltroCategoriasArbol;
 
 export default function CatalogoPage() {
   const [params, setParams] = useSearchParams();
@@ -68,6 +45,7 @@ export default function CatalogoPage() {
     [setParams],
   );
   const buscar = useCallback((texto) => actualizar("q", texto), [actualizar]);
+  const elegirCategoria = useCallback((id) => actualizar("categoria", id), [actualizar]);
   // El título acompaña lo que se está viendo (clave en una tienda de ropa: "Mujer", "Calzado"…).
   const categoriaActual = categorias.data?.find((c) => String(c.id) === filtros.categoria);
   const titulo = filtros.oferta ? "Ofertas" : (categoriaActual?.nombre ?? nombreProductos);
@@ -87,32 +65,16 @@ export default function CatalogoPage() {
 
       <div className="mt-6 grid gap-8 md:grid-cols-[220px_1fr]">
         <aside className="hidden md:block" aria-label="Categorías">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-texto-suave">Categorías</h2>
-          <button
-            type="button"
-            onClick={() => actualizar("categoria", "")}
-            className={cn("mb-1 w-full rounded-lg px-2 py-1.5 text-left text-sm hover:bg-fondo", !filtros.categoria && "bg-primario/10 font-semibold text-primario")}
-          >
-            Todas
-          </button>
-          {categorias.data && <ArbolFiltro nodos={armarArbol(categorias.data)} seleccionada={filtros.categoria} onElegir={(id) => actualizar("categoria", id)} />}
+          <FiltroCategorias lugar="lateral" categorias={categorias.data} seleccionada={filtros.categoria} onElegir={elegirCategoria} />
         </aside>
 
-        <div>
+        {/* min-w-0: sin esto, los chips con scroll lateral ensanchan la columna y la página se desborda en el celular */}
+        <div className="min-w-0">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <SearchField valor={filtros.q} onBuscar={buscar} etiqueta="Buscar productos" placeholder="Buscar por producto, marca o código" />
             <SelectField name="orden" aria-label="Ordenar" opciones={ORDENES} value={filtros.orden} onChange={(e) => actualizar("orden", e.target.value)} className="mt-1" />
           </div>
-          <div className="mt-3 md:hidden">
-            <CategoriaSelect
-              name="categoria_movil"
-              aria-label="Categoría"
-              categorias={categorias.data}
-              placeholder="Todas las categorías"
-              value={filtros.categoria}
-              onChange={(e) => actualizar("categoria", e.target.value)}
-            />
-          </div>
+          <FiltroCategorias lugar="arriba" categorias={categorias.data} seleccionada={filtros.categoria} onElegir={elegirCategoria} />
 
           <div className="mt-6">
             {productos.isPending ? (

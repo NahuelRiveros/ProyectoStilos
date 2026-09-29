@@ -8,6 +8,7 @@ import {
   Package,
   Phone,
   ShieldCheck,
+  Shirt,
   ShoppingBag,
   Store,
   Tag,
@@ -16,7 +17,7 @@ import {
 
 // Iconos que se pueden usar por nombre desde la config de un cliente (home.js).
 // Para sumar uno: importarlo de lucide-react y agregarlo acá.
-const ICONOS = { Clock, CreditCard, Headphones, Mail, MapPin, MessageCircle, Package, Phone, ShieldCheck, ShoppingBag, Store, Tag, Truck };
+const ICONOS = { Clock, CreditCard, Headphones, Mail, MapPin, MessageCircle, Package, Phone, ShieldCheck, Shirt, ShoppingBag, Store, Tag, Truck };
 
 export default function Icono({ nombre, className = "h-5 w-5" }) {
   const Componente = ICONOS[nombre] ?? Package;

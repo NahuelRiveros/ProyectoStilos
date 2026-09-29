@@ -4,6 +4,13 @@ import { FileSpreadsheet, FolderTree, Package, Store } from "lucide-react";
 import { ROLES_PANEL } from "compartido/reglas/roles.js";
 import { cliente, nombreProductos } from "@/clientes/index.js";
 import MenuCategorias from "./tienda/menu_categorias.jsx";
+import MenuTienda from "./tienda/menu_tienda.jsx";
+
+// clientes/<id>/navbar.js → menu_productos. "enlace" (o cualquier otro valor) = un solo link.
+const MENU_PRODUCTOS = {
+  categorias: { clave: "menu-categorias", Componente: MenuCategorias },
+  desplegable: { clave: "menu-tienda", Componente: MenuTienda },
+};
 
 // Todo lo que el módulo catálogo aporta a la app. Las pantallas se cargan recién
 // cuando se visitan (lazy), así la tienda no descarga el código del panel.
@@ -12,10 +19,11 @@ const cargar = (importar) => async () => ({ Component: (await importar()).defaul
 export const moduloCatalogo = {
   codigo: "catalogo",
 
-  // Navbar de la tienda: según clientes/<id>/navbar.js, un link "Productos" o el menú por categorías,
+  // Navbar de la tienda: según clientes/<id>/navbar.js, un link "Productos", el menú por categorías
+  // o un solo desplegable con las categorías en columnas,
   // más "Novedades" y "Ofertas" si están activados.
   navbar: [
-    cliente.navbar.menu_productos === "categorias" ? { clave: "menu-categorias", Componente: MenuCategorias } : { etiqueta: nombreProductos, a: "/catalogo" },
+    MENU_PRODUCTOS[cliente.navbar.menu_productos] ?? { etiqueta: nombreProductos, a: "/catalogo" },
     ...(cliente.navbar.novedades ? [{ etiqueta: "Novedades", a: "/catalogo?orden=reciente" }] : []),
     ...(cliente.navbar.ofertas ? [{ etiqueta: "Ofertas", a: "/catalogo?oferta=1" }] : []),
   ],

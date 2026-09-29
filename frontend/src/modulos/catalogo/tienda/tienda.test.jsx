@@ -30,7 +30,7 @@ describe("Tienda · Catálogo", () => {
 
     // Solo se listan categorías con productos (Almacén aparece porque su subcategoría tiene)
     const categorias = screen.getByRole("complementary", { name: "Categorías" });
-    expect(within(categorias).getByRole("button", { name: "Almacén" })).toBeInTheDocument();
+    expect(within(categorias).getByRole("button", { name: /^Almacén/ })).toBeInTheDocument();
   });
 });
 
