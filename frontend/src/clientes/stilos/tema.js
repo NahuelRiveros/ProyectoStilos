@@ -11,6 +11,16 @@ export const tema = {
     texto: "#1E2D3D",
     "texto-suave": "#5B6878",
     borde: "#E2D3C4",
+    // Panel de administración (contraste medido): navy oscuro con texto crema (10.3:1), pestaña
+    // activa crema con texto navy (10.3:1), títulos de sección 6.9:1 y contenido en gris neutro
+    // para leer tablas cómodo (texto suave 5.2:1).
+    "panel-fondo": "#1E2D3D",
+    "panel-texto": "#EDDAC7",
+    "panel-texto-suave": "#A9B7C6",
+    "panel-activo": "#EDDAC7",
+    "panel-activo-texto": "#1E2D3D",
+    "panel-foco": "#C3A38C",
+    "panel-contenido": "#F3F4F6",
   },
   fuentes: {
     titulos: "'Cormorant Garamond', Georgia, serif",

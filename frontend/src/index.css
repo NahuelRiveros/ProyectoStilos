@@ -22,6 +22,16 @@
      verde y rojo porque son colores de "estado" (bien/mal), no de identidad. */
   --serie-1: #2a78d6;
   --serie-2: #eb6834;
+  /* Panel de administración: colores propios (no dependen del primario de la tienda, que puede
+     ser claro o muy saturado). Contraste mínimo 4.5:1 en texto: menú oscuro con texto claro,
+     pestaña activa clara con texto oscuro (se distingue de un vistazo) y contenido en gris neutro. */
+  --panel-fondo: #0f172a;
+  --panel-texto: #e2e8f0;
+  --panel-texto-suave: #94a3b8;
+  --panel-activo: #e2e8f0;
+  --panel-activo-texto: #0f172a;
+  --panel-foco: #60a5fa;
+  --panel-contenido: #f8fafc;
 }
 
 @theme inline {
@@ -37,6 +47,13 @@
   --color-peligro: var(--peligro);
   --color-serie-1: var(--serie-1);
   --color-serie-2: var(--serie-2);
+  --color-panel-fondo: var(--panel-fondo);
+  --color-panel-texto: var(--panel-texto);
+  --color-panel-texto-suave: var(--panel-texto-suave);
+  --color-panel-activo: var(--panel-activo);
+  --color-panel-activo-texto: var(--panel-activo-texto);
+  --color-panel-foco: var(--panel-foco);
+  --color-panel-contenido: var(--panel-contenido);
   --font-titulos: var(--fuente-titulos);
   --font-cuerpo: var(--fuente-cuerpo);
 }

@@ -7,11 +7,11 @@ import { modulosActivos } from "@/modulos/registro.js";
 import { useAuth } from "@/modulos/usuarios/auth_context.jsx";
 import { cn } from "@/utils/cn.js";
 
-const claseLink = ({ isActive }) =>
-  cn(
-    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition",
-    isActive ? "bg-white/15 font-semibold" : "opacity-85 hover:bg-white/10 hover:opacity-100",
-  );
+// Colores del panel (tokens panel-* de index.css / tema del cliente). La pestaña activa se ve
+// "encendida" (fondo claro, texto oscuro): se sabe de un vistazo en qué sección se está.
+const claseItem = "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-panel-foco";
+const claseInactivo = "text-panel-texto hover:bg-panel-texto/10";
+const claseLink = ({ isActive }) => cn(claseItem, isActive ? "bg-panel-activo font-semibold text-panel-activo-texto shadow-sm" : claseInactivo);
 
 function ItemsSeccion({ items, onNavegar }) {
   return (
@@ -38,7 +38,7 @@ function SubmenuSeccion({ modulo: { codigo, menuAdmin }, onNavegar }) {
       <Link
         to="/admin"
         onClick={onNavegar}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold opacity-85 transition hover:bg-white/10 hover:opacity-100"
+        className={cn(claseItem, claseInactivo, "font-semibold")}
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver al panel
       </Link>
@@ -66,17 +66,17 @@ function MenuGeneral({ secciones, onNavegar }) {
               key={codigo}
               to={menuAdmin.submenu.raiz}
               onClick={onNavegar}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm opacity-85 transition hover:bg-white/10 hover:opacity-100"
+              className={cn(claseItem, claseInactivo)}
             >
               {Icono && <Icono className="h-4 w-4" aria-hidden="true" />}
               <span className="flex-1">{menuAdmin.titulo}</span>
-              <ChevronRight className="h-4 w-4 opacity-70" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 text-panel-texto-suave" aria-hidden="true" />
             </Link>
           );
         }
         return (
           <section key={codigo} aria-labelledby={`menu-${codigo}`}>
-            <h2 id={`menu-${codigo}`} className="mb-1 flex items-center gap-2 px-3 text-xs font-semibold uppercase tracking-wider opacity-70">
+            <h2 id={`menu-${codigo}`} className="mb-1 flex items-center gap-2 px-3 text-xs font-semibold uppercase tracking-wider text-panel-texto-suave">
               {Icono && <Icono className="h-3.5 w-3.5" aria-hidden="true" />} {menuAdmin.titulo}
             </h2>
             <ItemsSeccion items={menuAdmin.items} onNavegar={onNavegar} />
@@ -94,12 +94,12 @@ function MenuLateral({ onNavegar }) {
   const abierta = secciones.find((m) => m.menuAdmin.submenu && estaDentro(pathname, m.menuAdmin.submenu.raiz));
 
   return (
-    <div className="flex h-full flex-col bg-primario text-primario-texto">
-      <Link to="/admin" onClick={onNavegar} className="flex items-center gap-2.5 border-b border-white/10 px-5 py-4">
+    <div className="flex h-full flex-col bg-panel-fondo text-panel-texto">
+      <Link to="/admin" onClick={onNavegar} className="flex items-center gap-2.5 border-b border-panel-texto/10 px-5 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-panel-foco">
         <img src={cliente.marca.logo} alt="" className="h-8 w-8 rounded-md bg-white p-0.5" />
         <span className="leading-tight">
           <span className="block font-titulos font-bold">{cliente.marca.nombre}</span>
-          <span className="text-xs opacity-75">Panel de administración</span>
+          <span className="text-xs text-panel-texto-suave">Panel de administración</span>
         </span>
       </Link>
 
@@ -107,12 +107,12 @@ function MenuLateral({ onNavegar }) {
         {abierta ? <SubmenuSeccion modulo={abierta} onNavegar={onNavegar} /> : <MenuGeneral secciones={secciones} onNavegar={onNavegar} />}
       </nav>
 
-      <div className="space-y-1 border-t border-white/10 px-3 py-4 text-sm">
-        <p className="px-3 pb-2 opacity-75">{usuario?.nombre}</p>
-        <Link to="/" className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-white/10">
+      <div className="space-y-1 border-t border-panel-texto/10 px-3 py-4 text-sm">
+        <p className="px-3 pb-2 text-panel-texto-suave">{usuario?.nombre}</p>
+        <Link to="/" className={cn(claseItem, claseInactivo)}>
           <ExternalLink className="h-4 w-4" aria-hidden="true" /> Ver tienda
         </Link>
-        <button type="button" onClick={logout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-white/10">
+        <button type="button" onClick={logout} className={cn(claseItem, claseInactivo, "w-full")}>
           <LogOut className="h-4 w-4" aria-hidden="true" /> Salir
         </button>
       </div>
@@ -126,7 +126,7 @@ export default function AdminLayout() {
   const cerrar = () => setMenuAbierto(false);
 
   return (
-    <div className="min-h-screen bg-fondo md:pl-64">
+    <div className="min-h-screen bg-panel-contenido md:pl-64">
       <aside className="fixed inset-y-0 left-0 hidden w-64 md:block">
         <MenuLateral />
       </aside>
@@ -142,7 +142,7 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-slate-950/50" onClick={cerrar} aria-hidden="true" />
           <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl">
-            <button type="button" onClick={cerrar} aria-label="Cerrar menú del panel" className="absolute right-2 top-3 z-10 rounded-lg p-2 text-primario-texto hover:bg-white/10">
+            <button type="button" onClick={cerrar} aria-label="Cerrar menú del panel" className="absolute right-2 top-3 z-10 rounded-lg p-2 text-panel-texto hover:bg-panel-texto/10">
               <X className="h-5 w-5" />
             </button>
             <MenuLateral onNavegar={cerrar} />
