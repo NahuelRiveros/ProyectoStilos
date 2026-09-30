@@ -21,7 +21,9 @@
       "Bash(node -e ' *)",
       "Bash(sed -i 's#`vercel.json` \\(instala en la raíz, compila `frontend` y publica `frontend/dist`\\)#`vercel.json` \\(instala en la raíz y compila `frontend` en una carpeta `dist` en la raíz, que es donde Vercel la busca por defecto\\)#' docs/DESPLIEGUE.md)",
       "Bash(grep -c \"donde Vercel la busca\" docs/DESPLIEGUE.md)",
-      "Bash(grep -i \"\\\\.env$\")"
+      "Bash(grep -i \"\\\\.env$\")",
+      "Bash(echo \"EXIT $?\")",
+      "Bash(echo \"salida: $?\")"
     ],
     "deny": [
       "Read(./.env)",
