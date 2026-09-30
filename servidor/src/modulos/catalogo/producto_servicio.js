@@ -61,7 +61,7 @@ function presentar(producto, { publico }) {
 function incluir({ publico }) {
   return [
     { model: Categoria, as: "categoria", attributes: ["id", "nombre", "slug"] },
-    { model: Marca, as: "marca", attributes: ["id", "nombre"] },
+    { model: Marca, as: "marca", attributes: ["id", "nombre", "logo_url"] },
     { model: GrupoTalle, as: "grupo_talle", attributes: ["id", "nombre"] },
     {
       model: Variante,
@@ -166,7 +166,7 @@ export async function filtrosDisponibles(filtros, { publico }) {
   // Cantidad de productos (no de variantes) por color y por talle, solo de variantes a la venta.
   const consulta = (sql) => sequelize.query(sql, { replacements: { ids }, type: QueryTypes.SELECT });
   const [marcas, colores, talles] = await Promise.all([
-    porMarca.size ? Marca.findAll({ where: { id: { [Op.in]: [...porMarca.keys()] } }, attributes: ["id", "nombre"], order: [["nombre", "ASC"]], raw: true }) : [],
+    porMarca.size ? Marca.findAll({ where: { id: { [Op.in]: [...porMarca.keys()] } }, attributes: ["id", "nombre", "logo_url"], order: [["nombre", "ASC"]], raw: true }) : [],
     consulta(
       `SELECT c.id, c.nombre, c.hex, COUNT(DISTINCT v.producto_id)::int AS cantidad
        FROM ${DB_SCHEMA}.variante v JOIN ${DB_SCHEMA}.color c ON c.id = v.color_id

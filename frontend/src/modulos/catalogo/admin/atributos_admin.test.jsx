@@ -1,8 +1,19 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http as mock, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { API, servidorMock } from "@/test/servidor_mock.js";
+
+// Paleta sugerida fija para este archivo (la real depende del cliente activo).
+vi.mock("compartido/proyecto.js", async (original) => {
+  const { proyecto: real } = await original();
+  return {
+    proyecto: {
+      ...real,
+      catalogo: { ...real.catalogo, colores_sugeridos: [{ nombre: "Negro", hex: "#111111" }, { nombre: "Camel", hex: "#C19A6B" }] },
+    },
+  };
+});
 import { renderizar } from "@/test/renderizar.jsx";
 import ColoresPage from "./colores_page.jsx";
 import MarcasPage from "./marcas_page.jsx";
@@ -47,6 +58,80 @@ describe("Admin · Marcas", () => {
     await userEvent.click(within(dialogo).getByRole("button", { name: "Guardar" }));
 
     expect(await within(dialogo).findByText('Ya existe la marca "Taverniti".')).toBeInTheDocument();
+  });
+});
+
+describe("Admin · Logo de la marca", () => {
+  const LEVIS = { id: 1, nombre: "Levis", logo_url: null };
+  const abrirEdicion = async () => {
+    renderizar(<MarcasPage />);
+    await userEvent.click(await screen.findByRole("button", { name: "Editar Levis" }));
+    return within(screen.getByRole("dialog", { name: "Editar marca" }));
+  };
+
+  it("pega la dirección de un logo y lo muestra", async () => {
+    let enviado;
+    servidorMock.use(
+      lista("marcas", [LEVIS]),
+      mock.put(`${API}/catalogo/marcas/1/logo`, async ({ request }) => {
+        enviado = await request.json();
+        return HttpResponse.json({ ok: true, data: { ...LEVIS, logo_url: enviado.url } });
+      }),
+    );
+    const dialogo = await abrirEdicion();
+    expect(dialogo.getByText("Sin logo")).toBeInTheDocument();
+
+    await userEvent.type(dialogo.getByLabelText("O pegá la dirección del logo"), "https://marcas.com/levis.png");
+    await userEvent.click(dialogo.getByRole("button", { name: "Usar" }));
+    expect(await dialogo.findByRole("img", { name: "Logo de Levis" })).toHaveAttribute("src", "https://marcas.com/levis.png");
+    expect(enviado).toEqual({ url: "https://marcas.com/levis.png" });
+  });
+
+  it("no acepta una dirección que no sea https; sube un archivo y lo puede quitar", async () => {
+    const pedidos = [];
+    servidorMock.use(
+      lista("marcas", [LEVIS]),
+      mock.post(`${API}/catalogo/marcas/1/logo`, () => {
+        pedidos.push("subir");
+        return HttpResponse.json({ ok: true, data: { ...LEVIS, logo_url: "https://cdn.test/marcas/levis.png" } });
+      }),
+      mock.delete(`${API}/catalogo/marcas/1/logo`, () => {
+        pedidos.push("quitar");
+        return HttpResponse.json({ ok: true, data: LEVIS });
+      }),
+    );
+    const dialogo = await abrirEdicion();
+
+    await userEvent.type(dialogo.getByLabelText("O pegá la dirección del logo"), "http://inseguro.com/a.png");
+    await userEvent.click(dialogo.getByRole("button", { name: "Usar" }));
+    expect(dialogo.getByText("La dirección tiene que empezar con https://")).toBeInTheDocument();
+
+    await userEvent.upload(dialogo.getByLabelText("Elegir logo"), new File(["png"], "levis.png", { type: "image/png" }));
+    expect(await dialogo.findByRole("img", { name: "Logo de Levis" })).toBeInTheDocument();
+    await userEvent.click(dialogo.getByRole("button", { name: "Quitar" }));
+    expect(await dialogo.findByText("Sin logo")).toBeInTheDocument();
+    expect(pedidos).toEqual(["subir", "quitar"]);
+  });
+});
+
+describe("Admin · Colores sugeridos", () => {
+  it("ofrece cargar la paleta mientras falte alguno de sus colores", async () => {
+    let cargados = false;
+    servidorMock.use(
+      mock.get(`${API}/catalogo/colores`, () =>
+        HttpResponse.json({ ok: true, data: cargados ? [{ id: 1, nombre: "Negro", hex: "#111111", orden: 0 }, { id: 2, nombre: "Camel", hex: "#C19A6B", orden: 1 }] : [{ id: 1, nombre: "negro", hex: "#000000", orden: 0 }] }),
+      ),
+      mock.post(`${API}/catalogo/colores/sugeridos`, () => {
+        cargados = true;
+        return HttpResponse.json({ ok: true, data: { creados: ["Camel"] } });
+      }),
+    );
+    renderizar(<ColoresPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Cargar colores sugeridos" }));
+    expect(await screen.findByText("Se agregaron 1 colores")).toBeInTheDocument();
+    // Con toda la paleta cargada, el botón ya no aparece.
+    await vi.waitFor(() => expect(screen.queryByRole("button", { name: "Cargar colores sugeridos" })).not.toBeInTheDocument());
   });
 });
 

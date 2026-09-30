@@ -57,6 +57,10 @@ export const useEliminarCategoria = () => useMutacionCatalogo(api.eliminarCatego
 export const useDuplicarCategoria = () => useMutacionCatalogo(api.duplicarCategoria);
 export const useGuardarMarca = () => useMutacionCatalogo((datos) => (datos.id ? api.actualizarMarca(datos) : api.crearMarca(datos)));
 export const useEliminarMarca = () => useMutacionCatalogo(api.eliminarMarca);
+export const useSubirLogoMarca = () => useMutacionCatalogo(api.subirLogoMarca);
+export const useLogoMarcaPorUrl = () => useMutacionCatalogo(api.logoMarcaPorUrl);
+export const useQuitarLogoMarca = () => useMutacionCatalogo(api.quitarLogoMarca);
+export const useCargarColoresSugeridos = () => useMutacionCatalogo(api.cargarColoresSugeridos);
 export const useGuardarColor = () => useMutacionCatalogo((datos) => (datos.id ? api.actualizarColor(datos) : api.crearColor(datos)));
 export const useEliminarColor = () => useMutacionCatalogo(api.eliminarColor);
 export const useGuardarGrupoTalle = () => useMutacionCatalogo((datos) => (datos.id ? api.actualizarGrupoTalle(datos) : api.crearGrupoTalle(datos)));

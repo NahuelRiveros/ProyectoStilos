@@ -8,6 +8,9 @@ export async function eliminarMarca(req, res) {
   await atributos.eliminarMarca(req.datos.params.id);
   res.status(204).end();
 }
+export const subirLogoMarca = async (req, res) => res.json({ ok: true, data: await atributos.subirLogoMarca(req.datos.params.id, req.file) });
+export const logoMarcaPorUrl = async (req, res) => res.json({ ok: true, data: await atributos.logoMarcaPorUrl(req.datos.params.id, req.datos.body) });
+export const quitarLogoMarca = async (req, res) => res.json({ ok: true, data: await atributos.quitarLogoMarca(req.datos.params.id) });
 
 // Colores
 export const listarColores = async (req, res) => res.json({ ok: true, data: await atributos.listarColores() });
@@ -17,6 +20,7 @@ export async function eliminarColor(req, res) {
   await atributos.eliminarColor(req.datos.params.id);
   res.status(204).end();
 }
+export const cargarColoresSugeridos = async (req, res) => res.json({ ok: true, data: await atributos.cargarColoresSugeridos() });
 
 // Grupos de talles
 export const listarGruposTalle = async (req, res) => res.json({ ok: true, data: await atributos.listarGruposTalle() });

@@ -61,6 +61,8 @@ export const ProductoImagen = defineModel("producto_imagen", {
 // Listas del panel (migraciones/2026_09_29_1300_crear_marcas_colores_talles.js).
 export const Marca = defineModel("marca", {
   nombre: { type: DataTypes.STRING(80), allowNull: false },
+  logo_url: { type: DataTypes.STRING(500), allowNull: true },
+  logo_public_id: { type: DataTypes.STRING(200), allowNull: true },
   eliminado_en: eliminado_en(),
 });
 

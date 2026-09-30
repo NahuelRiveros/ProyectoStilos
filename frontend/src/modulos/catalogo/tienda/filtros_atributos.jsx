@@ -1,4 +1,5 @@
 import { cn } from "@/utils/cn.js";
+import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 import { leerIds } from "../utils/filtros_url.js";
 
 const claseTitulo = "mb-2 text-sm font-semibold uppercase tracking-wide text-texto-suave";
@@ -89,7 +90,8 @@ export default function FiltrosAtributos({ disponibles, elegidos, onAlternar }) 
             {marcas.map((m) => (
               <li key={m.id}>
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-fondo">
-                  <input type="checkbox" checked={marcasElegidas.includes(m.id)} onChange={() => onAlternar("marca", m.id)} className="h-4 w-4 accent-[var(--primario)]" />
+                  <input type="checkbox" checked={marcasElegidas.includes(m.id)} onChange={() => onAlternar("marca", m.id)} className="h-4 w-4 accent-primario" />
+                  {m.logo_url && <img src={urlImagen(m.logo_url, ANCHOS.miniatura)} alt="" className="h-5 w-10 object-contain" />}
                   <span className="flex-1">{m.nombre}</span>
                   <span className="text-xs text-texto-suave">
                     {m.cantidad}

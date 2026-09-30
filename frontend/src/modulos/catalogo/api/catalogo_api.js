@@ -12,11 +12,19 @@ export const listarMarcas = async () => (await http.get("/catalogo/marcas")).dat
 export const crearMarca = async (datos) => (await http.post("/catalogo/marcas", datos)).data.data;
 export const actualizarMarca = async ({ id, ...datos }) => (await http.put(`/catalogo/marcas/${id}`, datos)).data.data;
 export const eliminarMarca = async (id) => http.delete(`/catalogo/marcas/${id}`);
+export async function subirLogoMarca({ id, archivo }) {
+  const formulario = new FormData();
+  formulario.append("logo", archivo);
+  return (await http.post(`/catalogo/marcas/${id}/logo`, formulario, { timeout: 60_000 })).data.data;
+}
+export const logoMarcaPorUrl = async ({ id, url }) => (await http.put(`/catalogo/marcas/${id}/logo`, { url })).data.data;
+export const quitarLogoMarca = async (id) => (await http.delete(`/catalogo/marcas/${id}/logo`)).data.data;
 
 export const listarColores = async () => (await http.get("/catalogo/colores")).data.data;
 export const crearColor = async (datos) => (await http.post("/catalogo/colores", datos)).data.data;
 export const actualizarColor = async ({ id, ...datos }) => (await http.put(`/catalogo/colores/${id}`, datos)).data.data;
 export const eliminarColor = async (id) => http.delete(`/catalogo/colores/${id}`);
+export const cargarColoresSugeridos = async () => (await http.post("/catalogo/colores/sugeridos")).data.data;
 
 export const listarGruposTalle = async () => (await http.get("/catalogo/grupos-talle")).data.data;
 export const crearGrupoTalle = async (datos) => (await http.post("/catalogo/grupos-talle", datos)).data.data;

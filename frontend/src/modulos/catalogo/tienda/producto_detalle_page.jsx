@@ -62,7 +62,12 @@ function Detalle({ producto }) {
       {/* key: al cambiar de color la galería vuelve a su primera foto */}
       <Galeria key={elegida.color_id ?? "general"} imagenes={fotosDelColor(producto.imagenes, elegida.color_id)} nombre={producto.nombre} />
       <div>
-        {producto.marca && <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">{producto.marca.nombre}</p>}
+        {producto.marca &&
+          (producto.marca.logo_url ? (
+            <img src={urlImagen(producto.marca.logo_url, ANCHOS.miniatura)} alt={producto.marca.nombre} className="h-8 max-w-40 object-contain object-left" />
+          ) : (
+            <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">{producto.marca.nombre}</p>
+          ))}
         <h1 className="mt-1 font-titulos text-3xl font-bold">{producto.nombre}</h1>
         <div className="mt-3">
           {pagos && <CintaPago pagos={pagos} />}

@@ -159,8 +159,8 @@ describe("Productos con talle y color", () => {
 
     const filtros = (await request(app).get(`/api/catalogo/productos/filtros?categoria=${categoria.id}`)).body.data;
     expect(filtros.marcas).toEqual([
-      { id: levis.id, nombre: "Levis", cantidad: 1 },
-      { id: taverniti.id, nombre: "Taverniti", cantidad: 2 },
+      { id: levis.id, nombre: "Levis", logo_url: null, cantidad: 1 },
+      { id: taverniti.id, nombre: "Taverniti", logo_url: null, cantidad: 2 },
     ]);
     // Mismo "orden" en el panel: desempata el nombre. La Levis blanca no cuenta (no está a la venta).
     expect(filtros.colores).toEqual([

@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { proyecto } from "compartido/proyecto.js";
 import { sequelize } from "../../nucleo/db/sequelize.js";
 import { Conflicto, DatosInvalidos, NoEncontrado } from "../../nucleo/errores.js";
+import { eliminarImagenGuardada, subirImagen } from "../../nucleo/imagenes.js";
 import { Color, GrupoTalle, Marca, Talle } from "./modelos.js";
 
 // Listas del catálogo que se cargan en el panel: marcas, colores y grupos de talles.
@@ -26,15 +27,16 @@ async function buscarActivo({ Modelo, id, mensaje, codigo, transaction }) {
 const MARCA = { Modelo: Marca, mensaje: "La marca no existe.", codigo: "MARCA_NO_ENCONTRADA" };
 const marcaDuplicada = (nombre) => ({ mensaje: `Ya existe la marca "${nombre}".`, codigo: "MARCA_DUPLICADA" });
 
+const datosMarca = (m) => ({ id: m.id, nombre: m.nombre, logo_url: m.logo_url ?? null });
+
 export async function listarMarcas() {
-  return Marca.findAll({ where: { eliminado_en: null }, attributes: ["id", "nombre"], order: [["nombre", "ASC"]], raw: true });
+  return Marca.findAll({ where: { eliminado_en: null }, attributes: ["id", "nombre", "logo_url"], order: [["nombre", "ASC"]], raw: true });
 }
 
 export async function crearMarca({ nombre }) {
   return sequelize.transaction(async (transaction) => {
     await exigirNombreLibre({ Modelo: Marca, nombre, ...marcaDuplicada(nombre), transaction });
-    const marca = await Marca.create({ nombre }, { transaction });
-    return { id: marca.id, nombre: marca.nombre };
+    return datosMarca(await Marca.create({ nombre }, { transaction }));
   });
 }
 
@@ -43,8 +45,36 @@ export async function actualizarMarca(id, { nombre }) {
     const marca = await buscarActivo({ ...MARCA, id, transaction });
     await exigirNombreLibre({ Modelo: Marca, nombre, idPropio: marca.id, ...marcaDuplicada(nombre), transaction });
     await marca.update({ nombre }, { transaction });
-    return { id: marca.id, nombre: marca.nombre };
+    return datosMarca(marca);
   });
+}
+
+// Cambia el logo y borra el anterior del almacén (si era un archivo subido). Afuera de la
+// transacción: si el almacén falla al borrar, el logo nuevo ya quedó guardado.
+async function reemplazarLogo(marca, { logo_url, logo_public_id }) {
+  const anterior = marca.logo_public_id;
+  await marca.update({ logo_url, logo_public_id });
+  if (anterior && anterior !== logo_public_id) await eliminarImagenGuardada(anterior);
+  return datosMarca(marca);
+}
+
+/** Logo subido como archivo (va al almacén de imágenes, carpeta "marcas"). */
+export async function subirLogoMarca(id, archivo) {
+  if (!archivo) throw new DatosInvalidos("Elegí una imagen para subir.");
+  const marca = await buscarActivo({ ...MARCA, id });
+  const subida = await subirImagen(archivo.buffer, { carpeta: "marcas" });
+  return reemplazarLogo(marca, { logo_url: subida.url, logo_public_id: subida.public_id });
+}
+
+/** Logo alojado en otra web (https): útil si no está configurado el almacén de imágenes. */
+export async function logoMarcaPorUrl(id, { url }) {
+  const marca = await buscarActivo({ ...MARCA, id });
+  return reemplazarLogo(marca, { logo_url: url, logo_public_id: null });
+}
+
+export async function quitarLogoMarca(id) {
+  const marca = await buscarActivo({ ...MARCA, id });
+  return reemplazarLogo(marca, { logo_url: null, logo_public_id: null });
 }
 
 export async function eliminarMarca(id) {
@@ -106,6 +136,25 @@ export async function eliminarColor(id) {
   return sequelize.transaction(async (transaction) => {
     const color = await buscarActivo({ ...COLOR, id, transaction });
     await color.update({ eliminado_en: new Date() }, { transaction });
+  });
+}
+
+/**
+ * Crea los colores de proyecto.config.js → catalogo.colores_sugeridos que todavía no existen (por
+ * nombre, sin distinguir mayúsculas). Los que ya están no se tocan (ni su código de color).
+ */
+export async function cargarColoresSugeridos() {
+  const sugeridos = proyecto.catalogo.colores_sugeridos ?? [];
+  return sequelize.transaction(async (transaction) => {
+    const existentes = await Color.findAll({ where: { eliminado_en: null }, attributes: ["nombre"], raw: true, transaction });
+    const tomados = new Set(existentes.map((c) => c.nombre.toLowerCase()));
+    const creados = [];
+    for (const [orden, { nombre, hex }] of sugeridos.entries()) {
+      if (tomados.has(nombre.toLowerCase())) continue;
+      await Color.create({ nombre, hex: hex.toUpperCase(), orden }, { transaction });
+      creados.push(nombre);
+    }
+    return { creados };
   });
 }
 

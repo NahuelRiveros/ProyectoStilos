@@ -220,7 +220,7 @@ describe("Productos: alta y validaciones", () => {
   it("la marca se elige de la lista; una inexistente o dada de baja se rechaza", async () => {
     const oreo = await nuevaMarca("Oreo");
     const producto = await nuevoProducto(categoria.id, { marca_id: oreo.id });
-    expect(producto.marca).toEqual({ id: oreo.id, nombre: "Oreo" });
+    expect(producto.marca).toEqual({ id: oreo.id, nombre: "Oreo", logo_url: null });
 
     const inexistente = await api.post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "Y", marca_id: 9999, variantes: [{ precio: 1 }] });
     expect(inexistente.status).toBe(400);

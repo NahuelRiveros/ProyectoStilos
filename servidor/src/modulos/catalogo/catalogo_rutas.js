@@ -15,7 +15,7 @@ import {
   ordenImagenesSchema,
   productoSchema,
 } from "compartido/schemas/catalogo.js";
-import { colorSchema, grupoTalleSchema, marcaSchema } from "compartido/schemas/atributos.js";
+import { colorSchema, grupoTalleSchema, logoMarcaUrlSchema, marcaSchema } from "compartido/schemas/atributos.js";
 import { authOpcional, requerirAuth, requerirModulo, requerirRol } from "../../nucleo/auth/middlewares.js";
 import { recibirArchivo } from "../../nucleo/archivos.js";
 import { validar } from "../../nucleo/validar.js";
@@ -45,8 +45,19 @@ catalogoRutas.get("/marcas", cachePublico(), atributos.listarMarcas);
 catalogoRutas.post("/marcas", ...gestor, validar({ body: marcaSchema }), atributos.crearMarca);
 catalogoRutas.put("/marcas/:id", ...gestor, validar({ params: idParams, body: marcaSchema }), atributos.actualizarMarca);
 catalogoRutas.delete("/marcas/:id", ...gestor, validar({ params: idParams }), atributos.eliminarMarca);
+// Logo de la marca: archivo (almacén de imágenes) o dirección https.
+const archivoLogo = recibirArchivo({
+  campo: "logo",
+  maxMb: 2,
+  extensiones: [".jpg", ".jpeg", ".png", ".webp", ".avif"],
+  mensajeTipo: "El logo tiene que ser una imagen JPG, PNG, WEBP o AVIF.",
+});
+catalogoRutas.post("/marcas/:id/logo", ...gestor, validar({ params: idParams }), archivoLogo, atributos.subirLogoMarca);
+catalogoRutas.put("/marcas/:id/logo", ...gestor, validar({ params: idParams, body: logoMarcaUrlSchema }), atributos.logoMarcaPorUrl);
+catalogoRutas.delete("/marcas/:id/logo", ...gestor, validar({ params: idParams }), atributos.quitarLogoMarca);
 
 catalogoRutas.get("/colores", cachePublico(), atributos.listarColores);
+catalogoRutas.post("/colores/sugeridos", ...gestor, atributos.cargarColoresSugeridos);
 catalogoRutas.post("/colores", ...gestor, validar({ body: colorSchema }), atributos.crearColor);
 catalogoRutas.put("/colores/:id", ...gestor, validar({ params: idParams, body: colorSchema }), atributos.actualizarColor);
 catalogoRutas.delete("/colores/:id", ...gestor, validar({ params: idParams }), atributos.eliminarColor);

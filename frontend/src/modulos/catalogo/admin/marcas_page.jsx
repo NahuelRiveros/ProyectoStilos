@@ -6,6 +6,7 @@ import Boton from "@/componentes/ui/boton.jsx";
 import ConfirmDialog from "@/componentes/ui/confirm_dialog.jsx";
 import { Cargando, ErrorCarga, Vacio } from "@/componentes/ui/estado_carga.jsx";
 import Tabla from "@/componentes/ui/tabla.jsx";
+import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 import { useEliminarMarca, useGuardarMarca, useMarcas } from "../hooks/use_catalogo.js";
 import MarcaFormModal from "./marca_form_modal.jsx";
 
@@ -58,7 +59,24 @@ export default function MarcasPage() {
             etiqueta="Marcas"
             filas={marcas.data}
             compacta
-            columnas={[{ titulo: "Nombre", principal: true, celda: (m) => <span className="font-medium">{m.nombre}</span> }]}
+            columnas={[
+              {
+                titulo: "Nombre",
+                principal: true,
+                celda: (m) => (
+                  <span className="flex items-center gap-3 font-medium">
+                    <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg border border-borde bg-fondo p-1">
+                      {m.logo_url ? (
+                        <img src={urlImagen(m.logo_url, ANCHOS.miniatura)} alt="" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-[10px] text-texto-suave">Sin logo</span>
+                      )}
+                    </span>
+                    {m.nombre}
+                  </span>
+                ),
+              },
+            ]}
             acciones={(m, { enTarjeta }) => (
               <>
                 <Boton variante="fantasma" tamano="chico" onClick={() => setFormulario({ marca: m })} aria-label={`Editar ${m.nombre}`}>

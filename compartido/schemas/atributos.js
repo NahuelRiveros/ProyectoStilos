@@ -9,6 +9,16 @@ export const marcaSchema = z.object({
   nombre: textoObligatorio(80, "El nombre"),
 });
 
+// Logo de una marca alojado en otra web (si no, se sube el archivo).
+export const logoMarcaUrlSchema = z.object({
+  url: z
+    .string({ error: "Pegá la dirección del logo" })
+    .trim()
+    .max(500, "La dirección es demasiado larga")
+    .url("Tiene que ser una dirección web válida")
+    .refine((u) => u.startsWith("https://"), "La dirección tiene que empezar con https://"),
+});
+
 export const colorSchema = z.object({
   nombre: textoObligatorio(40, "El nombre"),
   hex: z
