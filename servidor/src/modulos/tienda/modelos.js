@@ -100,7 +100,11 @@ export const PedidoCobro = defineModel(
     monto: dinero(),
     metodo: { type: DataTypes.STRING(30), allowNull: false },
     nota: { type: DataTypes.STRING(255), allowNull: true },
-    registrado_por: { type: DataTypes.INTEGER, allowNull: false },
+    // null = entró solo (pago online aprobado); si no, quién lo cargó.
+    registrado_por: { type: DataTypes.INTEGER, allowNull: true },
+    // "manual" (lo carga el personal) | "online" (lo registra el aviso del proveedor de pagos)
+    origen: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "manual" },
+    pago_online_id: { type: DataTypes.INTEGER, allowNull: true },
     anulado_en: { type: DataTypes.DATE, allowNull: true },
     anulado_por: { type: DataTypes.INTEGER, allowNull: true },
     motivo_anulacion: { type: DataTypes.STRING(300), allowNull: true },

@@ -5,10 +5,11 @@ import { proyecto } from "../proyecto.js";
  * para cada valor de proyecto.config.js → stock.descontar_en.
  * Reservado = ya no está disponible para otros, pero sigue en el depósito.
  */
+// "pago_recibido" (pagado, esperando que lo preparen) guarda el stock igual que "pendiente".
 const FASES = {
-  envio_pedido: { pendiente: "descontado", en_preparacion: "descontado", entregado: "descontado", cancelado: "ninguna" },
-  confirmacion: { pendiente: "reservado", en_preparacion: "descontado", entregado: "descontado", cancelado: "ninguna" },
-  entrega: { pendiente: "reservado", en_preparacion: "reservado", entregado: "descontado", cancelado: "ninguna" },
+  envio_pedido: { pendiente: "descontado", pago_recibido: "descontado", en_preparacion: "descontado", entregado: "descontado", cancelado: "ninguna" },
+  confirmacion: { pendiente: "reservado", pago_recibido: "reservado", en_preparacion: "descontado", entregado: "descontado", cancelado: "ninguna" },
+  entrega: { pendiente: "reservado", pago_recibido: "reservado", en_preparacion: "reservado", entregado: "descontado", cancelado: "ninguna" },
 };
 
 export function faseStock(estado, descontarEn = proyecto.stock.descontar_en) {

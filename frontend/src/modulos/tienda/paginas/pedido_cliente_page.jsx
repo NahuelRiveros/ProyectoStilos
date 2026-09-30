@@ -7,6 +7,10 @@ import { usePedido } from "../hooks/use_tienda.js";
 import { EntregaPedido, EstadoPedido, HistorialPedido, ItemsPedido } from "../componentes/detalle_pedido.jsx";
 import { fechaHora, numeroPedido } from "../utils/presentacion.js";
 import { formatearDinero } from "@/utils/formatear_dinero.js";
+import { modulosActivos } from "@/modulos/registro.js";
+
+// Lo que otros módulos agregan al pedido del cliente (ej. pagos online: "Pagar con Mercado Pago").
+const ACCIONES = modulosActivos.flatMap((m) => m.accionesPedido ?? []);
 
 // El CBU se muestra mientras quede algo por pagar de un pedido vigente que se paga por transferencia.
 const debeTransferir = (p) => p.medio_pago === "transferencia" && p.estado_cobro !== "cobrado" && p.estado !== "cancelado";
@@ -35,6 +39,9 @@ export default function PedidoClientePage() {
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
             <ItemsPedido pedido={pedido.data} />
             <div className="space-y-6">
+              {ACCIONES.map((Accion, i) => (
+                <Accion key={i} pedido={pedido.data} recargar={pedido.refetch} />
+              ))}
               {debeTransferir(pedido.data) && pagos && (
                 <DatosTransferencia
                   datos={pagos.datos_transferencia}

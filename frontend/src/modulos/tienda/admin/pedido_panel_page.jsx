@@ -13,9 +13,12 @@ import { Cargando, ErrorCarga } from "@/componentes/ui/estado_carga.jsx";
 import { useCambiarEstado, usePedidoPanel } from "../hooks/use_tienda.js";
 import { EntregaPedido, EstadoPedido, HistorialPedido, ItemsPedido } from "../componentes/detalle_pedido.jsx";
 import { estadoPedido, fechaHora, numeroPedido } from "../utils/presentacion.js";
+import { modulosActivos } from "@/modulos/registro.js";
 import CobrosPedido from "./cobros_pedido.jsx";
 
 const { transiciones, motivo_requerido } = proyecto.pedidos;
+// Lo que otros módulos agregan al pedido en el panel (ej. pagos online).
+const SECCIONES = modulosActivos.flatMap((m) => m.seccionesPedidoPanel ?? []);
 
 /** Botones con los cambios de estado permitidos desde el estado actual (proyecto.config.js). */
 function AccionesEstado({ pedido }) {
@@ -115,6 +118,9 @@ export default function PedidoPanelPage() {
         <div className="space-y-6">
           <ItemsPedido pedido={p} />
           <CobrosPedido pedido={p} />
+          {SECCIONES.map((Seccion, i) => (
+            <Seccion key={i} pedido={p} />
+          ))}
         </div>
         <div className="space-y-6">
           <EntregaPedido pedido={p} />

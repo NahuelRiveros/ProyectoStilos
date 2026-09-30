@@ -37,6 +37,20 @@ export async function registrarCobro(pedido_id, { monto, metodo, nota }, usuario
   return obtenerPedido(pedido_id, { usuario: { roles: ROLES_PANEL } });
 }
 
+/**
+ * Cobro que entra solo por un pago online aprobado (lo llama el módulo de pagos, dentro de SU
+ * transacción). Sin usuario: origen "online". Devuelve false si no se puede cobrar (pedido
+ * cancelado o el monto supera el saldo): ese pago queda para que lo revise una persona.
+ */
+export async function registrarCobroOnline({ pedido_id, monto, metodo, pago_online_id, nota }, { transaction }) {
+  const pedido = await pedidoBloqueado(pedido_id, transaction);
+  const saldo = aCentavos(pedido.total) - aCentavos(pedido.monto_cobrado);
+  if (pedido.estado === "cancelado" || aCentavos(monto) > saldo) return false;
+  await PedidoCobro.create({ pedido_id, monto, metodo, nota: nota ?? null, origen: "online", pago_online_id, registrado_por: null }, { transaction });
+  await recalcular(pedido, transaction);
+  return true;
+}
+
 export async function anularCobro(pedido_id, cobro_id, { motivo }, usuario_id) {
   await sequelize.transaction(async (transaction) => {
     const pedido = await pedidoBloqueado(pedido_id, transaction);

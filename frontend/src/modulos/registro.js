@@ -2,6 +2,7 @@ import { proyecto } from "compartido/proyecto.js";
 import { moduloCaja } from "./caja/modulo.jsx";
 import { moduloCatalogo } from "./catalogo/modulo.jsx";
 import { moduloConfiguracion } from "./configuracion/modulo.jsx";
+import { moduloPagos } from "./pagos/modulo.jsx";
 import { moduloStock } from "./stock/modulo.jsx";
 import { moduloTienda } from "./tienda/modulo.jsx";
 import { moduloUsuarios } from "./usuarios/modulo.jsx";
@@ -17,8 +18,10 @@ import { moduloUsuarios } from "./usuarios/modulo.jsx";
 //   enlacesCuenta → links de la cuenta del usuario con sesión (ej. "Mis pedidos")
 //   globales      → componentes sin interfaz montados en el layout de la tienda
 //   accionesProducto → componentes debajo del precio en el detalle de producto ({ producto, variante })
+//   accionesPedido   → componentes en el detalle del pedido del cliente ({ pedido, recargar }) (ej. "Pagar")
+//   seccionesPedidoPanel → secciones en el detalle del pedido del panel ({ pedido }) (ej. pagos online)
 // Para sumar un módulo (ej. stock): crear modulos/stock/modulo.jsx y agregarlo a esta lista.
 // El orden define el orden en el menú del panel. `siempre: true` = núcleo (no se apaga).
-const TODOS = [moduloTienda, moduloCatalogo, moduloStock, moduloCaja, moduloConfiguracion, moduloUsuarios];
+const TODOS = [moduloTienda, moduloCatalogo, moduloStock, moduloCaja, moduloPagos, moduloConfiguracion, moduloUsuarios];
 
 export const modulosActivos = TODOS.filter((modulo) => modulo.siempre || proyecto.modulos[modulo.codigo]);

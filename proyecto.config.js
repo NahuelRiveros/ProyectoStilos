@@ -35,7 +35,8 @@ export const proyecto = {
     stock: true,
     tienda: true,
     caja: true,
-    pagos_online: false,
+    // Mercado Pago: queda listo, pero sin credenciales (servidor/.env) no se ofrece el botón de pago.
+    pagos_online: true,
   },
 
   usuarios: {
@@ -100,12 +101,15 @@ export const proyecto = {
   pedidos: {
     estados: {
       pendiente: { etiqueta: "Recibido", tono: "warning" },
+      // Pagado online (o el negocio confirmó el pago) y esperando que lo preparen.
+      pago_recibido: { etiqueta: "Pago recibido", tono: "success" },
       en_preparacion: { etiqueta: "En preparación", tono: "info" },
       entregado: { etiqueta: "Entregado", tono: "success" },
       cancelado: { etiqueta: "Cancelado", tono: "danger" },
     },
     transiciones: {
-      pendiente: ["en_preparacion", "cancelado"],
+      pendiente: ["pago_recibido", "en_preparacion", "cancelado"],
+      pago_recibido: ["en_preparacion", "cancelado"],
       en_preparacion: ["pendiente", "entregado", "cancelado"],
       entregado: ["en_preparacion"],
       cancelado: ["pendiente"],
@@ -118,9 +122,22 @@ export const proyecto = {
       "entregado:en_preparacion",
       "cancelado:pendiente",
       "pendiente:cancelado",
+      "pago_recibido:cancelado",
       "en_preparacion:cancelado",
     ],
     metodos_cobro: MEDIOS_PAGO,
+  },
+
+  // Pagos online (módulo pagos_online). Las credenciales van en servidor/.env (MERCADOPAGO_*):
+  // sin ellas el botón "Pagar" no aparece y todo sigue como nota de pedido.
+  pagos_online: {
+    // El cliente elige al confirmar: pagar ahora online o coordinar el pago. También puede pagar
+    // después desde "Mis pedidos" mientras quede saldo.
+    // Solo los pedidos con estos medios de pago ofrecen el botón (el descuento de "transferencia"
+    // no vale para un pago con tarjeta).
+    medios: ["mercado_pago", "tarjeta"],
+    // Al aprobarse el pago, un pedido "Recibido" pasa a este estado (null = queda como está).
+    estado_al_aprobar: "pago_recibido",
   },
 
   // Caja: ingresos y egresos del negocio. Los cobros de pedidos entran solos como ingresos

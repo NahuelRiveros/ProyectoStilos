@@ -154,6 +154,21 @@ export async function cambiarEstado(id, { estado, motivo, estado_actual }, usuar
   return obtenerPedido(id, { usuario: { roles: ROLES_PANEL } });
 }
 
+/**
+ * Cambio de estado que hace el sistema (ej. un pago online aprobado pasa el pedido de "Recibido" a
+ * "Pago recibido"), dentro de la transacción de quien lo llama. Solo avanza desde `desde` y si la
+ * transición está permitida en proyecto.config.js; si no, no hace nada (lo decide una persona).
+ */
+export async function avanzarEstadoAutomatico({ pedido_id, desde, hacia, motivo }, { transaction }) {
+  if (!proyecto.pedidos.estados[hacia]) return false;
+  const pedido = await Pedido.findByPk(pedido_id, { transaction, lock: transaction.LOCK.UPDATE });
+  if (!pedido || pedido.estado !== desde || problemaTransicion({ desde, hacia, motivo, estadoCobro: pedido.estado_cobro })) return false;
+  await moverStock(pedido, hacia, { usuario_id: null, transaction });
+  await PedidoEstadoLog.create({ pedido_id, estado_anterior: desde, estado_nuevo: hacia, motivo, usuario_id: null }, { transaction });
+  await pedido.update({ estado: hacia }, { transaction });
+  return true;
+}
+
 /** Detalle completo. Un cliente solo puede ver sus pedidos (el resto responde 404). */
 export async function obtenerPedido(id, { usuario }) {
   const pedido = await Pedido.findByPk(id, {
@@ -224,7 +239,8 @@ export async function listarPedidos({ q, estado, estado_cobro, pagina, limite })
 
 export async function resumenPedidos() {
   const [fila] = await sequelize.query(
-    `SELECT COUNT(*) FILTER (WHERE estado = 'pendiente')::int AS nuevos,
+    // "Pago recibido" también espera que lo preparen: cuenta como nuevo.
+    `SELECT COUNT(*) FILTER (WHERE estado IN ('pendiente', 'pago_recibido'))::int AS nuevos,
             COUNT(*) FILTER (WHERE estado = 'en_preparacion')::int AS en_preparacion,
             COUNT(*) FILTER (WHERE estado <> 'cancelado' AND estado_cobro <> 'cobrado')::int AS por_cobrar
      FROM ${DB_SCHEMA}.pedido`,

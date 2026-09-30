@@ -7,6 +7,7 @@ import { stockRutas } from "./stock/stock_rutas.js";
 import { tiendaRutas } from "./tienda/tienda_rutas.js";
 import { pedidosPanelRutas } from "./tienda/pedidos_panel_rutas.js";
 import { cajaRutas } from "./caja/caja_rutas.js";
+import { pagosRutas } from "./pagos/pagos_rutas.js";
 
 // Rutas de cada módulo bajo /api. `modulo: null` = siempre activo (núcleo).
 // Los módulos de negocio se suman acá con su código de proyecto.config.js,
@@ -21,4 +22,5 @@ export const rutasDeModulos = [
   { prefijo: "/tienda", rutas: tiendaRutas, modulo: "tienda" },
   { prefijo: "/pedidos", rutas: pedidosPanelRutas, modulo: "tienda" },
   { prefijo: "/caja", rutas: cajaRutas, modulo: "caja" },
+  { prefijo: "/pagos", rutas: pagosRutas, modulo: "pagos_online" },
 ];

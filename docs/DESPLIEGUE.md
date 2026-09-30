@@ -45,6 +45,22 @@ Nunca se sube un `.env` real: los valores se cargan en el panel de cada platafor
 
 Opcionales: `DURACION_SESION` (7d), `INTENTOS_LOGIN` (10). **No** cargar `PORT` (lo pone Render).
 
+### Pagos online con Mercado Pago (módulo `pagos_online`)
+
+Sin estas tres, la tienda funciona igual (nota de pedido) y el botón de pagar no aparece. En producción,
+si está el token tienen que estar las tres (si no, la API no arranca).
+
+| Variable | Qué va | De dónde sale |
+|---|---|---|
+| `MERCADOPAGO_ACCESS_TOKEN` | Access Token **de producción** (`APP_USR-…`). En tu PC, el de prueba (`TEST-…`) | Mercado Pago Developers → Tus integraciones → tu aplicación → Credenciales |
+| `MERCADOPAGO_CLAVE_WEBHOOK` | Clave secreta de los avisos | Tu aplicación → Webhooks (ver paso de abajo) → "Clave secreta" |
+| `URL_API_RENDER` | Dirección pública de la API, **sin** `/api` (ej. `https://mi-tienda-api.onrender.com`) | Render → tu servicio → URL arriba a la izquierda |
+
+Paso en Mercado Pago (una vez): tu aplicación → **Webhooks** → URL de producción
+`<URL_API_RENDER>/api/pagos/aviso/mercado_pago`, evento **Pagos**, guardar y copiar la clave secreta.
+Con el simulador de esa pantalla podés mandar un aviso de prueba: el servidor tiene que responder 200.
+El Public Key **no** hace falta (el pago se hace en la página de Mercado Pago, Checkout Pro).
+
 ## Vercel (tienda y panel) → Settings → Environment Variables
 
 | Variable | Qué va | De dónde sale |

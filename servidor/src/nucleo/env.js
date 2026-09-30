@@ -73,6 +73,15 @@ const esquema = z
     CLOUDINARY_SECRETO_API: z.string().default(""),
     CLOUDINARY_CARPETA: z.string().default("mi_eccomerce"),
 
+    // ── Pagos online: Mercado Pago. Opcionales: sin ACCESS_TOKEN no se ofrece el botón de pago ──
+    // Mercado Pago → Tus integraciones → tu aplicación → Credenciales (de prueba o de producción).
+    MERCADOPAGO_ACCESS_TOKEN: z.string().default(""),
+    // Mercado Pago → tu aplicación → Webhooks → "Clave secreta": firma de los avisos de pago.
+    MERCADOPAGO_CLAVE_WEBHOOK: z.string().default(""),
+    // Dirección pública de ESTA API (Render), sin /api. Mercado Pago avisa los pagos a
+    // <URL_API_RENDER>/api/pagos/aviso/mercado_pago. Ej: https://mi-tienda-api.onrender.com
+    URL_API_RENDER: z.string().default(""),
+
     // ── Primer usuario (super admin): se crea al arrancar si no existe ──
     SUPERADMIN_NOMBRE: z.string().default("Admin"),
     SUPERADMIN_EMAIL: z.string().default(""),
@@ -84,6 +93,10 @@ const esquema = z
     }
     if (v.NODE_ENV === "production" && !v.URL_FRONTEND_VERCEL) {
       ctx.addIssue({ code: "custom", path: ["URL_FRONTEND_VERCEL"], message: "en producción hay que indicar la dirección de la tienda (Vercel)" });
+    }
+    // En producción, un pago sin firma verificable no se acepta: con token hace falta la clave de los avisos.
+    if (v.NODE_ENV === "production" && v.MERCADOPAGO_ACCESS_TOKEN && (!v.MERCADOPAGO_CLAVE_WEBHOOK || !v.URL_API_RENDER)) {
+      ctx.addIssue({ code: "custom", path: ["MERCADOPAGO_CLAVE_WEBHOOK"], message: "con MERCADOPAGO_ACCESS_TOKEN también hacen falta MERCADOPAGO_CLAVE_WEBHOOK y URL_API_RENDER" });
     }
   });
 
@@ -124,6 +137,8 @@ export const env = {
   esProduccion: datos.NODE_ENV === "production",
   esTest: datos.NODE_ENV === "test",
   imagenesConfiguradas: Boolean(datos.CLOUDINARY_NOMBRE_NUBE && datos.CLOUDINARY_CLAVE_API && datos.CLOUDINARY_SECRETO_API),
+  // Dirección pública de la API (para los avisos de pago) y de la tienda (para volver después de pagar).
+  urlApiPublica: datos.URL_API_RENDER.replace(/\/+$/, "").replace(/\/api$/, ""),
   // Esquema efectivo: en tests se usa uno aparte que se recrea en cada corrida.
   schema: datos.NODE_ENV === "test" ? datos.BD_ESQUEMA_TEST : datos.BD_ESQUEMA,
 };

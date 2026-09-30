@@ -240,7 +240,9 @@ describe("Panel · detalle del pedido", () => {
     renderizarDetalle();
 
     const acciones = await screen.findByRole("group", { name: "Cambiar estado" });
-    expect(within(acciones).getAllByRole("button").map((b) => b.textContent)).toEqual(["Pasar a “En preparación”", "Cancelar pedido"]);
+    // Los botones salen de proyecto.config.js → pedidos.transiciones (ej. "Pago recibido" si existe ese estado).
+    const esperados = proyecto.pedidos.transiciones.pendiente.map((e) => (e === "cancelado" ? "Cancelar pedido" : `Pasar a “${proyecto.pedidos.estados[e].etiqueta}”`));
+    expect(within(acciones).getAllByRole("button").map((b) => b.textContent)).toEqual(esperados);
 
     await userEvent.click(within(acciones).getByRole("button", { name: "Cancelar pedido" }));
     const dialogo = screen.getByRole("dialog");

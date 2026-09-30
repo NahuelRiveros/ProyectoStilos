@@ -68,7 +68,7 @@ otra en `frontend/src/modulos/`; borrar ambas carpetas debe eliminarlo sin rompe
 | `stock`     | stock por variante, movimientos (kardex), ajustes, alertas de mínimo   | catalogo   |
 | `tienda`    | catálogo público, carrito (invitado + cuenta), pedidos, cobros, perfil cliente | catalogo |
 | `caja`      | ingresos y egresos con categoría y medio de pago, calendario, balance anual, Excel. Los cobros de pedidos entran solos (se leen de `pedido_cobro`, no se copian). Solo admin | — (usa tienda si está activa) |
-| `pagos_online` | Mercado Pago + webhooks (futuro)                                    | tienda     |
+| `pagos_online` | Mercado Pago (Checkout Pro) + avisos (webhooks). `servidor/src/modulos/pagos/proveedores/<proveedor>.js` con `crearCobro` / `verificarAviso` / `consultarPago`. El link cobra el saldo del pedido (de la base); el aviso consulta el pago real y registra el cobro (`pedido_cobro.origen = "online"`, uno por pago) y pasa el pedido a `proyecto.config.js → pagos_online.estado_al_aprobar`. Sin `MERCADOPAGO_ACCESS_TOKEN` no aparece el botón | tienda     |
 
 ## Comandos (desde la raíz)
 
