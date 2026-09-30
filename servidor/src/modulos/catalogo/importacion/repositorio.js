@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { sequelize } from "../../../nucleo/db/sequelize.js";
-import { Categoria, Producto, Variante } from "../modelos.js";
+import { Categoria, Color, GrupoTalle, Producto, Talle, Variante } from "../modelos.js";
 import { generarSlugUnico } from "../slugs.js";
 import { idsDeMarcas } from "../atributos_servicio.js";
 import { Stock } from "../../stock/modelos.js";
@@ -23,11 +23,26 @@ async function leerEnTandas(Modelo, valores, condicion, atributos, transaction) 
   return salida;
 }
 
-const ATR_PRODUCTO = ["id", "categoria_id", "nombre", "activo"];
+const ATR_PRODUCTO = ["id", "categoria_id", "nombre", "activo", "grupo_talle_id"];
 const ATR_VARIANTE = ["id", "producto_id", "nombre", "sku", "precio", "iva_porcentaje", "controla_stock"];
+
+/** Listas del panel contra las que se resuelven Color y Talle (indumentaria). Solo lo vigente. */
+async function cargarListas(transaction) {
+  const [colores, grupos] = await Promise.all([
+    Color.findAll({ where: { eliminado_en: null }, attributes: ["id", "nombre"], raw: true, transaction }),
+    GrupoTalle.findAll({
+      where: { eliminado_en: null },
+      attributes: ["id", "nombre"],
+      include: [{ model: Talle, as: "talles", attributes: ["id", "nombre"], where: { eliminado_en: null }, required: false }],
+      transaction,
+    }),
+  ]);
+  return { colores, grupos: grupos.map((g) => g.get({ plain: true })) };
+}
 
 export async function cargarCatalogo(filas, transaction) {
   const valores = filas.filter((f) => f.valor).map((f) => f.valor);
+  const listas = await cargarListas(transaction);
   const categorias = await Categoria.findAll({ where: { eliminado_en: null }, attributes: ["id", "nombre", "padre_id"], raw: true, transaction });
   let productos = await leerEnTandas(Producto, valores.map((v) => claveTexto(v.producto)).filter(Boolean), (nombres) => ({ [Op.and]: enMinusculas("nombre", nombres) }), ATR_PRODUCTO, transaction);
   let variantes = await leerEnTandas(Variante, valores.map((v) => claveTexto(v.sku)).filter(Boolean), (skus) => ({ [Op.and]: enMinusculas("sku", skus) }), ATR_VARIANTE, transaction);
@@ -42,7 +57,7 @@ export async function cargarCatalogo(filas, transaction) {
     }
   }
   variantes = variantes.map((v) => ({ ...v, stock_cantidad: saldos.get(v.id)?.cantidad ?? 0, stock_reservado: saldos.get(v.id)?.reservado ?? 0 }));
-  return { categorias, productos, variantes };
+  return { categorias, productos, variantes, ...listas };
 }
 
 /**
@@ -77,6 +92,11 @@ export async function aplicarPlan(plan, catalogo, transaction, { usuario_id = nu
   const idPorProducto = new Map(catalogo.productos.map((p) => [claveGrupo(rutas.get(p.categoria_id), p.nombre), p.id]));
   // La marca escrita en el archivo se busca en la lista de Marcas; si no está, se agrega.
   const marcaPorNombre = await idsDeMarcas(altas.filter((f) => !f.producto_id).map((f) => f.valor.marca), { transaction });
+  // Grupo de talles de cada prenda nueva: el de cualquiera de sus filas con talle (el plan ya verificó que sea uno solo).
+  const grupoPorProducto = new Map();
+  for (const f of altas) {
+    if (f.valor.grupo_talle_id) grupoPorProducto.set(claveGrupo(f.valor.categoria, f.valor.producto), f.valor.grupo_talle_id);
+  }
   let productosNuevos = 0;
   for (const fila of altas) {
     if (fila.producto_id) continue;
@@ -88,6 +108,7 @@ export async function aplicarPlan(plan, catalogo, transaction, { usuario_id = nu
         nombre: fila.valor.producto,
         categoria_id: idPorRuta.get(claveTexto(fila.valor.categoria)),
         marca_id: fila.valor.marca ? marcaPorNombre.get(fila.valor.marca.toLowerCase()) : null,
+        grupo_talle_id: grupoPorProducto.get(clave) ?? null,
         descripcion: fila.valor.descripcion,
         slug,
       },

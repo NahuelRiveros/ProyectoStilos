@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { sugerirMapeo } from "compartido/importacion_catalogo.js";
+import { proyecto } from "compartido/proyecto.js";
 import { crearApp } from "../../../app.js";
 import { sequelize } from "../../../nucleo/db/sequelize.js";
 import { autorizacion, crearRoles, crearUsuario, vaciarTablas } from "../../../../tests/ayudantes.js";
@@ -68,9 +69,15 @@ describe("lectura de archivos", () => {
     });
     expect(res.headers["content-type"]).toMatch(/spreadsheetml/);
     const leido = await leerPlanilla(res.body, "plantilla.xlsx", {});
-    expect(leido.columnas.map((c) => c.nombre)).toEqual(["SKU", "Producto", "Presentación", "Categoría", "Precio", "IVA", "Marca"]);
-    expect(leido.filas[0].valores[0]).toBe("000123");
-    expect(sugerirMapeo(leido.columnas)).toMatchObject({ sku: "c1", producto: "c2", presentacion: "c3", categoria: "c4", precio: "c5", iva_porcentaje: "c6", marca: "c7" });
+    // Las columnas dependen del rubro: presentaciones (distribuidora) o color y talle (indumentaria).
+    if (proyecto.catalogo.variantes === "talle_color") {
+      expect(leido.columnas.map((c) => c.nombre)).toEqual(["SKU", "Producto", "Categoría", "Color", "Talle", "Grupo de talles", "Precio", "IVA", "Marca"]);
+      expect(sugerirMapeo(leido.columnas)).toMatchObject({ sku: "c1", producto: "c2", categoria: "c3", color: "c4", talle: "c5", grupo_talle: "c6", precio: "c7", iva_porcentaje: "c8", marca: "c9" });
+    } else {
+      expect(leido.columnas.map((c) => c.nombre)).toEqual(["SKU", "Producto", "Presentación", "Categoría", "Precio", "IVA", "Marca"]);
+      expect(leido.filas[0].valores[0]).toBe("000123");
+      expect(sugerirMapeo(leido.columnas)).toMatchObject({ sku: "c1", producto: "c2", presentacion: "c3", categoria: "c4", precio: "c5", iva_porcentaje: "c6", marca: "c7" });
+    }
   });
 });
 

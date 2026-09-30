@@ -30,7 +30,7 @@ export default function PasoArchivo({ asistente, deshabilitado }) {
         </Boton>
       </div>
       <p className="text-sm text-texto-suave">
-        Excel (.xlsx) o CSV de hasta {config.maxMb} MB y {config.maxFilas.toLocaleString("es-AR")} filas. Una fila por presentación. Puede ser la lista de precios de tu sistema o de un proveedor.
+        Excel (.xlsx) o CSV de hasta {config.maxMb} MB y {config.maxFilas.toLocaleString("es-AR")} filas. {config.textos.unaFilaPor} Puede ser la lista de precios de tu sistema o de un proveedor.
       </p>
 
       <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-borde p-6 text-center hover:border-primario">

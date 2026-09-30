@@ -5,7 +5,7 @@ import SelectField from "@/componentes/ui/select_field.jsx";
 
 const IDENTIDADES = [
   { valor: "sku", etiqueta: "Código / SKU (recomendado)" },
-  { valor: "nombre", etiqueta: "Categoría + nombre + presentación" },
+  { valor: "nombre", etiqueta: config.textos.identidadNombre },
 ];
 const DECIMALES = [
   { valor: "coma", etiqueta: "Coma decimal: 1.234,56" },

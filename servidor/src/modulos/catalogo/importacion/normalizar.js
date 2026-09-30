@@ -84,6 +84,10 @@ export function normalizarFilas(leido, mapeo, opciones) {
         sku: texto(fila, "sku", 60, "El código"),
         producto: texto(fila, "producto", 150, "El nombre"),
         presentacion: texto(fila, "presentacion", 100, "La presentación"),
+        // Indumentaria: se resuelven contra las listas del panel en plan_talle_color.js.
+        color: texto(fila, "color", 40, "El color"),
+        talle: texto(fila, "talle", 20, "El talle"),
+        grupo_talle: texto(fila, "grupo_talle", 40, "El grupo de talles"),
         categoria: texto(fila, "categoria", 800, "La categoría") || opciones.categoria_por_defecto || null,
         marca: texto(fila, "marca", 80, "La marca"),
         descripcion: texto(fila, "descripcion", 5000, "La descripción"),

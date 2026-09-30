@@ -7,10 +7,12 @@ import { quitarAcentos } from "./reglas/texto.js";
 // no pisa el saldo, se registra la diferencia como movimiento "importacion".
 
 const conStock = proyecto.modulos.stock;
+// Indumentaria (catalogo.variantes: "talle_color"): columnas Color, Talle y Grupo de talles.
+const TALLE_COLOR = proyecto.catalogo.variantes === "talle_color";
 
 export const importacionCatalogo = {
   // Subir si cambian las reglas: las importaciones validadas con otra versión se rechazan.
-  version: 2,
+  version: 3,
   maxMb: 20,
   maxFilas: 50_000,
   maxColumnas: 80,
@@ -20,6 +22,11 @@ export const importacionCatalogo = {
   tamanoLote: 250,
   filasMuestra: 12,
   tiempoLecturaMs: 60_000,
+
+  // Textos del asistente que cambian según el rubro.
+  textos: TALLE_COLOR
+    ? { unaFilaPor: "Una fila por combinación de color y talle: las filas del mismo producto forman una sola prenda.", identidadNombre: "Categoría + nombre + color y talle" }
+    : { unaFilaPor: "Una fila por presentación.", identidadNombre: "Categoría + nombre + presentación" },
 
   opcionesPorDefecto: {
     hoja: 1,
@@ -40,7 +47,15 @@ export const importacionCatalogo = {
     { clave: "producto", etiqueta: "Nombre del producto", alias: ["producto", "articulo", "artículo", "nombre", "descripcion articulo", "detalle"] },
     { clave: "precio", etiqueta: "Precio", alias: ["precio", "precio venta", "pvp", "precio lista"], ayuda: "Una sola lista de precios. Indicá abajo si incluye IVA." },
     { clave: "categoria", etiqueta: "Categoría", alias: ["categoria", "categoría", "rubro", "familia"], ayuda: "Admite niveles: Almacén > Galletitas." },
-    { clave: "presentacion", etiqueta: proyecto.catalogo.etiqueta_variante, alias: ["presentacion", "presentación", "variedad", "variante", "unidad", "envase"] },
+    { clave: "presentacion", etiqueta: TALLE_COLOR ? "Presentación" : proyecto.catalogo.etiqueta_variante, alias: ["presentacion", "presentación", "variedad", "variante", "unidad", "envase"] },
+    // Indumentaria: una fila por combinación. Color y talle tienen que existir en las listas del panel.
+    ...(TALLE_COLOR
+      ? [
+          { clave: "color", etiqueta: "Color", alias: ["color", "colores"], ayuda: "Tiene que existir en Catálogo → Colores (si no, la fila queda con error)." },
+          { clave: "talle", etiqueta: "Talle", alias: ["talle", "talla", "size", "medida"], ayuda: "Tiene que existir en Catálogo → Talles." },
+          { clave: "grupo_talle", etiqueta: "Grupo de talles", alias: ["grupo de talles", "grupo talle", "grupo", "tabla de talles"], ayuda: "Opcional: hace falta si un talle está en dos grupos (ej. 40 en Jeans y Calzado)." },
+        ]
+      : []),
     { clave: "marca", etiqueta: "Marca", alias: ["marca", "fabricante"] },
     { clave: "descripcion", etiqueta: "Descripción", alias: ["descripcion", "descripción", "observaciones"] },
     { clave: "iva_porcentaje", etiqueta: "IVA (%)", alias: ["iva", "% iva", "iva_porcentaje", "alicuota", "alícuota"] },

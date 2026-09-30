@@ -111,6 +111,8 @@ export function armarPlan(filas, opciones, catalogo) {
     if (precio != null && (!variante || actualiza("precio"))) cambios.precio = precio;
     if (!variante || (actualiza("iva_porcentaje") && valor.iva_porcentaje != null)) cambios.iva_porcentaje = iva;
     if (!variante || (!variante.sku && valor.sku)) cambios.sku = valor.sku;
+    // Indumentaria: la variante nueva guarda su color y talle (ya resueltos contra las listas del panel).
+    if (!variante && (valor.color_id || valor.talle_id)) Object.assign(cambios, { color_id: valor.color_id, talle_id: valor.talle_id });
     // Stock: es la cantidad objetivo; al aplicar se registra la diferencia como movimiento.
     if (valor.stock != null && (!variante || actualiza("stock"))) {
       if (variante && valor.stock < (variante.stock_reservado ?? 0)) {

@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import ExcelJS from "exceljs";
 import { importacionCatalogo as config } from "compartido/importacion_catalogo.js";
+import { proyecto } from "compartido/proyecto.js";
 import { sequelize, DB_SCHEMA } from "../../../nucleo/db/sequelize.js";
 import { Conflicto, DatosInvalidos, NoEncontrado } from "../../../nucleo/errores.js";
 import { Usuario } from "../../usuarios/modelos.js";
@@ -8,6 +9,7 @@ import { ImportacionCatalogo, ImportacionCatalogoLote } from "../modelos.js";
 import { leerArchivo } from "./leer_archivo.js";
 import { normalizarFilas, validarOpciones } from "./normalizar.js";
 import { armarPlan, hash, resumir } from "./plan.js";
+import { resolverTalleColor } from "./plan_talle_color.js";
 import { aplicarPlan, cargarCatalogo } from "./repositorio.js";
 
 // Adaptado de DistribuCG (services/distribuidora/importacion_distribuidora_service.js).
@@ -64,7 +66,9 @@ export async function validar({ buffer, nombreArchivo, mapeo, opciones, id, usua
   if (!leido.filas.length) throw new DatosInvalidos("El archivo no tiene productos debajo del encabezado.");
   const completas = validarOpciones(mapeo, opciones, leido.columnas);
   const filas = normalizarFilas(leido, mapeo, completas);
-  const plan = armarPlan(filas, completas, await cargarCatalogo(filas));
+  const catalogo = await cargarCatalogo(filas);
+  // Color y talle se resuelven una sola vez, acá: los lotes guardan las filas ya resueltas.
+  const plan = armarPlan(resolverTalleColor(filas, catalogo), completas, catalogo);
 
   await sequelize.transaction(async (transaction) => {
     // Bloquea al usuario: dos validaciones simultáneas con el mismo id no chocan.
@@ -193,29 +197,61 @@ export async function* informe(id, usuario_id) {
   }
 }
 
+// Columnas y filas de ejemplo de la plantilla según el rubro (catalogo.variantes).
+const PLANTILLA = {
+  presentacion: {
+    columnas: [
+      { header: "SKU", key: "sku", width: 18, style: { numFmt: "@" } },
+      { header: "Producto", key: "producto", width: 32 },
+      { header: "Presentación", key: "presentacion", width: 22 },
+      { header: "Categoría", key: "categoria", width: 30 },
+      { header: "Precio", key: "precio", width: 14 },
+      { header: "IVA", key: "iva", width: 10 },
+      { header: "Marca", key: "marca", width: 20 },
+    ],
+    filas: [{ sku: "000123", producto: "Arroz de ejemplo", presentacion: "Paquete 1 kg", categoria: "Almacén > Arroz", precio: 1000, iva: 21, marca: "Marca de ejemplo" }],
+    ayuda: ["Una fila por presentación. Escribí el SKU como texto para conservar los ceros iniciales.", "Las categorías pueden tener niveles: Almacén > Arroz. Las que no existan se crean solas."],
+  },
+  talle_color: {
+    columnas: [
+      { header: "SKU", key: "sku", width: 18, style: { numFmt: "@" } },
+      { header: "Producto", key: "producto", width: 32 },
+      { header: "Categoría", key: "categoria", width: 30 },
+      { header: "Color", key: "color", width: 16 },
+      { header: "Talle", key: "talle", width: 10 },
+      { header: "Grupo de talles", key: "grupo_talle", width: 18 },
+      { header: "Precio", key: "precio", width: 14 },
+      { header: "IVA", key: "iva", width: 10 },
+      { header: "Marca", key: "marca", width: 20 },
+    ],
+    filas: [
+      { sku: "REM-NEG-S", producto: "Remera de ejemplo", categoria: "Hombres > Remeras", color: "Negro", talle: "S", grupo_talle: "Ropa", precio: 10000, iva: 21, marca: "Marca de ejemplo" },
+      { sku: "REM-NEG-M", producto: "Remera de ejemplo", categoria: "Hombres > Remeras", color: "Negro", talle: "M", grupo_talle: "Ropa", precio: 10000, iva: 21, marca: "Marca de ejemplo" },
+    ],
+    ayuda: [
+      "Una fila por combinación de color y talle. Las filas con el mismo Producto y Categoría forman una sola prenda.",
+      "El color y el talle tienen que existir en el panel (Catálogo → Colores y Catálogo → Talles): si no, la fila queda con error.",
+      "Grupo de talles es opcional: hace falta cuando un talle está en dos grupos (ej. 40 en Jeans y en Calzado).",
+      "Las categorías pueden tener niveles: Hombres > Remeras. Las que no existan se crean solas.",
+    ],
+  },
+};
+
 /** Excel de ejemplo con las columnas que el asistente reconoce solo. */
 export async function escribirPlantilla(destino) {
+  const modelo = PLANTILLA[proyecto.catalogo.variantes] ?? PLANTILLA.presentacion;
   const libro = new ExcelJS.Workbook();
   const hoja = libro.addWorksheet("Productos");
-  hoja.columns = [
-    { header: "SKU", key: "sku", width: 18, style: { numFmt: "@" } },
-    { header: "Producto", key: "producto", width: 32 },
-    { header: "Presentación", key: "presentacion", width: 22 },
-    { header: "Categoría", key: "categoria", width: 30 },
-    { header: "Precio", key: "precio", width: 14 },
-    { header: "IVA", key: "iva", width: 10 },
-    { header: "Marca", key: "marca", width: 20 },
-  ];
-  hoja.addRow({ sku: "000123", producto: "Arroz de ejemplo", presentacion: "Paquete 1 kg", categoria: "Almacén > Arroz", precio: 1000, iva: 21, marca: "Marca de ejemplo" });
+  hoja.columns = modelo.columnas;
+  modelo.filas.forEach((fila) => hoja.addRow(fila));
   hoja.getRow(1).font = { bold: true };
   hoja.views = [{ state: "frozen", ySplit: 1 }];
   const ayuda = libro.addWorksheet("Instrucciones");
   ayuda.getColumn(1).width = 110;
   [
-    "Reemplazá la fila de ejemplo por tus productos antes de importar.",
-    "Una fila por presentación. Escribí el SKU como texto para conservar los ceros iniciales.",
-    "El precio del ejemplo es NETO (sin IVA): 1000 + 21 % = 1210 en la tienda. Si tu lista ya incluye IVA, indicalo en el asistente.",
-    "Las categorías pueden tener niveles: Almacén > Arroz. Las que no existan se crean solas.",
+    "Reemplazá las filas de ejemplo por tus productos antes de importar.",
+    ...modelo.ayuda,
+    "El precio del ejemplo es NETO (sin IVA): se le suma el IVA en la tienda. Si tu lista ya incluye IVA, indicalo en el asistente.",
     "En el asistente podés elegir la hoja, la fila de títulos y qué columna corresponde a cada dato.",
   ].forEach((texto) => ayuda.addRow([texto]));
   await libro.xlsx.write(destino);
