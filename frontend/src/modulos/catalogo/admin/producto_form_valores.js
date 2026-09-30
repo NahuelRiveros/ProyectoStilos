@@ -12,12 +12,12 @@ export const presentacionVacia = () => ({
 /** Valores del formulario a partir de un producto del API (o vacíos para uno nuevo). */
 export function valoresIniciales(producto) {
   if (!producto) {
-    return { categoria_id: "", nombre: "", marca: "", descripcion: "", activo: true, publicado: true, variantes: [presentacionVacia()] };
+    return { categoria_id: "", nombre: "", marca_id: "", descripcion: "", activo: true, publicado: true, variantes: [presentacionVacia()] };
   }
   return {
     categoria_id: String(producto.categoria_id),
     nombre: producto.nombre,
-    marca: producto.marca ?? "",
+    marca_id: producto.marca_id ? String(producto.marca_id) : "",
     descripcion: producto.descripcion ?? "",
     activo: producto.activo,
     publicado: producto.publicado,

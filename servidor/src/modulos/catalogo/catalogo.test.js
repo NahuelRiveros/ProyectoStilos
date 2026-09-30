@@ -16,7 +16,7 @@ beforeAll(async () => {
   cliente = await crearUsuario({ email: "cliente@catalogo.com", roles: ["cliente"] });
   superAdmin = await crearUsuario({ email: "super@catalogo.com", roles: ["super_admin"] });
 });
-beforeEach(() => vaciarTablas("producto_imagen", "variante", "producto", "categoria"));
+beforeEach(() => vaciarTablas("producto_imagen", "variante", "producto", "categoria", "marca"));
 afterAll(() => sequelize.close());
 
 // ── Ayudantes ──
@@ -34,11 +34,16 @@ async function nuevaCategoria(nombre, padre_id = null) {
   return res.body.data;
 }
 
+async function nuevaMarca(nombre) {
+  const res = await api.post("/api/catalogo/marcas", { nombre });
+  expect(res.status).toBe(201);
+  return res.body.data;
+}
+
 async function nuevoProducto(categoria_id, extra = {}) {
   const res = await api.post("/api/catalogo/productos", {
     categoria_id,
     nombre: "Galletitas Oreo",
-    marca: "Oreo",
     variantes: [
       { nombre: "118 g", sku: "ORE-118", precio: 1000 },
       { nombre: "Familiar 300 g", sku: "ORE-300", precio: 2250.5, iva_porcentaje: 10.5 },
@@ -48,6 +53,37 @@ async function nuevoProducto(categoria_id, extra = {}) {
   expect(res.status).toBe(201);
   return res.body.data;
 }
+
+describe("Duplicar una categoría con sus subcategorías", () => {
+  it("copia todo el árbol (sin productos) con el nombre nuevo, al mismo nivel", async () => {
+    const hombres = await nuevaCategoria("Hombres");
+    const remeras = await nuevaCategoria("Remeras", hombres.id);
+    await nuevaCategoria("Lisas", remeras.id);
+    await nuevaCategoria("Rayadas", remeras.id);
+    await nuevaCategoria("Jeans", hombres.id);
+    await nuevoProducto(remeras.id);
+
+    const res = await api.post(`/api/catalogo/categorias/${hombres.id}/duplicar`, { nombre: "Mujeres" });
+    expect(res.status).toBe(201);
+    expect(res.body.data).toMatchObject({ creadas: 5, categoria: { nombre: "Mujeres", padre_id: null, slug: "mujeres" } });
+
+    const todas = (await api.get("/api/catalogo/categorias", staff)).body.data;
+    const porId = new Map(todas.map((c) => [c.id, c]));
+    const ruta = (c) => (c.padre_id ? `${ruta(porId.get(c.padre_id))} > ${c.nombre}` : c.nombre);
+    const deMujeres = todas.filter((c) => ruta(c).startsWith("Mujeres")).map(ruta).sort();
+    expect(deMujeres).toEqual(["Mujeres", "Mujeres > Jeans", "Mujeres > Remeras", "Mujeres > Remeras > Lisas", "Mujeres > Remeras > Rayadas"]);
+    // Los productos no se copian.
+    expect(todas.filter((c) => ruta(c).startsWith("Mujeres")).every((c) => c.cantidad_productos === 0)).toBe(true);
+  });
+
+  it("no deja duplicar con un nombre que ya existe en ese nivel", async () => {
+    const hombres = await nuevaCategoria("Hombres");
+    const repetido = await api.post(`/api/catalogo/categorias/${hombres.id}/duplicar`, { nombre: "hombres" });
+    expect(repetido.status).toBe(409);
+    expect(repetido.body.codigo).toBe("CATEGORIA_DUPLICADA");
+    expect((await api.post("/api/catalogo/categorias/9999/duplicar", { nombre: "X" })).status).toBe(404);
+  });
+});
 
 describe("Categorías", () => {
   it("crea raíz y subcategoría con slug automático", async () => {
@@ -180,6 +216,29 @@ describe("Productos: alta y validaciones", () => {
     expect(sinCategoria.status).toBe(400);
     expect(sinCategoria.body.detalles[0].campo).toBe("categoria_id");
   });
+
+  it("la marca se elige de la lista; una inexistente o dada de baja se rechaza", async () => {
+    const oreo = await nuevaMarca("Oreo");
+    const producto = await nuevoProducto(categoria.id, { marca_id: oreo.id });
+    expect(producto.marca).toEqual({ id: oreo.id, nombre: "Oreo" });
+
+    const inexistente = await api.post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "Y", marca_id: 9999, variantes: [{ precio: 1 }] });
+    expect(inexistente.status).toBe(400);
+    expect(inexistente.body.detalles[0]).toEqual({ campo: "marca_id", mensaje: "La marca no existe" });
+
+    // Dada de baja: el producto que ya la tenía la conserva al editarse, pero no se puede elegir para otro.
+    await api.delete(`/api/catalogo/marcas/${oreo.id}`);
+    const editado = await api.put(`/api/catalogo/productos/${producto.id}`, {
+      categoria_id: categoria.id,
+      nombre: "Galletitas Oreo",
+      marca_id: oreo.id,
+      variantes: producto.variantes.map(({ id, nombre, sku, precio }) => ({ id, nombre, sku, precio: Number(precio) })),
+    });
+    expect(editado.status).toBe(200);
+    expect(editado.body.data.marca.nombre).toBe("Oreo");
+    const otro = await api.post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "Z", marca_id: oreo.id, variantes: [{ precio: 1 }] });
+    expect(otro.status).toBe(400);
+  });
 });
 
 describe("Productos: catálogo público y búsqueda", () => {
@@ -189,7 +248,8 @@ describe("Productos: catálogo público y búsqueda", () => {
     galletitas = await nuevaCategoria("Galletitas", almacen.id);
     bebidas = await nuevaCategoria("Bebidas");
     await nuevoProducto(galletitas.id);
-    await nuevoProducto(bebidas.id, { nombre: "Agua 100% mineral", marca: "Villavicencio", variantes: [{ sku: "AGU-1", precio: 500 }] });
+    const villavicencio = await nuevaMarca("Villavicencio");
+    await nuevoProducto(bebidas.id, { nombre: "Agua 100% mineral", marca_id: villavicencio.id, variantes: [{ sku: "AGU-1", precio: 500 }] });
     await nuevoProducto(bebidas.id, { nombre: "Gaseosa sin publicar", publicado: false, variantes: [{ sku: "GAS-1", precio: 800 }] });
     await nuevoProducto(bebidas.id, { nombre: "Jugo sin stock", variantes: [{ sku: "JUG-1", precio: 300, activo: false }] });
   });

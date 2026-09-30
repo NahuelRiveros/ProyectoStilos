@@ -5,6 +5,7 @@ import {
   cambiarEstadoProducto,
   crearProducto,
   eliminarProducto,
+  filtrosDisponibles,
   listarProductos,
   obtenerProducto,
 } from "./producto_servicio.js";
@@ -17,18 +18,23 @@ export async function listar(req, res) {
   res.json({ ok: true, data, paginacion });
 }
 
+export async function filtros(req, res) {
+  const data = await filtrosDisponibles(req.datos.query, { publico: esPublico(req) });
+  res.json({ ok: true, data });
+}
+
 export async function obtener(req, res) {
   const data = await obtenerProducto(req.datos.params.clave, { publico: esPublico(req) });
   res.json({ ok: true, data });
 }
 
 export async function crear(req, res) {
-  const data = await crearProducto(req.datos.body);
+  const data = await crearProducto(req.datos.body, { usuario_id: req.usuario.id });
   res.status(201).json({ ok: true, data });
 }
 
 export async function actualizar(req, res) {
-  const data = await actualizarProducto(req.datos.params.id, req.datos.body);
+  const data = await actualizarProducto(req.datos.params.id, req.datos.body, { usuario_id: req.usuario.id });
   res.json({ ok: true, data });
 }
 

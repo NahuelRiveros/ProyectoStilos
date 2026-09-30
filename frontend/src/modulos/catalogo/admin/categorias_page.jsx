@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { mensajeDeError } from "@/api/http.js";
 import { estaEnMenu } from "@/clientes/index.js";
 import { useToast } from "@/componentes/toast/toast_context.jsx";
@@ -7,9 +7,10 @@ import Boton from "@/componentes/ui/boton.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
 import ConfirmDialog from "@/componentes/ui/confirm_dialog.jsx";
 import { Cargando, ErrorCarga, Vacio } from "@/componentes/ui/estado_carga.jsx";
-import { useCategorias, useEliminarCategoria, useGuardarCategoria } from "../hooks/use_catalogo.js";
+import { useCategorias, useDuplicarCategoria, useEliminarCategoria, useGuardarCategoria } from "../hooks/use_catalogo.js";
 import { armarArbol, totalConSubcategorias } from "../utils/arbol.js";
 import CategoriaFormModal from "./categoria_form_modal.jsx";
+import DuplicarCategoriaModal from "./duplicar_categoria_modal.jsx";
 
 function NodoCategoria({ nodo, nivel, cerrados, alternar, acciones }) {
   const tieneHijos = nodo.hijos.length > 0;
@@ -44,6 +45,9 @@ function NodoCategoria({ nodo, nivel, cerrados, alternar, acciones }) {
           <Boton variante="fantasma" tamano="icono" onClick={() => acciones.editar(nodo)} aria-label={`Editar ${nodo.nombre}`} title="Editar">
             <Pencil className="h-4 w-4" />
           </Boton>
+          <Boton variante="fantasma" tamano="icono" onClick={() => acciones.duplicar(nodo)} aria-label={`Duplicar ${nodo.nombre}`} title="Duplicar con subcategorías">
+            <Copy className="h-4 w-4" />
+          </Boton>
           <Boton variante="fantasma" tamano="icono" onClick={() => acciones.eliminar(nodo)} aria-label={`Eliminar ${nodo.nombre}`} title="Eliminar">
             <Trash2 className="h-4 w-4 text-peligro" />
           </Boton>
@@ -64,9 +68,11 @@ export default function CategoriasPage() {
   const categorias = useCategorias();
   const guardar = useGuardarCategoria();
   const eliminar = useEliminarCategoria();
+  const duplicar = useDuplicarCategoria();
   const toast = useToast();
   const [formulario, setFormulario] = useState(null); // { categoria?, padreInicial? }
   const [aEliminar, setAEliminar] = useState(null);
+  const [aDuplicar, setADuplicar] = useState(null);
   const [cerrados, setCerrados] = useState(() => new Set());
 
   const alternar = (id) =>
@@ -80,8 +86,15 @@ export default function CategoriasPage() {
   const acciones = {
     crearDentro: (nodo) => setFormulario({ padreInicial: nodo.id }),
     editar: (nodo) => setFormulario({ categoria: nodo }),
+    duplicar: setADuplicar,
     eliminar: setAEliminar,
   };
+
+  async function onDuplicar(datos) {
+    const { creadas } = await duplicar.mutateAsync(datos);
+    toast.exito(`Se creó "${datos.nombre}" (${creadas} categoría${creadas === 1 ? "" : "s"})`);
+    setADuplicar(null);
+  }
 
   async function onGuardar(datos) {
     await guardar.mutateAsync(datos);
@@ -138,6 +151,7 @@ export default function CategoriasPage() {
           onCerrar={() => setFormulario(null)}
         />
       )}
+      {aDuplicar && <DuplicarCategoriaModal categoria={aDuplicar} onDuplicar={onDuplicar} onCerrar={() => setADuplicar(null)} />}
       <ConfirmDialog
         abierto={Boolean(aEliminar)}
         titulo="Eliminar categoría"

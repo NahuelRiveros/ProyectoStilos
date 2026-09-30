@@ -21,7 +21,9 @@ export const Producto = defineModel("producto", {
   categoria_id: { type: DataTypes.INTEGER, allowNull: false },
   nombre: { type: DataTypes.STRING(150), allowNull: false },
   slug: { type: DataTypes.STRING(180), allowNull: false },
-  marca: { type: DataTypes.STRING(80), allowNull: true },
+  marca_id: { type: DataTypes.INTEGER, allowNull: true },
+  // Indumentaria: de qué grupo son los talles de sus variantes (Ropa, Jeans, Calzado).
+  grupo_talle_id: { type: DataTypes.INTEGER, allowNull: true },
   descripcion: { type: DataTypes.TEXT, allowNull: true },
   activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   publicado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
@@ -33,6 +35,9 @@ export const Variante = defineModel("variante", {
   producto_id: { type: DataTypes.INTEGER, allowNull: false },
   nombre: { type: DataTypes.STRING(100), allowNull: true },
   atributos: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+  // Indumentaria: la combinación color + talle (el nombre se arma solo: "Negro · M").
+  color_id: { type: DataTypes.INTEGER, allowNull: true },
+  talle_id: { type: DataTypes.INTEGER, allowNull: true },
   sku: { type: DataTypes.STRING(60), allowNull: true },
   precio: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
   precio_anterior: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
@@ -48,7 +53,35 @@ export const ProductoImagen = defineModel("producto_imagen", {
   url: { type: DataTypes.STRING(500), allowNull: false },
   public_id: { type: DataTypes.STRING(200), allowNull: true },
   alt: { type: DataTypes.STRING(150), allowNull: true },
+  // Indumentaria: de qué color es la foto (null = general, se ve con cualquier color).
+  color_id: { type: DataTypes.INTEGER, allowNull: true },
   orden: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+});
+
+// Listas del panel (migraciones/2026_09_29_1300_crear_marcas_colores_talles.js).
+export const Marca = defineModel("marca", {
+  nombre: { type: DataTypes.STRING(80), allowNull: false },
+  eliminado_en: eliminado_en(),
+});
+
+export const Color = defineModel("color", {
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
+  hex: { type: DataTypes.STRING(7), allowNull: false },
+  orden: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  eliminado_en: eliminado_en(),
+});
+
+export const GrupoTalle = defineModel("grupo_talle", {
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
+  orden: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  eliminado_en: eliminado_en(),
+});
+
+export const Talle = defineModel("talle", {
+  grupo_talle_id: { type: DataTypes.INTEGER, allowNull: false },
+  nombre: { type: DataTypes.STRING(20), allowNull: false },
+  orden: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  eliminado_en: eliminado_en(),
 });
 
 // Tablas de migraciones/2026_09_25_1400_crear_importacion_catalogo.js
@@ -80,4 +113,9 @@ aplicarRelaciones([
   { tipo: "hasMany", from: Producto, to: Variante, foreignKey: "producto_id", as: "variantes" },
   { tipo: "belongsTo", from: Variante, to: Producto, foreignKey: "producto_id", as: "producto" },
   { tipo: "hasMany", from: Producto, to: ProductoImagen, foreignKey: "producto_id", as: "imagenes" },
+  { tipo: "hasMany", from: GrupoTalle, to: Talle, foreignKey: "grupo_talle_id", as: "talles" },
+  { tipo: "belongsTo", from: Producto, to: Marca, foreignKey: "marca_id", as: "marca" },
+  { tipo: "belongsTo", from: Producto, to: GrupoTalle, foreignKey: "grupo_talle_id", as: "grupo_talle" },
+  { tipo: "belongsTo", from: Variante, to: Color, foreignKey: "color_id", as: "color" },
+  { tipo: "belongsTo", from: Variante, to: Talle, foreignKey: "talle_id", as: "talle" },
 ]);

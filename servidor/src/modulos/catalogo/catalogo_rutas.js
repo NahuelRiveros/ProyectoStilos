@@ -4,18 +4,24 @@ import {
   ajustePreciosSchema,
   categoriaSchema,
   claveProductoParams,
+  colorImagenSchema,
+  duplicarCategoriaSchema,
   estadoProductoSchema,
+  filtrosDisponiblesQuery,
+  imagenArchivoSchema,
   imagenParams,
   imagenUrlSchema,
   listarProductosQuery,
   ordenImagenesSchema,
   productoSchema,
 } from "compartido/schemas/catalogo.js";
+import { colorSchema, grupoTalleSchema, marcaSchema } from "compartido/schemas/atributos.js";
 import { authOpcional, requerirAuth, requerirModulo, requerirRol } from "../../nucleo/auth/middlewares.js";
 import { recibirArchivo } from "../../nucleo/archivos.js";
 import { validar } from "../../nucleo/validar.js";
 import { cachePublico } from "../../nucleo/cache.js";
 import { GESTORES_CATALOGO } from "./permisos.js";
+import * as atributos from "./atributos_controlador.js";
 import * as categorias from "./categoria_controlador.js";
 import * as productos from "./producto_controlador.js";
 import * as imagenes from "./imagen_controlador.js";
@@ -31,10 +37,30 @@ catalogoRutas.use(requerirModulo("catalogo"));
 catalogoRutas.get("/categorias", cachePublico(), authOpcional, categorias.listar);
 catalogoRutas.post("/categorias", ...gestor, validar({ body: categoriaSchema }), categorias.crear);
 catalogoRutas.put("/categorias/:id", ...gestor, validar({ params: idParams, body: categoriaSchema }), categorias.actualizar);
+catalogoRutas.post("/categorias/:id/duplicar", ...gestor, validar({ params: idParams, body: duplicarCategoriaSchema }), categorias.duplicar);
 catalogoRutas.delete("/categorias/:id", ...gestor, validar({ params: idParams }), categorias.eliminar);
+
+// ── Marcas, colores y grupos de talles (listas del panel; la tienda las lee para filtrar) ──
+catalogoRutas.get("/marcas", cachePublico(), atributos.listarMarcas);
+catalogoRutas.post("/marcas", ...gestor, validar({ body: marcaSchema }), atributos.crearMarca);
+catalogoRutas.put("/marcas/:id", ...gestor, validar({ params: idParams, body: marcaSchema }), atributos.actualizarMarca);
+catalogoRutas.delete("/marcas/:id", ...gestor, validar({ params: idParams }), atributos.eliminarMarca);
+
+catalogoRutas.get("/colores", cachePublico(), atributos.listarColores);
+catalogoRutas.post("/colores", ...gestor, validar({ body: colorSchema }), atributos.crearColor);
+catalogoRutas.put("/colores/:id", ...gestor, validar({ params: idParams, body: colorSchema }), atributos.actualizarColor);
+catalogoRutas.delete("/colores/:id", ...gestor, validar({ params: idParams }), atributos.eliminarColor);
+
+catalogoRutas.get("/grupos-talle", cachePublico(), atributos.listarGruposTalle);
+catalogoRutas.post("/grupos-talle/sugeridos", ...gestor, atributos.cargarGruposSugeridos);
+catalogoRutas.post("/grupos-talle", ...gestor, validar({ body: grupoTalleSchema }), atributos.crearGrupoTalle);
+catalogoRutas.put("/grupos-talle/:id", ...gestor, validar({ params: idParams, body: grupoTalleSchema }), atributos.actualizarGrupoTalle);
+catalogoRutas.delete("/grupos-talle/:id", ...gestor, validar({ params: idParams }), atributos.eliminarGrupoTalle);
 
 // ── Productos ──
 catalogoRutas.get("/productos", cachePublico(), authOpcional, validar({ query: listarProductosQuery }), productos.listar);
+// Antes de /productos/:clave: si no, "filtros" se tomaría como el slug de un producto.
+catalogoRutas.get("/productos/filtros", cachePublico(), authOpcional, validar({ query: filtrosDisponiblesQuery }), productos.filtros);
 catalogoRutas.get("/productos/:clave", cachePublico(), authOpcional, validar({ params: claveProductoParams }), productos.obtener);
 catalogoRutas.post("/productos", ...gestor, validar({ body: productoSchema }), productos.crear);
 catalogoRutas.put("/productos/:id", ...gestor, validar({ params: idParams, body: productoSchema }), productos.actualizar);
@@ -48,7 +74,9 @@ const archivoImagen = recibirArchivo({
   extensiones: [".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"],
   mensajeTipo: "Solo se aceptan imágenes JPG, PNG, WEBP, AVIF o GIF.",
 });
-catalogoRutas.post("/productos/:id/imagenes", ...gestor, validar({ params: idParams }), archivoImagen, imagenes.subir);
+// El body (multipart) recién existe después de recibir el archivo: params y body se validan juntos ahí.
+catalogoRutas.post("/productos/:id/imagenes", ...gestor, archivoImagen, validar({ params: idParams, body: imagenArchivoSchema }), imagenes.subir);
+catalogoRutas.patch("/productos/:id/imagenes/:imagenId", ...gestor, validar({ params: imagenParams, body: colorImagenSchema }), imagenes.cambiarColor);
 catalogoRutas.post("/productos/:id/imagenes/url", ...gestor, validar({ params: idParams, body: imagenUrlSchema }), imagenes.agregarPorUrl);
 catalogoRutas.put("/productos/:id/imagenes/orden", ...gestor, validar({ params: idParams, body: ordenImagenesSchema }), imagenes.ordenar);
 catalogoRutas.delete("/productos/:id/imagenes/:imagenId", ...gestor, validar({ params: imagenParams }), imagenes.eliminar);

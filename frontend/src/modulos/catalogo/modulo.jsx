@@ -1,10 +1,14 @@
 import { lazy } from "react";
 import { Navigate } from "react-router-dom";
-import { FileSpreadsheet, FolderTree, Package, Store } from "lucide-react";
+import { FileSpreadsheet, FolderTree, Package, Palette, Ruler, Store, Tag } from "lucide-react";
+import { proyecto } from "compartido/proyecto.js";
 import { ROLES_PANEL } from "compartido/reglas/roles.js";
 import { cliente, nombreProductos } from "@/clientes/index.js";
 import MenuCategorias from "./tienda/menu_categorias.jsx";
 import MenuTienda from "./tienda/menu_tienda.jsx";
+
+// proyecto.config.js → catalogo.variantes: colores y talles solo en indumentaria (las marcas, en todos los rubros).
+const USA_TALLE_COLOR = proyecto.catalogo.variantes === "talle_color";
 
 // clientes/<id>/navbar.js → menu_productos. "enlace" (o cualquier otro valor) = un solo link.
 const MENU_PRODUCTOS = {
@@ -40,6 +44,13 @@ export const moduloCatalogo = {
     { path: "catalogo/productos/nuevo", lazy: cargar(() => import("./admin/producto_form_page.jsx")) },
     { path: "catalogo/productos/:id", lazy: cargar(() => import("./admin/producto_form_page.jsx")) },
     { path: "catalogo/categorias", lazy: cargar(() => import("./admin/categorias_page.jsx")) },
+    { path: "catalogo/marcas", lazy: cargar(() => import("./admin/marcas_page.jsx")) },
+    ...(USA_TALLE_COLOR
+      ? [
+          { path: "catalogo/colores", lazy: cargar(() => import("./admin/colores_page.jsx")) },
+          { path: "catalogo/talles", lazy: cargar(() => import("./admin/talles_page.jsx")) },
+        ]
+      : []),
     { path: "catalogo/importar", lazy: cargar(() => import("./admin/importacion/importacion_page.jsx")) },
   ],
 
@@ -51,6 +62,13 @@ export const moduloCatalogo = {
     items: [
       { etiqueta: "Productos", a: "/admin/catalogo/productos", icono: Package },
       { etiqueta: "Categorías", a: "/admin/catalogo/categorias", icono: FolderTree },
+      { etiqueta: "Marcas", a: "/admin/catalogo/marcas", icono: Tag },
+      ...(USA_TALLE_COLOR
+        ? [
+            { etiqueta: "Colores", a: "/admin/catalogo/colores", icono: Palette },
+            { etiqueta: "Talles", a: "/admin/catalogo/talles", icono: Ruler },
+          ]
+        : []),
       { etiqueta: "Importar Excel", a: "/admin/catalogo/importar", icono: FileSpreadsheet },
     ],
   },

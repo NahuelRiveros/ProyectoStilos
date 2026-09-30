@@ -147,7 +147,7 @@ export default function ProductosPage() {
                   celda: (p) => (
                     <>
                       <p className="font-semibold">{p.nombre}</p>
-                      {p.marca && <p className="text-xs text-texto-suave">{p.marca}</p>}
+                      {p.marca && <p className="text-xs text-texto-suave">{p.marca.nombre}</p>}
                     </>
                   ),
                 },

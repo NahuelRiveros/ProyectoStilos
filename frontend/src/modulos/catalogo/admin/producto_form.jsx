@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { proyecto } from "compartido/proyecto.js";
 import { productoSchema } from "compartido/schemas/catalogo.js";
 import Boton from "@/componentes/ui/boton.jsx";
 import CheckboxField from "@/componentes/ui/checkbox_field.jsx";
@@ -10,10 +11,19 @@ import SubmitButton from "@/componentes/ui/submit_button.jsx";
 import TextareaField from "@/componentes/ui/textarea_field.jsx";
 import { aplicarErroresServidor } from "@/utils/errores_formulario.js";
 import CategoriaSelect from "../componentes/categoria_select.jsx";
+import MarcaSelect from "../componentes/marca_select.jsx";
 import PresentacionesEditor from "./presentaciones_editor.jsx";
+import VariantesTalleColorEditor from "./variantes_talle_color_editor.jsx";
 import { valoresIniciales } from "./producto_form_valores.js";
+import { armarProducto, valoresTalleColor } from "./talle_color_valores.js";
 
-const CAMPOS = ["categoria_id", "nombre", "marca", "descripcion", "activo", "publicado", "variantes"];
+const CAMPOS = ["categoria_id", "nombre", "marca_id", "grupo_talle_id", "descripcion", "activo", "publicado", "variantes"];
+
+// Indumentaria: en pantalla se eligen colores y talles; se valida (con el mismo schema del
+// servidor) el producto ya armado con una variante por combinación.
+const TALLE_COLOR = proyecto.catalogo.variantes === "talle_color";
+const validarProducto = zodResolver(productoSchema);
+const resolver = TALLE_COLOR ? (valores, contexto, opciones) => validarProducto(armarProducto(valores), contexto, opciones) : validarProducto;
 
 export default function ProductoForm({ producto, categorias, onGuardar, onCancelar }) {
   const [errorGeneral, setErrorGeneral] = useState("");
@@ -22,8 +32,9 @@ export default function ProductoForm({ producto, categorias, onGuardar, onCancel
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(productoSchema), defaultValues: valoresIniciales(producto) });
+  } = useForm({ resolver, defaultValues: TALLE_COLOR ? valoresTalleColor(producto) : valoresIniciales(producto) });
 
   async function enviar(datos) {
     setErrorGeneral("");
@@ -40,13 +51,17 @@ export default function ProductoForm({ producto, categorias, onGuardar, onCancel
         <h2 className="text-lg font-bold md:col-span-2">Datos del producto</h2>
         <InputField label="Nombre" name="nombre" register={register} error={errors.nombre?.message} required />
         <CategoriaSelect label="Categoría" name="categoria_id" register={register} categorias={categorias} placeholder="Elegí una categoría" error={errors.categoria_id?.message} required />
-        <InputField label="Marca" name="marca" register={register} error={errors.marca?.message} />
+        <MarcaSelect register={register} setValue={setValue} error={errors.marca_id?.message} />
         <div className="md:col-span-2">
           <TextareaField label="Descripción" name="descripcion" register={register} error={errors.descripcion?.message} />
         </div>
       </section>
 
-      <PresentacionesEditor control={control} register={register} errors={errors} />
+      {TALLE_COLOR ? (
+        <VariantesTalleColorEditor control={control} register={register} setValue={setValue} errors={errors} producto={producto} />
+      ) : (
+        <PresentacionesEditor control={control} register={register} errors={errors} />
+      )}
 
       <section className="space-y-3 rounded-2xl border border-borde bg-superficie p-5">
         <h2 className="text-lg font-bold">Publicación</h2>

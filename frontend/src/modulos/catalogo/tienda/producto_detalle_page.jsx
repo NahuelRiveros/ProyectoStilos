@@ -7,6 +7,9 @@ import { cn } from "@/utils/cn.js";
 import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 import { formatearDinero } from "@/utils/formatear_dinero.js";
 import { useProducto } from "../hooks/use_catalogo.js";
+import { fotosDelColor } from "../utils/galeria.js";
+import { usaTalleColor } from "../utils/talle_color.js";
+import SelectorTalleColor from "./selector_talle_color.jsx";
 import { leyendaIva, precioVisible, presentacionMasBarata } from "../utils/precios.js";
 import { ImagenProducto } from "./producto_card.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
@@ -56,15 +59,18 @@ function Detalle({ producto }) {
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <Galeria imagenes={producto.imagenes} nombre={producto.nombre} />
+      {/* key: al cambiar de color la galería vuelve a su primera foto */}
+      <Galeria key={elegida.color_id ?? "general"} imagenes={fotosDelColor(producto.imagenes, elegida.color_id)} nombre={producto.nombre} />
       <div>
-        {producto.marca && <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">{producto.marca}</p>}
+        {producto.marca && <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">{producto.marca.nombre}</p>}
         <h1 className="mt-1 font-titulos text-3xl font-bold">{producto.nombre}</h1>
         <div className="mt-3">
           {pagos && <CintaPago pagos={pagos} />}
         </div>
 
-        {varias && (
+        {usaTalleColor(producto) ? (
+          <SelectorTalleColor producto={producto} elegida={elegida} onElegir={(v) => setElegidaId(v.id)} />
+        ) : varias && (
           <fieldset className="mt-6">
             <legend className="text-sm font-semibold">{etiqueta_variante}</legend>
             <div className="mt-2 flex flex-wrap gap-2">

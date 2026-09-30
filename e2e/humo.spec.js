@@ -32,8 +32,9 @@ test("en celular el menú es lateral, navega y se cierra solo", async ({ page, i
   await expect.poll(async () => Math.round((await menu.boundingBox()).x + (await menu.boundingBox()).width)).toBe(ancho);
   expect((await menu.boundingBox()).width).toBeLessThan(ancho);
 
-  // Por dirección y no por texto: el nombre ("Productos", "Tienda"…) lo elige cada cliente
-  await menu.locator("a[href='/catalogo']").click();
+  // Por dirección y no por texto: el nombre ("Productos", "Tienda"…) lo elige cada cliente, y con el
+  // menú por categorías el link es a una categoría (/catalogo?categoria=…) en vez de a /catalogo.
+  await menu.locator("a[href^='/catalogo']").first().click();
   await expect(page).toHaveURL(/\/catalogo/);
   await expect(menu).toBeHidden();
 });

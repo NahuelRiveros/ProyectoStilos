@@ -2,12 +2,18 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http as mock, HttpResponse } from "msw";
 import { Route, Routes } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { proyecto } from "compartido/proyecto.js";
 import { API, servidorMock } from "@/test/servidor_mock.js";
 import { renderizar } from "@/test/renderizar.jsx";
 import { categoriasEjemplo, productoEjemplo } from "@/test/datos_catalogo.js";
 import ProductoFormPage from "./producto_form_page.jsx";
+
+// Este archivo prueba el modo "presentacion" (variantes con nombre libre), sea cual sea el cliente activo.
+vi.mock("compartido/proyecto.js", async (original) => {
+  const { proyecto: real } = await original();
+  return { proyecto: { ...real, catalogo: { ...real.catalogo, variantes: "presentacion" } } };
+});
 
 // El nombre de la variante depende del rubro ("Presentación", "Talle y color"...).
 const VARIANTE = proyecto.catalogo.etiqueta_variante;
@@ -26,6 +32,8 @@ function renderizarFormulario(ruta) {
 const categorias = () => mock.get(`${API}/catalogo/categorias`, () => HttpResponse.json({ ok: true, data: categoriasEjemplo }));
 
 describe("Admin · Formulario de producto", () => {
+  beforeEach(() => servidorMock.use(mock.get(`${API}/catalogo/marcas`, () => HttpResponse.json({ ok: true, data: [{ id: 1, nombre: "Oreo" }, { id: 2, nombre: "Terrabusi" }] }))));
+
   it("valida antes de enviar", async () => {
     servidorMock.use(categorias());
     renderizarFormulario("/admin/catalogo/productos/nuevo");
@@ -51,6 +59,8 @@ describe("Admin · Formulario de producto", () => {
     const datos = (await screen.findByRole("heading", { name: "Datos del producto" })).closest("section");
     await userEvent.type(within(datos).getByLabelText(/^Nombre/), "Yerba Playadito");
     await userEvent.selectOptions(within(datos).getByLabelText(/^Categoría/), "3");
+    await within(datos).findByRole("option", { name: "Terrabusi" });
+    await userEvent.selectOptions(within(datos).getByLabelText(/^Marca/), "Terrabusi");
 
     const primera = screen.getByRole("listitem", { name: `${VARIANTE} 1` });
     await userEvent.type(within(primera).getByLabelText(/^Nombre/), "500 g");
@@ -71,6 +81,7 @@ describe("Admin · Formulario de producto", () => {
     expect(enviado).toMatchObject({
       categoria_id: 3,
       nombre: "Yerba Playadito",
+      marca_id: 2,
       variantes: [
         { nombre: "500 g", precio: 1000.5, iva_porcentaje: 21 },
         { nombre: "1 kg", precio: 1900, iva_porcentaje: 10.5 },

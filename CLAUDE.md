@@ -64,7 +64,7 @@ otra en `frontend/src/modulos/`; borrar ambas carpetas debe eliminarlo sin rompe
 | Módulo      | Contenido                                                              | Depende de |
 | ----------- | ---------------------------------------------------------------------- | ---------- |
 | `nucleo`    | usuarios, auth, roles, subida de imágenes, Home/navbar/footer (siempre activo). Panel: Sistema → Usuarios (solo admin; permisos en `compartido/reglas/usuarios.js`) | —   |
-| `catalogo`  | categorías (árbol), productos, variantes, precios/IVA, importación Excel/CSV | nucleo |
+| `catalogo`  | categorías (árbol), productos, variantes, precios/IVA, importación Excel/CSV. Listas del panel: Marcas (todos los rubros; el producto guarda `marca_id`) y, con `catalogo.variantes: "talle_color"` (indumentaria), Colores y Grupos de talles; con `"presentacion"` (por defecto, distribuidoras) la variante es texto libre. Tienda: filtros por marca, color y talle (`GET /catalogo/productos/filtros` dice qué hay en lo que se está viendo; color y talle se cumplen en la misma variante) | nucleo |
 | `stock`     | stock por variante, movimientos (kardex), ajustes, alertas de mínimo   | catalogo   |
 | `tienda`    | catálogo público, carrito (invitado + cuenta), pedidos, cobros, perfil cliente | catalogo |
 | `caja`      | ingresos y egresos con categoría y medio de pago, calendario, balance anual, Excel. Los cobros de pedidos entran solos (se leen de `pedido_cobro`, no se copian). Solo admin | — (usa tienda si está activa) |

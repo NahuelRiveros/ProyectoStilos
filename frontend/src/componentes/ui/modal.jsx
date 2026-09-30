@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/utils/cn.js";
 
@@ -23,10 +24,13 @@ export default function Modal({ abierto = true, onCerrar, titulo, children, ocup
 
   if (!abierto) return null;
 
-  return (
+  // Portal + stopPropagation: un modal abierto desde un formulario (ej. "Nueva marca" dentro del
+  // producto) no queda como <form> adentro de otro, y guardarlo no envía también el de afuera.
+  return createPortal(
     <dialog
       ref={ref}
       aria-labelledby={idTitulo}
+      onSubmit={(e) => e.stopPropagation()}
       onCancel={(e) => {
         e.preventDefault();
         if (!ocupado) onCerrar();
@@ -54,6 +58,7 @@ export default function Modal({ abierto = true, onCerrar, titulo, children, ocup
         </button>
       </div>
       <div className="p-4">{children}</div>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }

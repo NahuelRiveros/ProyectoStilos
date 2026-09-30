@@ -41,6 +41,27 @@ describe("Admin · Categorías", () => {
     expect(enviado).toEqual({ nombre: "Aguas", padre_id: 3, orden: 0, en_menu: false });
   });
 
+  it("duplica una categoría con sus subcategorías pidiendo el nombre nuevo", async () => {
+    let enviado;
+    servidorMock.use(
+      mock.get(`${API}/catalogo/categorias`, () => HttpResponse.json({ ok: true, data: categoriasEjemplo })),
+      mock.post(`${API}/catalogo/categorias/1/duplicar`, async ({ request }) => {
+        enviado = await request.json();
+        return HttpResponse.json({ ok: true, data: { categoria: { id: 9, nombre: enviado.nombre }, creadas: 2 } }, { status: 201 });
+      }),
+    );
+    renderizar(<CategoriasPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Duplicar Almacén" }));
+    const dialogo = screen.getByRole("dialog", { name: 'Duplicar "Almacén"' });
+    expect(within(dialogo).getByText(/todas sus subcategorías/)).toBeInTheDocument();
+    await userEvent.type(within(dialogo).getByLabelText(/^Nombre de la copia/), "Almacén mayorista");
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Duplicar" }));
+
+    expect(await screen.findByText('Se creó "Almacén mayorista" (2 categorías)')).toBeInTheDocument();
+    expect(enviado).toEqual({ nombre: "Almacén mayorista" });
+  });
+
   it("explica por qué no se puede eliminar una categoría con productos", async () => {
     servidorMock.use(
       mock.get(`${API}/catalogo/categorias`, () => HttpResponse.json({ ok: true, data: categoriasEjemplo })),

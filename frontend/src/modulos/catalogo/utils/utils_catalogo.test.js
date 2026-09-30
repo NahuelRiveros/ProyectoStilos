@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { aplanarConNivel, armarArbol, idsDelSubarbol, nivelDeCategoria, rutaCategoria, totalConSubcategorias } from "./arbol.js";
+import { alternarId, filtrosActivos, leerIds } from "./filtros_url.js";
+import { coloresDelProducto, fotosDelColor } from "./galeria.js";
+import { colorAgotado, tallesDelColor, usaTalleColor, varianteAlCambiarColor } from "./talle_color.js";
 import { precioVisible, presentacionMasBarata } from "./precios.js";
 
 const categorias = [
@@ -63,6 +66,73 @@ describe("filtro por niveles", () => {
 
   it("un id que no existe se trata como sin elegir", () => {
     expect(nivelDeCategoria(ropa, "99").padre).toBeNull();
+  });
+});
+
+describe("fotos por color", () => {
+  const imagenes = [
+    { id: 1, color_id: 1 },
+    { id: 2, color_id: null },
+    { id: 3, color_id: 2 },
+    { id: 4, color_id: 1 },
+  ];
+  const ids = (lista) => lista.map((i) => i.id);
+
+  it("con un color: primero sus fotos y después las generales", () => {
+    expect(ids(fotosDelColor(imagenes, 1))).toEqual([1, 4, 2]);
+  });
+
+  it("sin color elegido, todas; con un color sin fotos, las generales; y nunca queda vacía", () => {
+    expect(ids(fotosDelColor(imagenes, null))).toEqual([1, 2, 3, 4]);
+    expect(ids(fotosDelColor(imagenes, 9))).toEqual([2]);
+    expect(ids(fotosDelColor([{ id: 5, color_id: 1 }], 9))).toEqual([5]);
+  });
+
+  it("los colores de la prenda salen sin repetir y en el orden del panel", () => {
+    const negro = { id: 1, nombre: "Negro", orden: 2 };
+    const blanco = { id: 2, nombre: "Blanco", orden: 1 };
+    const producto = { variantes: [{ color: negro }, { color: blanco }, { color: negro }, { color: null }] };
+    expect(coloresDelProducto(producto).map((c) => c.nombre)).toEqual(["Blanco", "Negro"]);
+  });
+});
+
+describe("talle y color en la ficha", () => {
+  const variantes = [
+    { id: 1, color_id: 1, talle_id: 10, talle: { orden: 1 }, disponibilidad: "disponible" },
+    { id: 2, color_id: 1, talle_id: 9, talle: { orden: 0 }, disponibilidad: "disponible" },
+    { id: 3, color_id: 2, talle_id: 9, talle: { orden: 0 }, disponibilidad: "sin_stock" },
+    { id: 4, color_id: 2, talle_id: 11, talle: { orden: 2 }, disponibilidad: "disponible" },
+  ];
+
+  it("detecta si el producto usa talle/color y lista los talles de un color en orden", () => {
+    expect(usaTalleColor({ variantes })).toBe(true);
+    expect(usaTalleColor({ variantes: [{ id: 1, nombre: "500 g" }] })).toBe(false);
+    expect(tallesDelColor(variantes, 1).map((v) => v.id)).toEqual([2, 1]);
+  });
+
+  it("al cambiar de color conserva el talle si existe; si no, el primero con stock", () => {
+    expect(varianteAlCambiarColor(variantes, variantes[1], 2).id).toBe(3); // mismo talle (aunque sin stock)
+    expect(varianteAlCambiarColor(variantes, variantes[0], 2).id).toBe(4); // talle 10 no existe en el color 2
+    expect(colorAgotado(variantes, 2)).toBe(false);
+    expect(colorAgotado([variantes[2]], 2)).toBe(true);
+  });
+});
+
+describe("filtros en la URL", () => {
+  it("lee listas de ids ignorando basura y alterna uno", () => {
+    expect(leerIds("1,3,x,,0")).toEqual([1, 3]);
+    expect(alternarId("1,3", 3)).toBe("1");
+    expect(alternarId("", 5)).toBe("5");
+  });
+
+  it("arma los chips con el nombre de cada filtro elegido (y omite los que ya no existen)", () => {
+    const disponibles = { marcas: [{ id: 1, nombre: "Levis" }], colores: [{ id: 10, nombre: "Negro", hex: "#111" }], talles: [{ id: 51, nombre: "M" }] };
+    expect(filtrosActivos({ marca: "1", color: "10,99", talle: "51" }, disponibles)).toEqual([
+      { clave: "marca", id: 1, nombre: "Levis", hex: undefined },
+      { clave: "color", id: 10, nombre: "Negro", hex: "#111" },
+      { clave: "talle", id: 51, nombre: "Talle M", hex: undefined },
+    ]);
+    expect(filtrosActivos({ color: "10" }, undefined)).toEqual([]);
   });
 });
 

@@ -31,6 +31,7 @@ const FILTRO_ESTADO = {
 const DESDE = `FROM ${S}.variante v
   JOIN ${S}.producto p ON p.id = v.producto_id
   JOIN ${S}.categoria c ON c.id = p.categoria_id
+  LEFT JOIN ${S}.marca m ON m.id = p.marca_id
   LEFT JOIN ${S}.stock s ON s.variante_id = v.id
   WHERE v.eliminado_en IS NULL AND p.eliminado_en IS NULL`;
 
@@ -39,7 +40,7 @@ export async function listarExistencias({ q, categoria, estado = "todos", pagina
   const replacements = { limite: pag.limite, offset: pag.offset };
   let filtros = FILTRO_ESTADO[estado] ?? "";
   if (q) {
-    filtros += " AND (p.nombre ILIKE :patron OR v.nombre ILIKE :patron OR v.sku ILIKE :patron OR p.marca ILIKE :patron)";
+    filtros += " AND (p.nombre ILIKE :patron OR v.nombre ILIKE :patron OR v.sku ILIKE :patron OR m.nombre ILIKE :patron)";
     replacements.patron = patronContiene(q);
   }
   if (categoria) {

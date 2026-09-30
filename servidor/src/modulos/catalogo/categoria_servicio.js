@@ -119,6 +119,42 @@ export async function actualizarCategoria(id, { nombre, padre_id, orden, en_menu
   });
 }
 
+/**
+ * Copia la categoría con todas sus subcategorías (sin productos), al mismo nivel y con otro nombre.
+ * Ej.: armar "Hombres" completo y duplicarlo como "Mujeres" en vez de cargarlo dos veces.
+ */
+export async function duplicarCategoria(id, { nombre }) {
+  return sequelize.transaction(async (transaction) => {
+    const origen = await buscarCategoriaActiva(id, { transaction });
+    await validarNombreLibre({ nombre, padre_id: origen.padre_id, transaction });
+
+    // Todo el subárbol en una consulta, de arriba hacia abajo (cada padre se crea antes que sus hijas).
+    const subarbol = await sequelize.query(
+      `WITH RECURSIVE arbol AS (
+         SELECT id, padre_id, nombre, orden, en_menu, 0 AS nivel FROM ${DB_SCHEMA}.categoria WHERE id = :id
+         UNION ALL
+         SELECT c.id, c.padre_id, c.nombre, c.orden, c.en_menu, a.nivel + 1
+         FROM ${DB_SCHEMA}.categoria c JOIN arbol a ON c.padre_id = a.id WHERE c.eliminado_en IS NULL
+       ) SELECT * FROM arbol ORDER BY nivel, orden, nombre`,
+      { replacements: { id: origen.id }, type: QueryTypes.SELECT, transaction },
+    );
+
+    const nuevoId = new Map();
+    for (const c of subarbol) {
+      const esRaiz = c.id === origen.id;
+      const nombreCopia = esRaiz ? nombre : c.nombre;
+      const slug = await generarSlugUnico(Categoria, nombreCopia, { largo: 90, transaction });
+      const copia = await Categoria.create(
+        { nombre: nombreCopia, padre_id: esRaiz ? origen.padre_id : nuevoId.get(c.padre_id), orden: c.orden, en_menu: c.en_menu, slug },
+        { transaction },
+      );
+      nuevoId.set(c.id, copia.id);
+    }
+    const categoria = await Categoria.findByPk(nuevoId.get(origen.id), { attributes: ATRIBUTOS, raw: true, transaction });
+    return { categoria, creadas: subarbol.length };
+  });
+}
+
 // Baja lógica. No se permite si le quedan productos o subcategorías: evita dejar
 // productos "colgados" de una categoría invisible.
 export async function eliminarCategoria(id) {

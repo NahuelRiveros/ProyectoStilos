@@ -52,7 +52,18 @@ export const proyecto = {
     alicuotas_iva: [21, 10.5, 27, 0],
     productos_por_pagina: 24,
     max_niveles_categoria: 10,
-    max_imagenes_producto: 10,
+    // Indumentaria: varias fotos por color en el mismo producto (ej. 15 colores de una remera).
+    max_imagenes_producto: 40,
+    // Cómo se arman las variantes:
+    //   "presentacion" → texto libre ("500 g", "1 kg"). Distribuidoras.
+    //   "talle_color"  → se eligen de las listas de Colores y Talles del panel (indumentaria).
+    variantes: "talle_color",
+    // Grupos que ofrece el botón "Cargar grupos sugeridos" en Catálogo → Talles (se pueden editar después).
+    grupos_talle_sugeridos: [
+      { nombre: "Ropa", talles: ["S", "M", "L", "XL", "XXL", "XXXL"] },
+      { nombre: "Jeans", talles: ["36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56"] },
+      { nombre: "Calzado", talles: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"] },
+    ],
   },
 
   tienda: {

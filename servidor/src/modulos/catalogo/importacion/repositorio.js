@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { sequelize } from "../../../nucleo/db/sequelize.js";
 import { Categoria, Producto, Variante } from "../modelos.js";
 import { generarSlugUnico } from "../slugs.js";
+import { idsDeMarcas } from "../atributos_servicio.js";
 import { Stock } from "../../stock/modelos.js";
 import { registrarMovimientos } from "../../stock/movimientos.js";
 import { claveTexto } from "./normalizar.js";
@@ -74,6 +75,8 @@ export async function aplicarPlan(plan, catalogo, transaction, { usuario_id = nu
 
   // Productos que faltan (varias filas pueden ser presentaciones del mismo producto nuevo).
   const idPorProducto = new Map(catalogo.productos.map((p) => [claveGrupo(rutas.get(p.categoria_id), p.nombre), p.id]));
+  // La marca escrita en el archivo se busca en la lista de Marcas; si no está, se agrega.
+  const marcaPorNombre = await idsDeMarcas(altas.filter((f) => !f.producto_id).map((f) => f.valor.marca), { transaction });
   let productosNuevos = 0;
   for (const fila of altas) {
     if (fila.producto_id) continue;
@@ -81,7 +84,13 @@ export async function aplicarPlan(plan, catalogo, transaction, { usuario_id = nu
     if (idPorProducto.has(clave)) continue;
     const slug = await generarSlugUnico(Producto, fila.valor.producto, { largo: 170, transaction });
     const producto = await Producto.create(
-      { nombre: fila.valor.producto, categoria_id: idPorRuta.get(claveTexto(fila.valor.categoria)), marca: fila.valor.marca, descripcion: fila.valor.descripcion, slug },
+      {
+        nombre: fila.valor.producto,
+        categoria_id: idPorRuta.get(claveTexto(fila.valor.categoria)),
+        marca_id: fila.valor.marca ? marcaPorNombre.get(fila.valor.marca.toLowerCase()) : null,
+        descripcion: fila.valor.descripcion,
+        slug,
+      },
       { transaction },
     );
     idPorProducto.set(clave, producto.id);

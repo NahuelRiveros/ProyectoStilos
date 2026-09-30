@@ -2,9 +2,9 @@ import { proyecto } from "compartido/proyecto.js";
 import { sequelize } from "../../nucleo/db/sequelize.js";
 import { Conflicto, DatosInvalidos, NoEncontrado } from "../../nucleo/errores.js";
 import { eliminarImagenGuardada, subirImagen } from "../../nucleo/imagenes.js";
-import { Producto, ProductoImagen } from "./modelos.js";
+import { Producto, ProductoImagen, Variante } from "./modelos.js";
 
-const ATRIBUTOS = ["id", "producto_id", "url", "alt", "orden"];
+const ATRIBUTOS = ["id", "producto_id", "url", "alt", "color_id", "orden"];
 
 async function productoConLugar(producto_id, transaction) {
   const producto = await Producto.findOne({ where: { id: producto_id, eliminado_en: null }, attributes: ["id", "nombre"], transaction });
@@ -16,20 +16,30 @@ async function productoConLugar(producto_id, transaction) {
   return { producto, orden: orden + 1 };
 }
 
+// La foto solo puede ser de un color que la prenda tenga (así la tienda la muestra al elegirlo).
+async function validarColor({ producto_id, color_id, transaction }) {
+  if (color_id == null) return;
+  const tiene = await Variante.findOne({ where: { producto_id, color_id, eliminado_en: null }, attributes: ["id"], transaction });
+  if (!tiene) throw new DatosInvalidos("Revisá los datos ingresados.", [{ campo: "color_id", mensaje: "Ese color no está entre los de la prenda" }]);
+}
+
 function plano(imagen) {
-  const { id, producto_id, url, alt, orden } = imagen.get({ plain: true });
-  return { id, producto_id, url, alt, orden };
+  const { id, producto_id, url, alt, color_id, orden } = imagen.get({ plain: true });
+  return { id, producto_id, url, alt, color_id, orden };
 }
 
 /** Sube el archivo al almacén y lo registra al final de la galería del producto. */
-export async function agregarImagenArchivo(producto_id, archivo, { alt = null } = {}) {
+export async function agregarImagenArchivo(producto_id, archivo, { alt = null, color_id = null } = {}) {
   if (!archivo) throw new DatosInvalidos("Elegí una imagen para subir.");
   const { producto } = await productoConLugar(producto_id);
+  await validarColor({ producto_id, color_id });
   const subida = await subirImagen(archivo.buffer, { carpeta: "productos" });
   try {
     return await sequelize.transaction(async (transaction) => {
       const { orden } = await productoConLugar(producto_id, transaction);
-      return plano(await ProductoImagen.create({ producto_id, url: subida.url, public_id: subida.public_id, alt: alt ?? producto.nombre, orden }, { transaction }));
+      return plano(
+        await ProductoImagen.create({ producto_id, url: subida.url, public_id: subida.public_id, alt: alt ?? producto.nombre, color_id, orden }, { transaction }),
+      );
     });
   } catch (error) {
     // No dejar la imagen huérfana en el almacén si no se pudo registrar.
@@ -39,10 +49,22 @@ export async function agregarImagenArchivo(producto_id, archivo, { alt = null } 
 }
 
 /** Imagen alojada en otro lado (https). Útil si no hay almacén configurado. */
-export async function agregarImagenUrl(producto_id, { url, alt }) {
+export async function agregarImagenUrl(producto_id, { url, alt, color_id = null }) {
   return sequelize.transaction(async (transaction) => {
     const { producto, orden } = await productoConLugar(producto_id, transaction);
-    return plano(await ProductoImagen.create({ producto_id, url, alt: alt ?? producto.nombre, orden }, { transaction }));
+    await validarColor({ producto_id, color_id, transaction });
+    return plano(await ProductoImagen.create({ producto_id, url, alt: alt ?? producto.nombre, color_id, orden }, { transaction }));
+  });
+}
+
+/** Cambia de qué color es una foto ya subida (null = general). */
+export async function cambiarColorImagen(producto_id, imagen_id, { color_id }) {
+  return sequelize.transaction(async (transaction) => {
+    const imagen = await ProductoImagen.findOne({ where: { id: imagen_id, producto_id }, transaction });
+    if (!imagen) throw new NoEncontrado("La imagen no existe.", "IMAGEN_NO_ENCONTRADA");
+    await validarColor({ producto_id, color_id, transaction });
+    await imagen.update({ color_id }, { transaction });
+    return plano(imagen);
   });
 }
 

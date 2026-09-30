@@ -56,6 +56,8 @@ sobre `fondo` (se usa en textos destacados).
 ## Paso 4 — Configuración del negocio (`proyecto.config.js`)
 - `modulos`: prender solo lo contratado (`catalogo`, `stock`, `tienda`, `caja`).
 - `catalogo.etiqueta_variante` / `etiqueta_variantes` según el rubro.
+- `catalogo.variantes`: `"presentacion"` (distribuidora, texto libre) o `"talle_color"` (indumentaria: Colores y Talles en el panel,
+  con `grupos_talle_sugeridos` para el botón "Cargar grupos sugeridos"). Las Marcas son una lista del panel en todos los rubros.
 - `tienda.filtro_categorias`: `"arbol"` (distribuidora) o `"niveles"` (indumentaria: Mujer › Jeans, chips en el celular).
 - `tienda.modalidades_entrega` (envío / retiro), `tienda.pedido_minimo`, `usuarios.registro_publico`.
 - `pagos`: son solo los **valores iniciales**. Los reales (CBU, cuotas, promociones) los carga el

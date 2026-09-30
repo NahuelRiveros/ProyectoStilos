@@ -1,14 +1,18 @@
-import { agregarImagenArchivo, agregarImagenUrl, eliminarImagen, ordenarImagenes } from "./imagen_servicio.js";
+import { agregarImagenArchivo, agregarImagenUrl, cambiarColorImagen, eliminarImagen, ordenarImagenes } from "./imagen_servicio.js";
 
 export async function subir(req, res) {
-  const alt = typeof req.body?.alt === "string" && req.body.alt.trim() ? req.body.alt.trim().slice(0, 150) : null;
-  const data = await agregarImagenArchivo(req.datos.params.id, req.file, { alt });
+  const data = await agregarImagenArchivo(req.datos.params.id, req.file, req.datos.body);
   res.status(201).json({ ok: true, data });
 }
 
 export async function agregarPorUrl(req, res) {
   const data = await agregarImagenUrl(req.datos.params.id, req.datos.body);
   res.status(201).json({ ok: true, data });
+}
+
+export async function cambiarColor(req, res) {
+  const data = await cambiarColorImagen(req.datos.params.id, req.datos.params.imagenId, req.datos.body);
+  res.json({ ok: true, data });
 }
 
 export async function eliminar(req, res) {

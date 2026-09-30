@@ -138,6 +138,65 @@ describe("Admin · Imágenes del producto", () => {
 
     await userEvent.type(screen.getByLabelText("O pegá la dirección de una imagen"), "https://web.com/c.jpg");
     await userEvent.click(screen.getByRole("button", { name: "Agregar" }));
-    await waitFor(() => expect(cuerpo).toEqual({ url: "https://web.com/c.jpg" }));
+    await waitFor(() => expect(cuerpo).toEqual({ url: "https://web.com/c.jpg", color_id: null }));
+  });
+});
+
+describe("Admin · Fotos por color", () => {
+  const NEGRO = { id: 1, nombre: "Negro", hex: "#111111", orden: 0 };
+  const BLANCO = { id: 2, nombre: "Blanco", hex: "#FFFFFF", orden: 1 };
+  const remera = productoEjemplo({
+    variantes: [
+      { id: 100, nombre: "Negro · S", color_id: 1, color: NEGRO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+      { id: 101, nombre: "Blanco · S", color_id: 2, color: BLANCO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+    ],
+    imagenes: [
+      { id: 1, url: "https://cdn.test/negro.webp", alt: "N", color_id: 1, orden: 0 },
+      { id: 2, url: "https://cdn.test/general.webp", alt: "G", color_id: null, orden: 1 },
+      { id: 3, url: "https://cdn.test/negro2.webp", alt: "N2", color_id: 1, orden: 2 },
+    ],
+  });
+
+  it("filtra por color y lo que se agrega con un color elegido queda con ese color", async () => {
+    let cuerpo;
+    servidorMock.use(
+      mock.post(`${API}/catalogo/productos/10/imagenes/url`, async ({ request }) => {
+        cuerpo = await request.json();
+        return HttpResponse.json({ ok: true, data: { id: 4 } }, { status: 201 });
+      }),
+    );
+    renderizar(<ImagenesProducto producto={remera} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Negro (2)" }));
+    const lista = screen.getByRole("list", { name: "Imágenes del producto" });
+    expect(within(lista).getAllByRole("img").map((i) => i.getAttribute("alt"))).toEqual(["N", "N2"]);
+    expect(screen.getByRole("button", { name: "Subir fotos de Negro" })).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("O pegá la dirección de una imagen"), "https://web.com/n3.jpg");
+    await userEvent.click(screen.getByRole("button", { name: "Agregar" }));
+    await waitFor(() => expect(cuerpo).toEqual({ url: "https://web.com/n3.jpg", color_id: 1 }));
+  });
+
+  it("cambia el color de una foto y, filtrando, reordena entre las de ese color", async () => {
+    let color, orden;
+    servidorMock.use(
+      mock.patch(`${API}/catalogo/productos/10/imagenes/2`, async ({ request }) => {
+        color = (await request.json()).color_id;
+        return HttpResponse.json({ ok: true, data: {} });
+      }),
+      mock.put(`${API}/catalogo/productos/10/imagenes/orden`, async ({ request }) => {
+        orden = (await request.json()).ids;
+        return HttpResponse.json({ ok: true, data: [] });
+      }),
+    );
+    renderizar(<ImagenesProducto producto={remera} />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Color de la imagen 2"), "Blanco");
+    await waitFor(() => expect(color).toBe(2));
+
+    // Con "Negro" filtrado, la 3 (negra) pasa antes que la 1 (negra); la general queda en su lugar.
+    await userEvent.click(screen.getByRole("button", { name: "Negro (2)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Mover imagen 3 antes" }));
+    await waitFor(() => expect(orden).toEqual([3, 2, 1]));
   });
 });
