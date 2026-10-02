@@ -115,7 +115,10 @@ export default function ImagenesProducto({ producto }) {
       <h2 id="titulo-imagenes" className="text-lg font-bold">
         Imágenes
       </h2>
-      <p className="text-sm text-texto-suave">La primera es la principal (la que se ve en el catálogo). Cada imagen, hasta {MAX_MB} MB.</p>
+      <p className="text-sm text-texto-suave">
+        La primera es la principal (la que se ve en el listado de la tienda). Cada imagen, hasta {MAX_MB} MB. Usá fotos cuadradas: en el listado se
+        muestran así y las verticales se recortan arriba y abajo. Con las flechas cambiás el orden.
+      </p>
       <FiltroFotosColor imagenes={imagenes} colores={colores} filtro={filtro} onFiltrar={setFiltro} />
 
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5" aria-label="Imágenes del producto">

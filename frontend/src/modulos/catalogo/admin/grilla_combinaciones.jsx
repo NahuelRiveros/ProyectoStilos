@@ -25,10 +25,25 @@ export default function GrillaCombinaciones({ register, errors, colores, talles,
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-texto-suave">
-        {combinaciones.length} combinación{combinaciones.length === 1 ? "" : "es"}.
-        {CON_STOCK && " Stock inicial vacío = esa combinación no controla stock."}
-      </p>
+      <div className="rounded-xl bg-fondo p-3 text-sm text-texto-suave">
+        <p className="font-semibold text-texto">
+          {combinaciones.length} combinación{combinaciones.length === 1 ? "" : "es"}. En cada una podés completar:
+        </p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-5">
+          <li>
+            <strong className="text-texto">Código</strong> (opcional): el que usás vos. Sirve para encontrarla y para actualizar precios o stock desde Excel.
+          </li>
+          {CON_STOCK && (
+            <li>
+              <strong className="text-texto">Stock inicial</strong>: cuántas unidades tenés hoy. Vacío = no se controla el stock de esa combinación. Después se
+              cambia desde Stock.
+            </li>
+          )}
+          <li>
+            <strong className="text-texto">A la venta</strong>: destildalo si esa combinación no se vende por ahora (no se borra).
+          </li>
+        </ul>
+      </div>
       {grupos.map((color_id) => {
         const color = colorPorId.get(color_id);
         return (

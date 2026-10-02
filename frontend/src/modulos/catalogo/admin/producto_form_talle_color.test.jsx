@@ -45,6 +45,25 @@ async function completarDatos() {
 describe("Admin · Producto con talles y colores", () => {
   beforeEach(() => servidorMock.use(lista("categorias", categoriasEjemplo), lista("marcas", []), lista("colores", COLORES), lista("grupos-talle", GRUPOS)));
 
+  it("guía al que carga: pasos abiertos al crear y ayuda debajo de cada campo", async () => {
+    renderizarFormulario("/admin/catalogo/productos/nuevo");
+    const guia = (await screen.findByText("Cómo cargar un producto, paso a paso")).closest("details");
+    expect(guia).toHaveAttribute("open");
+    expect(within(guia).getByText(/hasta 4 fotos de cada color/)).toBeInTheDocument();
+
+    expect(screen.getByLabelText(/^Nombre/)).toHaveAccessibleDescription(/Sin color ni talle/);
+    expect(screen.getByLabelText(/^Categoría/)).toHaveAccessibleDescription(/Dónde aparece en la tienda/);
+    expect(screen.getByLabelText("Marca")).toHaveAccessibleDescription(/tocá «Nueva»/);
+    expect(screen.getByLabelText(/^Grupo de talles/)).toHaveAccessibleDescription(/Ropa \(S a XXXL\)/);
+  });
+
+  it("al editar, la guía queda cerrada para no ocupar lugar", async () => {
+    servidorMock.use(lista("productos/10", productoEjemplo()));
+    renderizarFormulario("/admin/catalogo/productos/10");
+    const guia = (await screen.findByText("Cómo cargar un producto, paso a paso")).closest("details");
+    expect(guia).not.toHaveAttribute("open");
+  });
+
   it("arma una variante por color y talle, con el mismo precio y el stock inicial de cada una", async () => {
     let enviado;
     servidorMock.use(

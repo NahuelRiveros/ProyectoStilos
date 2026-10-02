@@ -5,6 +5,7 @@ import { Cargando, ErrorCarga, Vacio } from "@/componentes/ui/estado_carga.jsx";
 import Boton from "@/componentes/ui/boton.jsx";
 import { useCategorias, useGuardarProducto, useProducto } from "../hooks/use_catalogo.js";
 import ProductoForm from "./producto_form.jsx";
+import GuiaCargaProducto from "./guia_carga_producto.jsx";
 import ImagenesProducto from "./imagenes_producto.jsx";
 
 const LISTADO = "/admin/catalogo/productos";
@@ -46,8 +47,12 @@ export default function ProductoFormPage() {
   } else {
     contenido = (
       <div className="space-y-6">
+        <GuiaCargaProducto abierta={esNuevo} />
         {esNuevo ? (
-          <p className="rounded-xl bg-fondo p-3 text-sm text-texto-suave">Las imágenes se agregan después de guardar el producto.</p>
+          <p className="rounded-xl bg-fondo p-3 text-sm text-texto-suave">
+            <strong className="text-texto">Las fotos se suben después de guardar.</strong> Al tocar «Guardar producto» te quedás en esta pantalla y aparece
+            la sección de fotos.
+          </p>
         ) : (
           <ImagenesProducto producto={producto.data} />
         )}

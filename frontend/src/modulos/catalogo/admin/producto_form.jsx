@@ -23,6 +23,9 @@ const CAMPOS = ["categoria_id", "nombre", "marca_id", "grupo_talle_id", "descrip
 // servidor) el producto ya armado con una variante por combinación.
 const TALLE_COLOR = proyecto.catalogo.variantes === "talle_color";
 const validarProducto = zodResolver(productoSchema);
+const AYUDA_NOMBRE = TALLE_COLOR
+  ? "Como lo va a ver el cliente, ej. «Remera lisa de algodón». Sin color ni talle: se eligen más abajo."
+  : "Como lo va a ver el cliente, ej. «Yerba mate suave». Sin el tamaño: va en cada presentación.";
 const resolver = TALLE_COLOR ? (valores, contexto, opciones) => validarProducto(armarProducto(valores), contexto, opciones) : validarProducto;
 
 export default function ProductoForm({ producto, categorias, onGuardar, onCancelar }) {
@@ -49,11 +52,26 @@ export default function ProductoForm({ producto, categorias, onGuardar, onCancel
     <form onSubmit={handleSubmit(enviar)} noValidate className="space-y-6">
       <section className="grid gap-4 rounded-2xl border border-borde bg-superficie p-5 md:grid-cols-2">
         <h2 className="text-lg font-bold md:col-span-2">Datos del producto</h2>
-        <InputField label="Nombre" name="nombre" register={register} error={errors.nombre?.message} required />
-        <CategoriaSelect label="Categoría" name="categoria_id" register={register} categorias={categorias} placeholder="Elegí una categoría" error={errors.categoria_id?.message} required />
-        <MarcaSelect register={register} setValue={setValue} error={errors.marca_id?.message} />
+        <InputField label="Nombre" name="nombre" register={register} error={errors.nombre?.message} required ayuda={AYUDA_NOMBRE} />
+        <CategoriaSelect
+          label="Categoría"
+          name="categoria_id"
+          register={register}
+          categorias={categorias}
+          placeholder="Elegí una categoría"
+          error={errors.categoria_id?.message}
+          required
+          ayuda="Dónde aparece en la tienda. Si falta, creala en Catálogo → Categorías."
+        />
+        <MarcaSelect register={register} setValue={setValue} error={errors.marca_id?.message} ayuda="Opcional. Si no está en la lista, tocá «Nueva»." />
         <div className="md:col-span-2">
-          <TextareaField label="Descripción" name="descripcion" register={register} error={errors.descripcion?.message} />
+          <TextareaField
+            label="Descripción"
+            name="descripcion"
+            register={register}
+            error={errors.descripcion?.message}
+            ayuda="Opcional. Se ve en la página del producto: material, calce, cuidados, medidas…"
+          />
         </div>
       </section>
 

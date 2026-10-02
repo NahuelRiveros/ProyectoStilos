@@ -1,9 +1,10 @@
 import { useId } from "react";
 import { cn } from "@/utils/cn.js";
 
-/** opciones: [{ valor, etiqueta, deshabilitada? }] */
-export default function SelectField({ label, name, register, error, opciones = [], placeholder, required = false, className = "", ...resto }) {
+/** opciones: [{ valor, etiqueta, deshabilitada? }]. `ayuda`: texto debajo (el error lo reemplaza). */
+export default function SelectField({ label, name, register, error, ayuda, opciones = [], placeholder, required = false, className = "", ...resto }) {
   const id = `${name}-${useId()}`;
+  const mensaje = error ?? ayuda;
   return (
     <div className="w-full">
       {label && (
@@ -15,7 +16,7 @@ export default function SelectField({ label, name, register, error, opciones = [
       <select
         id={id}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
+        aria-describedby={mensaje ? `${id}-mensaje` : undefined}
         className={cn(
           "mt-1 w-full rounded-xl border bg-superficie px-3 py-2 text-texto outline-none focus:border-primario focus:ring-2 focus:ring-primario/20",
           error ? "border-peligro" : "border-borde",
@@ -31,9 +32,9 @@ export default function SelectField({ label, name, register, error, opciones = [
           </option>
         ))}
       </select>
-      {error && (
-        <p id={`${id}-error`} className="mt-1 text-sm text-peligro">
-          {error}
+      {mensaje && (
+        <p id={`${id}-mensaje`} className={cn("mt-1 text-sm", error ? "text-peligro" : "text-texto-suave")}>
+          {mensaje}
         </p>
       )}
     </div>

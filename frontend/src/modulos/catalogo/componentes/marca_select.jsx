@@ -7,7 +7,7 @@ import { useGuardarMarca, useMarcas } from "../hooks/use_catalogo.js";
 import MarcaFormModal from "../admin/marca_form_modal.jsx";
 
 /** Marca del producto (lista del panel) con "Nueva" para crearla sin salir del formulario. */
-export default function MarcaSelect({ name = "marca_id", register, setValue, error }) {
+export default function MarcaSelect({ name = "marca_id", register, setValue, error, ayuda }) {
   const marcas = useMarcas();
   const guardar = useGuardarMarca();
   const toast = useToast();
@@ -21,7 +21,7 @@ export default function MarcaSelect({ name = "marca_id", register, setValue, err
   }
 
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-start gap-2">
       <div className="min-w-0 flex-1">
         <SelectField
           label="Marca"
@@ -30,9 +30,10 @@ export default function MarcaSelect({ name = "marca_id", register, setValue, err
           opciones={(marcas.data ?? []).map((m) => ({ valor: m.id, etiqueta: m.nombre }))}
           placeholder={marcas.isPending ? "Cargando marcas..." : "Sin marca"}
           error={error ?? (marcas.isError ? "No se pudieron cargar las marcas" : undefined)}
+          ayuda={ayuda}
         />
       </div>
-      <Boton variante="secundario" onClick={() => setCreando(true)} aria-label="Nueva marca" title="Nueva marca" className="mb-px">
+      <Boton variante="secundario" onClick={() => setCreando(true)} aria-label="Nueva marca" title="Nueva marca" className="mt-6">
         <Plus className="h-4 w-4" aria-hidden="true" /> Nueva
       </Boton>
       {creando && <MarcaFormModal onGuardar={crear} onCerrar={() => setCreando(false)} />}

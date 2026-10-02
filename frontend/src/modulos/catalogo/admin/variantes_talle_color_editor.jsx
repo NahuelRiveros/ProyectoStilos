@@ -52,14 +52,21 @@ export default function VariantesTalleColorEditor({ control, register, setValue,
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <InputField label="Precio neto" name="precio" register={register} error={errorComun(errors, "precio")} inputMode="decimal" required />
+        <InputField label="Precio neto" name="precio" register={register} error={errorComun(errors, "precio")} inputMode="decimal" required ayuda="Sin IVA. Abajo ves el precio final." />
         <SelectField label="IVA" name="iva_porcentaje" register={register} opciones={OPCIONES_IVA} error={errorComun(errors, "iva_porcentaje")} />
-        <InputField label="Precio anterior" name="precio_anterior" register={register} error={errorComun(errors, "precio_anterior")} inputMode="decimal" ayuda="Opcional, para mostrarlo en oferta" />
+        <InputField label="Precio anterior" name="precio_anterior" register={register} error={errorComun(errors, "precio_anterior")} inputMode="decimal" ayuda="Opcional. Si es mayor al precio, la prenda sale en Ofertas con este precio tachado." />
         <PrecioEnTienda control={control} />
       </div>
 
       <fieldset>
         <legend className="text-sm font-semibold">Colores</legend>
+        <p className="text-sm text-texto-suave">
+          Tocá cada color que tenés de esta prenda (tocalo de nuevo para sacarlo). ¿Falta uno? Agregalo en{" "}
+          <Link to="/admin/catalogo/colores" className={claseBotonLista}>
+            Colores
+          </Link>
+          .
+        </p>
         {colores.data?.length === 0 ? (
           <p className="mt-1 text-sm text-texto-suave">
             No hay colores cargados. <Link to="/admin/catalogo/colores" className={claseBotonLista}>Cargalos en Colores</Link>
@@ -95,6 +102,7 @@ export default function VariantesTalleColorEditor({ control, register, setValue,
           opciones={(grupos.data ?? []).map((g) => ({ valor: g.id, etiqueta: g.nombre }))}
           placeholder="Sin talles (varía solo por color)"
           error={errors.grupo_talle_id?.message}
+          ayuda={grupo ? "Marcá los talles que tenés, o «Todos»." : "Ej. Ropa (S a XXXL), Jeans, Calzado. Elegí uno y después marcá los talles."}
           className="sm:max-w-xs"
         />
         {grupo && (
