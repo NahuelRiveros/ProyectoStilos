@@ -7,7 +7,7 @@ import SearchField from "@/componentes/ui/search_field.jsx";
 import SelectField from "@/componentes/ui/select_field.jsx";
 import { Cargando, ErrorCarga, Vacio } from "@/componentes/ui/estado_carga.jsx";
 import { useCategorias, useFiltrosDisponibles, useProductos } from "../hooks/use_catalogo.js";
-import { CLAVES_ATRIBUTOS, alternarId, filtrosActivos } from "../utils/filtros_url.js";
+import { CLAVES_ATRIBUTOS, alternarId, filtrosActivos, leerIds } from "../utils/filtros_url.js";
 import FiltroCategoriasArbol from "./filtro_categorias_arbol.jsx";
 import FiltroCategoriasNiveles from "./filtro_categorias_niveles.jsx";
 import FiltrosActivos from "./filtros_activos.jsx";
@@ -64,6 +64,7 @@ export default function CatalogoPage() {
   const alternar = (clave, id) => actualizar({ [clave]: alternarId(filtros[clave], id) });
   const activos = filtrosActivos(filtros, disponibles);
   const hayAtributos = CLAVES_ATRIBUTOS.some((clave) => filtros[clave]);
+  const coloresFiltro = leerIds(filtros.color);
   // El título acompaña lo que se está viendo (clave en una tienda de ropa: "Mujer", "Calzado"…).
   const categoriaActual = categorias.data?.find((c) => String(c.id) === filtros.categoria);
   const titulo = filtros.oferta ? "Ofertas" : (categoriaActual?.nombre ?? nombreProductos);
@@ -123,7 +124,7 @@ export default function CatalogoPage() {
                 <ul className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                   {productos.data.productos.map((p) => (
                     <li key={p.id} className="flex">
-                      <ProductoCard producto={p} />
+                      <ProductoCard producto={p} coloresFiltro={coloresFiltro} />
                     </li>
                   ))}
                 </ul>

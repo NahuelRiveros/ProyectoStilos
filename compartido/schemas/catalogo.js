@@ -4,6 +4,9 @@ import { comaDecimal, idSchema, importe, importeOpcional, paginacionQuery, texto
 
 const { etiqueta_variante, etiqueta_variantes, iva_por_defecto } = proyecto.catalogo;
 
+// Indumentaria: 30 colores × 6 talles (S a XXXL) = 180 combinaciones; con margen para grupos más largos.
+const MAX_VARIANTES = 300;
+
 // Id de una lista (marca, color, talle...). Vacío = sin elegir.
 const idOpcional = () => z.preprocess((v) => (v === "" || v === 0 ? null : v), idSchema.nullable()).optional().default(null);
 
@@ -66,7 +69,7 @@ export const productoSchema = z
     variantes: z
       .array(varianteSchema, { error: `El producto necesita al menos 1 ${etiqueta_variante.toLowerCase()}` })
       .min(1, `El producto necesita al menos 1 ${etiqueta_variante.toLowerCase()}`)
-      .max(100, `Máximo 100 ${etiqueta_variantes.toLowerCase()} por producto`),
+      .max(MAX_VARIANTES, `Máximo ${MAX_VARIANTES} ${etiqueta_variantes.toLowerCase()} por producto`),
   })
   .superRefine((producto, ctx) => {
     const skus = new Set();
@@ -184,5 +187,5 @@ export const imagenArchivoSchema = z.object({
 export const colorImagenSchema = z.object({ color_id: idOpcional() });
 
 export const ordenImagenesSchema = z.object({
-  ids: z.array(idSchema).min(1).max(50),
+  ids: z.array(idSchema).min(1).max(500),
 });

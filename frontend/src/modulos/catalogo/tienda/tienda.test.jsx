@@ -54,6 +54,31 @@ describe("Tienda · Catálogo", () => {
   });
 });
 
+describe("Tienda · Catálogo filtrado por color", () => {
+  it("la tarjeta muestra la foto del color filtrado y abre la ficha en ese color", async () => {
+    const color = (id, nombre) => ({ id, nombre, hex: "#000000", orden: id });
+    const remera = productoEjemplo({
+      variantes: [
+        { id: 1, nombre: "Negro", color_id: 1, color: color(1, "Negro"), precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+        { id: 2, nombre: "Rojo", color_id: 2, color: color(2, "Rojo"), precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+      ],
+      imagenes: [
+        { id: 1, url: "https://cdn.test/negro.webp", alt: "", color_id: 1, orden: 0 },
+        { id: 2, url: "https://cdn.test/rojo.webp", alt: "", color_id: 2, orden: 1 },
+      ],
+    });
+    servidorMock.use(
+      mock.get(`${API}/catalogo/categorias`, () => HttpResponse.json({ ok: true, data: categoriasEjemplo })),
+      mock.get(`${API}/catalogo/productos`, () => HttpResponse.json({ ok: true, data: [remera], paginacion: paginacionDe([remera]) })),
+    );
+    renderizar(<CatalogoPage />, { ruta: "/catalogo?color=2" });
+
+    const tarjeta = await screen.findByRole("link", { name: /Galletitas Oreo/ });
+    expect(tarjeta).toHaveAttribute("href", "/catalogo/galletitas-oreo?color=2");
+    expect(within(tarjeta).getByRole("img").getAttribute("src")).toContain("rojo");
+  });
+});
+
 describe("Tienda · Ficha de una prenda (color y talle)", () => {
   const NEGRO = { id: 1, nombre: "Negro", hex: "#111111", orden: 0 };
   const BLANCO = { id: 2, nombre: "Blanco", hex: "#FFFFFF", orden: 1 };
@@ -70,15 +95,23 @@ describe("Tienda · Ficha de una prenda (color y talle)", () => {
     ],
   });
 
-  function abrir() {
+  function abrir(ruta = "/catalogo/galletitas-oreo") {
     servidorMock.use(mock.get(`${API}/catalogo/productos/galletitas-oreo`, () => HttpResponse.json({ ok: true, data: remera })));
     renderizar(
       <Routes>
         <Route path="/catalogo/:slug" element={<ProductoDetallePage />} />
       </Routes>,
-      { ruta: "/catalogo/galletitas-oreo" },
+      { ruta },
     );
   }
+
+  it("con ?color= en el link abre en ese color, en un talle con stock", async () => {
+    abrir("/catalogo/galletitas-oreo?color=2");
+    const colores = within(await screen.findByRole("group", { name: /^Color/ }));
+    expect(colores.getByRole("radio", { name: "Blanco" })).toBeChecked();
+    expect(within(screen.getByRole("group", { name: "Talle" })).getByRole("radio", { name: "M" })).toBeChecked();
+    expect(screen.getAllByRole("img")[0].getAttribute("src")).toContain("blanco");
+  });
 
   it("se elige el color y después el talle; al cambiar de color se conserva el talle", async () => {
     abrir();

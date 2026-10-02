@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Link2 } from "lucide-react";
-import { proyecto } from "compartido/proyecto.js";
+import { lugarImagenes, maximoImagenes } from "compartido/reglas/imagenes_producto.js";
 import { mensajeDeError } from "@/api/http.js";
 import { useToast } from "@/componentes/toast/toast_context.jsx";
 import Boton from "@/componentes/ui/boton.jsx";
@@ -9,12 +9,10 @@ import InputField from "@/componentes/ui/input_field.jsx";
 import { cn } from "@/utils/cn.js";
 import { useAgregarImagenUrl, useCambiarColorImagen, useEliminarImagen, useOrdenarImagenes, useSubirImagen } from "../hooks/use_catalogo.js";
 import { coloresDelProducto } from "../utils/galeria.js";
+import FiltroFotosColor, { GENERALES, TODAS } from "./filtro_fotos_color.jsx";
 import ImagenTarjeta from "./imagen_tarjeta.jsx";
 
-const MAXIMO = proyecto.catalogo.max_imagenes_producto;
 const MAX_MB = 5;
-const TODAS = "todas";
-const GENERALES = "generales";
 
 /**
  * Galería del producto: subir (arrastrando o eligiendo), pegar URL, ordenar y quitar.
@@ -39,12 +37,18 @@ export default function ImagenesProducto({ producto }) {
   // Con un color elegido en el filtro, lo que se sube queda con ese color.
   const colorSubida = typeof filtro === "number" ? filtro : null;
   const visibles = filtro === TODAS ? imagenes : imagenes.filter((img) => (filtro === GENERALES ? img.color_id == null : img.color_id === filtro));
-  const lugar = MAXIMO - imagenes.length;
+  // El límite es por color (las generales tienen el suyo): lo que queda para lo que se está por subir.
+  const lugar = lugarImagenes(imagenes, colorSubida);
+  const maximo = maximoImagenes(colorSubida);
+  const nombreSubida = colores.find((c) => c.id === colorSubida)?.nombre;
   const ocupado = Boolean(progreso) || porUrl.isPending || ordenar.isPending || cambiarColor.isPending;
 
   async function subirArchivos(lista) {
     const archivos = [...lista].slice(0, lugar);
-    if (lista.length > lugar) toast.info(`Se suben solo ${lugar}: el máximo es ${MAXIMO} imágenes.`);
+    if (lista.length > lugar) {
+      const limite = colorSubida ? `${maximo} fotos por color` : `${maximo} fotos generales`;
+      toast.info(`Se ${lugar === 1 ? "sube solo 1" : `suben solo ${lugar}`}: el máximo es ${limite}.`);
+    }
     for (const [i, archivo] of archivos.entries()) {
       if (archivo.size > MAX_MB * 1024 * 1024) {
         toast.error(`"${archivo.name}" supera ${MAX_MB} MB.`);
@@ -102,39 +106,17 @@ export default function ImagenesProducto({ producto }) {
     }
   }
 
-  const cuantas = (id) => imagenes.filter((img) => (id === GENERALES ? img.color_id == null : img.color_id === id)).length;
-  const opcionesFiltro = [
-    { id: TODAS, nombre: `Todas (${imagenes.length})` },
-    { id: GENERALES, nombre: `Generales (${cuantas(GENERALES)})` },
-    ...colores.map((c) => ({ id: c.id, nombre: `${c.nombre} (${cuantas(c.id)})`, hex: c.hex })),
-  ];
+  // En el selector de cada foto: a qué colores ya no se le pueden pasar más fotos.
+  const completos = new Set([...colores.filter((c) => lugarImagenes(imagenes, c.id) === 0).map((c) => c.id), ...(lugarImagenes(imagenes, null) === 0 ? [null] : [])]);
+  const textoSubir = colores.length === 0 ? "Subir imágenes (o arrastralas acá)" : colorSubida ? `Subir fotos de ${nombreSubida}` : "Subir fotos generales";
 
   return (
     <section className="rounded-2xl border border-borde bg-superficie p-5" aria-labelledby="titulo-imagenes">
       <h2 id="titulo-imagenes" className="text-lg font-bold">
         Imágenes
       </h2>
-      <p className="text-sm text-texto-suave">
-        La primera es la principal (la que se ve en el catálogo). Hasta {MAXIMO} imágenes de {MAX_MB} MB.
-        {colores.length > 0 && " Elegí un color abajo para subir sus fotos: en la tienda, al elegir ese color se ven esas fotos."}
-      </p>
-
-      {colores.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Ver fotos de">
-          {opcionesFiltro.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              aria-pressed={filtro === o.id}
-              onClick={() => setFiltro(o.id)}
-              className={cn("flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm", filtro === o.id ? "border-primario bg-primario/10 font-semibold" : "border-borde hover:border-primario")}
-            >
-              {o.hex && <span className="h-3.5 w-3.5 rounded-full border border-borde" style={{ backgroundColor: o.hex }} aria-hidden="true" />}
-              {o.nombre}
-            </button>
-          ))}
-        </div>
-      )}
+      <p className="text-sm text-texto-suave">La primera es la principal (la que se ve en el catálogo). Cada imagen, hasta {MAX_MB} MB.</p>
+      <FiltroFotosColor imagenes={imagenes} colores={colores} filtro={filtro} onFiltrar={setFiltro} />
 
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5" aria-label="Imágenes del producto">
         {visibles.map((img, i) => (
@@ -144,6 +126,7 @@ export default function ImagenesProducto({ producto }) {
             numero={imagenes.indexOf(img) + 1}
             principal={img === imagenes[0]}
             colores={colores}
+            completos={completos}
             puedeAntes={i > 0}
             puedeDespues={i < visibles.length - 1}
             ocupado={ocupado}
@@ -153,7 +136,7 @@ export default function ImagenesProducto({ producto }) {
           />
         ))}
 
-        {lugar > 0 && (
+        {lugar > 0 ? (
           <li>
             <button
               type="button"
@@ -175,7 +158,8 @@ export default function ImagenesProducto({ producto }) {
               )}
             >
               <ImagePlus className="h-6 w-6" aria-hidden="true" />
-              {progreso ?? (colorSubida ? `Subir fotos de ${colores.find((c) => c.id === colorSubida)?.nombre}` : "Subir imágenes (o arrastralas acá)")}
+              {progreso ?? textoSubir}
+              {!progreso && <span>Quedan {lugar} de {maximo}</span>}
             </button>
             <input
               ref={entrada}
@@ -189,6 +173,10 @@ export default function ImagenesProducto({ producto }) {
                 e.target.value = "";
               }}
             />
+          </li>
+        ) : (
+          <li className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-borde p-3 text-center text-xs text-texto-suave" role="status">
+            {colorSubida ? `${nombreSubida} ya tiene sus ${maximo} fotos.` : `Ya hay ${maximo} fotos generales.`} Quitá una para subir otra.
           </li>
         )}
       </ul>

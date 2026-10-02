@@ -167,10 +167,10 @@ describe("Admin · Fotos por color", () => {
     );
     renderizar(<ImagenesProducto producto={remera} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Negro (2)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Negro (2/4)" }));
     const lista = screen.getByRole("list", { name: "Imágenes del producto" });
     expect(within(lista).getAllByRole("img").map((i) => i.getAttribute("alt"))).toEqual(["N", "N2"]);
-    expect(screen.getByRole("button", { name: "Subir fotos de Negro" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Subir fotos de Negro/ })).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText("O pegá la dirección de una imagen"), "https://web.com/n3.jpg");
     await userEvent.click(screen.getByRole("button", { name: "Agregar" }));
@@ -195,8 +195,27 @@ describe("Admin · Fotos por color", () => {
     await waitFor(() => expect(color).toBe(2));
 
     // Con "Negro" filtrado, la 3 (negra) pasa antes que la 1 (negra); la general queda en su lugar.
-    await userEvent.click(screen.getByRole("button", { name: "Negro (2)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Negro (2/4)" }));
     await userEvent.click(screen.getByRole("button", { name: "Mover imagen 3 antes" }));
     await waitFor(() => expect(orden).toEqual([3, 2, 1]));
+  });
+
+  it("avisa el límite por color y no deja subir más fotos a un color completo", async () => {
+    const negras = [1, 2, 3, 4].map((n) => ({ id: n, url: `https://cdn.test/n${n}.webp`, alt: `N${n}`, color_id: 1, orden: n }));
+    const llena = { ...remera, imagenes: [...negras, { id: 5, url: "https://cdn.test/g.webp", alt: "G", color_id: null, orden: 5 }] };
+    renderizar(<ImagenesProducto producto={llena} />);
+
+    expect(screen.getByText("Hasta 4 fotos por color")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /^Negro \(4\/4\).*completo/ }));
+    expect(screen.getByRole("status")).toHaveTextContent("Negro ya tiene sus 4 fotos. Quitá una para subir otra.");
+    expect(screen.queryByLabelText("Elegir imágenes")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("O pegá la dirección de una imagen")).not.toBeInTheDocument();
+
+    // A la foto general no se le puede poner Negro; Blanco sí tiene lugar.
+    await userEvent.click(screen.getByRole("button", { name: "Todas (5)" }));
+    const selector = screen.getByLabelText("Color de la imagen 5");
+    expect(within(selector).getByRole("option", { name: "Negro · completo" })).toBeDisabled();
+    expect(within(selector).getByRole("option", { name: "Blanco" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Subir fotos generales/ })).toBeInTheDocument();
   });
 });

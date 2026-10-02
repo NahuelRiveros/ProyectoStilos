@@ -1,4 +1,5 @@
 import { sinStock } from "./disponibilidad.js";
+import { presentacionMasBarata } from "./precios.js";
 
 // Ficha de una prenda: primero se elige el color y después el talle (cada combinación es una variante).
 
@@ -28,3 +29,10 @@ export function varianteAlCambiarColor(variantes, actual, color_id) {
 
 /** Un color está agotado si ninguno de sus talles tiene stock. */
 export const colorAgotado = (variantes, color_id) => tallesDelColor(variantes, color_id).every(sinStock);
+
+/** Al abrir la ficha: un talle del color que viene en el link (?color=5), si la prenda lo tiene; si no, la más barata. */
+export function varianteInicial(producto, color_id = null) {
+  const delColor = color_id ? tallesDelColor(producto.variantes, color_id) : [];
+  if (delColor.length === 0) return presentacionMasBarata(producto);
+  return delColor.find((v) => !sinStock(v)) ?? delColor[0];
+}

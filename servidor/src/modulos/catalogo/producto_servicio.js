@@ -58,7 +58,7 @@ function presentar(producto, { publico }) {
   };
 }
 
-function incluir({ publico }) {
+function incluir({ publico, conImagenes = true }) {
   return [
     { model: Categoria, as: "categoria", attributes: ["id", "nombre", "slug"] },
     { model: Marca, as: "marca", attributes: ["id", "nombre", "logo_url"] },
@@ -77,7 +77,9 @@ function incluir({ publico }) {
         ...(CON_STOCK ? [{ model: Stock, as: "stock", attributes: ["cantidad", "reservado", "minimo"] }] : []),
       ],
     },
-    { model: ProductoImagen, as: "imagenes", attributes: ["id", "url", "alt", "color_id", "orden"], separate: true, order: [["orden", "ASC"], ["id", "ASC"]] },
+    ...(conImagenes
+      ? [{ model: ProductoImagen, as: "imagenes", attributes: ["id", "url", "alt", "color_id", "orden"], separate: true, order: [["orden", "ASC"], ["id", "ASC"]] }]
+      : []),
   ];
 }
 
@@ -140,14 +142,41 @@ export async function listarProductos({ orden = "nombre", pagina, limite, ...fil
   const { rows, count } = await Producto.findAndCountAll({
     where: { [Op.and]: condiciones },
     attributes: ATRIBUTOS_PRODUCTO,
-    include: incluir({ publico }),
+    include: incluir({ publico, conImagenes: false }),
     order: ORDENES[orden] ?? ORDENES.nombre,
     limit: pag.limite,
     offset: pag.offset,
     distinct: true,
   });
 
-  return { data: rows.map((p) => presentar(p.get({ plain: true }), { publico })), paginacion: armarPaginacion({ ...pag, total: count }) };
+  const fotos = await fotosDeTarjeta(rows.map((p) => p.id));
+  return {
+    data: rows.map((p) => presentar({ ...p.get({ plain: true }), imagenes: fotos.get(p.id) ?? [] }, { publico })),
+    paginacion: armarPaginacion({ ...pag, total: count }),
+  };
+}
+
+/**
+ * Fotos que necesita la tarjeta del listado: la primera de cada color y la primera general (la
+ * principal siempre está, porque es la primera de su grupo). Una remera de 10 colores × 4 fotos
+ * manda 11 en vez de 40; la ficha del producto trae todas. Una sola consulta para toda la página.
+ */
+async function fotosDeTarjeta(ids) {
+  const porProducto = new Map();
+  if (ids.length === 0) return porProducto;
+  const filas = await sequelize.query(
+    `SELECT DISTINCT ON (producto_id, COALESCE(color_id, 0)) id, producto_id, url, alt, color_id, orden
+     FROM ${DB_SCHEMA}.producto_imagen
+     WHERE producto_id IN (:ids)
+     ORDER BY producto_id, COALESCE(color_id, 0), orden, id`,
+    { replacements: { ids }, type: QueryTypes.SELECT },
+  );
+  filas.sort((a, b) => a.orden - b.orden || a.id - b.id);
+  for (const { producto_id, ...foto } of filas) {
+    if (!porProducto.has(producto_id)) porProducto.set(producto_id, []);
+    porProducto.get(producto_id).push(foto);
+  }
+  return porProducto;
 }
 
 /**

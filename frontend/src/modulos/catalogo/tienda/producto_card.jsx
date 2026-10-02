@@ -5,7 +5,7 @@ import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 import Insignia from "@/componentes/ui/insignia.jsx";
 import { leyendaIva, precioVisible, presentacionMasBarata } from "../utils/precios.js";
 import { productoAgotado } from "../utils/disponibilidad.js";
-import { coloresDelProducto } from "../utils/galeria.js";
+import { colorDeTarjeta, coloresDelProducto, fotoDeTarjeta } from "../utils/galeria.js";
 import { conDescuento, mejorDescuento } from "compartido/reglas/pagos.js";
 import { usePagos } from "@/hooks/use_pagos.js";
 
@@ -47,7 +47,8 @@ function MuestrasColor({ colores }) {
   );
 }
 
-export default function ProductoCard({ producto }) {
+/** `coloresFiltro`: colores filtrados en el catálogo; la tarjeta muestra la foto de ese color y abre la ficha en él. */
+export default function ProductoCard({ producto, coloresFiltro = [] }) {
   const masBarata = presentacionMasBarata(producto);
   // "Desde" solo si de verdad hay precios distintos (en una prenda, todos los talles y colores cuestan lo mismo).
   const varias = new Set(producto.variantes.map((v) => Number(v.precio))).size > 1;
@@ -55,14 +56,15 @@ export default function ProductoCard({ producto }) {
   // El mejor descuento por medio de pago (ej. transferencia) se muestra también en el listado.
   const { data: pagos } = usePagos();
   const descuento = pagos ? mejorDescuento(pagos) : null;
+  const color = colorDeTarjeta(producto, coloresFiltro);
 
   return (
     <Link
-      to={`/catalogo/${producto.slug}`}
+      to={`/catalogo/${producto.slug}${color ? `?color=${color}` : ""}`}
       className="group flex w-full flex-col overflow-hidden rounded-2xl border border-borde bg-superficie transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="relative">
-        <ImagenProducto imagen={producto.imagenes?.[0]} nombre={producto.nombre} className={`aspect-square w-full ${agotado ? "opacity-60 grayscale" : ""}`} />
+        <ImagenProducto imagen={fotoDeTarjeta(producto.imagenes, color)} nombre={producto.nombre} className={`aspect-square w-full ${agotado ? "opacity-60 grayscale" : ""}`} />
         {agotado && (
           <span className="absolute left-2 top-2">
             <Insignia tono="peligro">Sin stock</Insignia>

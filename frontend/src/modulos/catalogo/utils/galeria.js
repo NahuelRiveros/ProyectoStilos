@@ -18,3 +18,12 @@ export function fotosDelColor(imagenes = [], color_id = null) {
   if (propias.length > 0) return [...propias, ...generales];
   return generales.length > 0 ? generales : imagenes;
 }
+
+/** Listado filtrado por color: el primero de los colores filtrados que la prenda tiene (null = sin filtro o no tiene). */
+export function colorDeTarjeta(producto, coloresFiltro = []) {
+  const tiene = new Set((producto?.variantes ?? []).map((v) => v.color_id).filter(Boolean));
+  return coloresFiltro.find((id) => tiene.has(id)) ?? null;
+}
+
+/** Foto de la tarjeta: la primera de ese color; si no tiene, la principal. */
+export const fotoDeTarjeta = (imagenes = [], color_id = null) => (color_id != null && imagenes.find((i) => i.color_id === color_id)) || imagenes[0];

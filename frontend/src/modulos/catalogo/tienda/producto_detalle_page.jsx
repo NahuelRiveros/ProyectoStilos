@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { proyecto } from "compartido/proyecto.js";
 import { Cargando, ErrorCarga } from "@/componentes/ui/estado_carga.jsx";
@@ -8,9 +8,9 @@ import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 import { formatearDinero } from "@/utils/formatear_dinero.js";
 import { useProducto } from "../hooks/use_catalogo.js";
 import { fotosDelColor } from "../utils/galeria.js";
-import { usaTalleColor } from "../utils/talle_color.js";
+import { usaTalleColor, varianteInicial } from "../utils/talle_color.js";
 import SelectorTalleColor from "./selector_talle_color.jsx";
-import { leyendaIva, precioVisible, presentacionMasBarata } from "../utils/precios.js";
+import { leyendaIva, precioVisible } from "../utils/precios.js";
 import { ImagenProducto } from "./producto_card.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
 import { sinStock, textoDisponibilidad } from "../utils/disponibilidad.js";
@@ -50,12 +50,27 @@ function Galeria({ imagenes, nombre }) {
 }
 
 function Detalle({ producto }) {
-  const [elegidaId, setElegidaId] = useState(() => presentacionMasBarata(producto)?.id);
+  // El color va en el link (?color=5): viniendo de un filtro por color se abre en ese color, y se puede compartir.
+  const [params, setParams] = useSearchParams();
+  const [elegidaId, setElegidaId] = useState(() => varianteInicial(producto, Number(params.get("color")) || null)?.id);
   const elegida = producto.variantes.find((v) => v.id === elegidaId) ?? producto.variantes[0];
   const varias = producto.variantes.length > 1;
   const precio = precioVisible(elegida.precio, elegida.iva_porcentaje);
   // Si la config de pagos todavía no llegó (o falló), la ficha se ve igual, sin esa parte.
   const { data: pagos } = usePagos();
+
+  function elegirPrenda(variante) {
+    setElegidaId(variante.id);
+    if (!variante.color_id) return;
+    setParams(
+      (actuales) => {
+        const nuevos = new URLSearchParams(actuales);
+        nuevos.set("color", String(variante.color_id));
+        return nuevos;
+      },
+      { replace: true }, // cambiar de color no suma pasos al botón "atrás"
+    );
+  }
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
@@ -74,7 +89,7 @@ function Detalle({ producto }) {
         </div>
 
         {usaTalleColor(producto) ? (
-          <SelectorTalleColor producto={producto} elegida={elegida} onElegir={(v) => setElegidaId(v.id)} />
+          <SelectorTalleColor producto={producto} elegida={elegida} onElegir={elegirPrenda} />
         ) : varias && (
           <fieldset className="mt-6">
             <legend className="text-sm font-semibold">{etiqueta_variante}</legend>

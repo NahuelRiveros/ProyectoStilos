@@ -139,6 +139,44 @@ describe("Productos con talle y color", () => {
     expect(publico.imagenes.map((i) => i.color_id)).toEqual([negro.id, blanco.id]);
   });
 
+  it("el listado trae solo la primera foto de cada color (y la principal); la ficha, todas", async () => {
+    const { categoria, negro, blanco, ropa, s } = await preparar();
+    const producto = (await post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "Remera", grupo_talle_id: ropa.id, variantes: [variante(negro, s), variante(blanco, s)] })).body.data;
+    const foto = async (nombre, color_id) => (await post(`/api/catalogo/productos/${producto.id}/imagenes/url`, { url: `https://fotos.com/${nombre}.jpg`, color_id })).body.data.id;
+    const n1 = await foto("n1", negro.id);
+    const g1 = await foto("g1", null);
+    const n2 = await foto("n2", negro.id);
+    const b1 = await foto("b1", blanco.id);
+    const b2 = await foto("b2", blanco.id);
+
+    const listado = (await request(app).get("/api/catalogo/productos")).body.data[0];
+    expect(listado.imagenes.map((i) => i.id)).toEqual([n1, g1, b1]);
+    expect(listado.imagenes[2]).toEqual({ id: b1, url: "https://fotos.com/b1.jpg", alt: "Remera", color_id: blanco.id, orden: 3 });
+
+    const ficha = (await request(app).get(`/api/catalogo/productos/${producto.slug}`)).body.data;
+    expect(ficha.imagenes.map((i) => i.id)).toEqual([n1, g1, n2, b1, b2]);
+  });
+
+  it("limita las fotos por color: un color completo no acepta más, los otros sí", async () => {
+    const { categoria, negro, blanco, ropa, s } = await preparar();
+    const producto = (await post("/api/catalogo/productos", { categoria_id: categoria.id, nombre: "Remera", grupo_talle_id: ropa.id, variantes: [variante(negro, s), variante(blanco, s)] })).body.data;
+    const foto = (color_id, n) => post(`/api/catalogo/productos/${producto.id}/imagenes/url`, { url: `https://fotos.com/${color_id ?? "general"}-${n}.jpg`, color_id });
+    const maximo = proyecto.catalogo.max_imagenes_por_color;
+
+    for (let n = 1; n <= maximo; n++) expect((await foto(negro.id, n)).status).toBe(201);
+    const deMas = await foto(negro.id, maximo + 1);
+    expect(deMas.status).toBe(409);
+    expect(deMas.body).toMatchObject({ codigo: "LIMITE_IMAGENES", mensaje: `Negro ya tiene ${maximo} fotos (el máximo por color). Quitá una para subir otra.` });
+
+    expect((await foto(blanco.id, 1)).status).toBe(201);
+    const general = (await foto(null, 1)).body.data;
+
+    // Pasar una foto a un color completo tampoco se puede.
+    const cambio = await request(app).patch(`/api/catalogo/productos/${producto.id}/imagenes/${general.id}`).set(...autorizacion(staff)).send({ color_id: negro.id });
+    expect(cambio.status).toBe(409);
+    expect(cambio.body.codigo).toBe("LIMITE_IMAGENES");
+  });
+
   it("filtra el catálogo por marca, color y talle (color y talle en la misma variante) y ofrece los filtros disponibles", async () => {
     const { categoria, negro, blanco, ropa, s, m } = await preparar();
     const taverniti = (await post("/api/catalogo/marcas", { nombre: "Taverniti" })).body.data;

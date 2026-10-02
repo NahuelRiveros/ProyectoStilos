@@ -53,8 +53,10 @@ export const proyecto = {
     alicuotas_iva: [21, 10.5, 27, 0],
     productos_por_pagina: 24,
     max_niveles_categoria: 10,
-    // Indumentaria: varias fotos por color en el mismo producto (ej. 15 colores de una remera).
-    max_imagenes_producto: 40,
+    // Fotos de un producto. El límite es por color (no un total): una remera de 30 colores y una
+    // de 2 tienen la misma regla. "Generales" = sin color, se ven con todos (en distribuidoras, todas).
+    max_imagenes_por_color: 4,
+    max_imagenes_generales: 10,
     // Cómo se arman las variantes:
     //   "presentacion" → texto libre ("500 g", "1 kg"). Distribuidoras.
     //   "talle_color"  → se eligen de las listas de Colores y Talles del panel (indumentaria).

@@ -3,8 +3,8 @@ import Boton from "@/componentes/ui/boton.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
 import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 
-/** Una foto de la galería del panel: mover, quitar y (en indumentaria) de qué color es. */
-export default function ImagenTarjeta({ imagen, numero, principal = false, colores = [], puedeAntes, puedeDespues, ocupado = false, onMover, onQuitar, onCambiarColor }) {
+/** Una foto de la galería del panel: mover, quitar y (en indumentaria) de qué color es. `completos`: ids de colores sin lugar (null = generales). */
+export default function ImagenTarjeta({ imagen, numero, principal = false, colores = [], completos = new Set(), puedeAntes, puedeDespues, ocupado = false, onMover, onQuitar, onCambiarColor }) {
   const color = colores.find((c) => c.id === imagen.color_id);
   return (
     <li className="overflow-hidden rounded-xl border border-borde">
@@ -27,12 +27,19 @@ export default function ImagenTarjeta({ imagen, numero, principal = false, color
           disabled={ocupado}
           className="w-full border-t border-borde bg-superficie px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primario/20"
         >
-          <option value="">General (todos los colores)</option>
-          {colores.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
+          {/* Un color (o las generales) con el máximo de fotos no se puede elegir, salvo el que la foto ya tiene. */}
+          <option value="" disabled={imagen.color_id != null && completos.has(null)}>
+            General (todos los colores){imagen.color_id != null && completos.has(null) ? " · completo" : ""}
+          </option>
+          {colores.map((c) => {
+            const lleno = c.id !== imagen.color_id && completos.has(c.id);
+            return (
+              <option key={c.id} value={c.id} disabled={lleno}>
+                {c.nombre}
+                {lleno ? " · completo" : ""}
+              </option>
+            );
+          })}
         </select>
       )}
       <div className="flex justify-between p-1">

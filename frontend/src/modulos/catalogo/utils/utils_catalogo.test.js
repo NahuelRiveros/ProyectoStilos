@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { aplanarConNivel, armarArbol, idsDelSubarbol, nivelDeCategoria, rutaCategoria, totalConSubcategorias } from "./arbol.js";
 import { alternarId, filtrosActivos, leerIds } from "./filtros_url.js";
-import { coloresDelProducto, fotosDelColor } from "./galeria.js";
-import { colorAgotado, tallesDelColor, usaTalleColor, varianteAlCambiarColor } from "./talle_color.js";
+import { colorDeTarjeta, coloresDelProducto, fotoDeTarjeta, fotosDelColor } from "./galeria.js";
+import { colorAgotado, tallesDelColor, usaTalleColor, varianteAlCambiarColor, varianteInicial } from "./talle_color.js";
 import { precioVisible, presentacionMasBarata } from "./precios.js";
 
 const categorias = [
@@ -94,6 +94,17 @@ describe("fotos por color", () => {
     const producto = { variantes: [{ color: negro }, { color: blanco }, { color: negro }, { color: null }] };
     expect(coloresDelProducto(producto).map((c) => c.nombre)).toEqual(["Blanco", "Negro"]);
   });
+
+  it("tarjeta con filtro de color: la foto de ese color si la prenda lo tiene; si no, la principal", () => {
+    const prenda = { variantes: [{ color_id: 1 }, { color_id: 2 }] };
+    expect(colorDeTarjeta(prenda, [5, 2])).toBe(2);
+    expect(colorDeTarjeta(prenda, [5])).toBeNull();
+    expect(colorDeTarjeta(prenda)).toBeNull();
+    expect(fotoDeTarjeta(imagenes, 2).id).toBe(3);
+    expect(fotoDeTarjeta(imagenes, null).id).toBe(1);
+    expect(fotoDeTarjeta([{ id: 7, color_id: null }], 2).id).toBe(7);
+    expect(fotoDeTarjeta([], 2)).toBeUndefined();
+  });
 });
 
 describe("talle y color en la ficha", () => {
@@ -145,5 +156,22 @@ describe("precios", () => {
   it("elige la presentación activa más barata", () => {
     const producto = { variantes: [{ id: 1, precio: "50", activo: false }, { id: 2, precio: "80" }, { id: 3, precio: "120" }] };
     expect(presentacionMasBarata(producto).id).toBe(2);
+  });
+});
+
+describe("variante con la que abre la ficha", () => {
+  const variantes = [
+    { id: 1, color_id: 1, talle_id: 10, precio: "900.00", disponibilidad: "disponible" },
+    { id: 2, color_id: 2, talle_id: 10, precio: "1000.00", disponibilidad: "sin_stock" },
+    { id: 3, color_id: 2, talle_id: 11, precio: "1000.00", disponibilidad: "disponible" },
+  ];
+
+  it("con ?color= abre en un talle con stock de ese color", () => {
+    expect(varianteInicial({ variantes }, 2).id).toBe(3);
+  });
+
+  it("sin color, o con un color que la prenda no tiene, abre en la más barata", () => {
+    expect(varianteInicial({ variantes }, null).id).toBe(1);
+    expect(varianteInicial({ variantes }, 99).id).toBe(1);
   });
 });
