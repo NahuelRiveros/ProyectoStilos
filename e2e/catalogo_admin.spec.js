@@ -52,7 +52,13 @@ test("el admin carga una categoría y un producto y el producto aparece publicad
   // Queda en la edición del producto, lista para cargarle imágenes
   await expect(page.getByText("Producto creado. Ahora podés agregarle imágenes.")).toBeVisible();
   await expect(page.getByRole("heading", { name: `Editar ${producto}` })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Imágenes" })).toBeVisible();
+  if (TALLE_COLOR) {
+    // Arriba, las generales; las fotos de cada color se suben dentro de la tarjeta de ese color.
+    await expect(page.getByRole("heading", { name: "Fotos generales" })).toBeVisible();
+    await expect(page.getByRole("region", { name: `Color ${color}` }).getByRole("button", { name: new RegExp(`^Subir fotos de ${color}`) })).toBeVisible();
+  } else {
+    await expect(page.getByRole("heading", { name: "Imágenes" })).toBeVisible();
+  }
 
   await page.goto("/admin/catalogo/productos");
   // En escritorio es una tabla y en celular tarjetas: se busca dentro de la lista, sea cual sea

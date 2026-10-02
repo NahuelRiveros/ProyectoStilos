@@ -49,12 +49,33 @@ describe("Admin · Producto con talles y colores", () => {
     renderizarFormulario("/admin/catalogo/productos/nuevo");
     const guia = (await screen.findByText("Cómo cargar un producto, paso a paso")).closest("details");
     expect(guia).toHaveAttribute("open");
-    expect(within(guia).getByText(/hasta 4 fotos de cada color/)).toBeInTheDocument();
+    expect(within(guia).getByText(/cada color tiene en su tarjeta un lugar para subir sus fotos \(hasta 4\)/)).toBeInTheDocument();
 
     expect(screen.getByLabelText(/^Nombre/)).toHaveAccessibleDescription(/Sin color ni talle/);
     expect(screen.getByLabelText(/^Categoría/)).toHaveAccessibleDescription(/Dónde aparece en la tienda/);
     expect(screen.getByLabelText("Marca")).toHaveAccessibleDescription(/tocá «Nueva»/);
     expect(screen.getByLabelText(/^Grupo de talles/)).toHaveAccessibleDescription(/Ropa \(S a XXXL\)/);
+  });
+
+  it("cada color tiene sus fotos en su tarjeta; un color recién elegido pide guardar primero", async () => {
+    const prenda = productoEjemplo({
+      grupo_talle_id: 5,
+      variantes: [{ id: 100, nombre: "Negro · S", color_id: 1, color: COLORES[0], talle_id: 51, talle: GRUPOS[0].talles[0], precio: "1000.00", iva_porcentaje: "21.00", activo: true, controla_stock: false }],
+      imagenes: [
+        { id: 1, url: "https://cdn.test/negro.webp", alt: "Negra", color_id: 1, orden: 0 },
+        { id: 2, url: "https://cdn.test/guia.webp", alt: "Guía de talles", color_id: null, orden: 1 },
+      ],
+    });
+    servidorMock.use(lista("productos/10", prenda));
+    renderizarFormulario("/admin/catalogo/productos/10");
+
+    const negro = await screen.findByRole("region", { name: "Color Negro" });
+    expect(within(negro).getByText("(1 de 4)")).toBeInTheDocument();
+    expect(within(within(negro).getByRole("list", { name: "Fotos: fotos de Negro" })).getByRole("img")).toHaveAttribute("alt", "Negra");
+    expect(within(screen.getByRole("list", { name: "Fotos: fotos generales" })).getByRole("img")).toHaveAttribute("alt", "Guía de talles");
+
+    await userEvent.click(screen.getByRole("button", { name: "Blanco" }));
+    expect(within(screen.getByRole("region", { name: "Color Blanco" })).getByText("Guardá los cambios y vas a poder subir acá las fotos de Blanco.")).toBeInTheDocument();
   });
 
   it("al editar, la guía queda cerrada para no ocupar lugar", async () => {

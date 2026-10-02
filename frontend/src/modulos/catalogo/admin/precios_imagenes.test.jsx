@@ -6,6 +6,7 @@ import { API, servidorMock } from "@/test/servidor_mock.js";
 import { renderizar } from "@/test/renderizar.jsx";
 import { categoriasEjemplo, productoEjemplo } from "@/test/datos_catalogo.js";
 import AjustePreciosModal from "./ajuste_precios_modal.jsx";
+import GaleriaFotos from "./galeria_fotos.jsx";
 import ImagenesProducto from "./imagenes_producto.jsx";
 
 const sinEspacios = (t) => t.replace(/\s/g, " ");
@@ -145,19 +146,30 @@ describe("Admin · Imágenes del producto", () => {
 describe("Admin · Fotos por color", () => {
   const NEGRO = { id: 1, nombre: "Negro", hex: "#111111", orden: 0 };
   const BLANCO = { id: 2, nombre: "Blanco", hex: "#FFFFFF", orden: 1 };
-  const remera = productoEjemplo({
-    variantes: [
-      { id: 100, nombre: "Negro · S", color_id: 1, color: NEGRO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
-      { id: 101, nombre: "Blanco · S", color_id: 2, color: BLANCO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
-    ],
-    imagenes: [
-      { id: 1, url: "https://cdn.test/negro.webp", alt: "N", color_id: 1, orden: 0 },
-      { id: 2, url: "https://cdn.test/general.webp", alt: "G", color_id: null, orden: 1 },
-      { id: 3, url: "https://cdn.test/negro2.webp", alt: "N2", color_id: 1, orden: 2 },
-    ],
+  const remera = (imagenes) =>
+    productoEjemplo({
+      variantes: [
+        { id: 100, nombre: "Negro · S", color_id: 1, color: NEGRO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+        { id: 101, nombre: "Blanco · S", color_id: 2, color: BLANCO, precio: "1000.00", iva_porcentaje: "21.00", activo: true },
+      ],
+      imagenes,
+    });
+  const conFotos = remera([
+    { id: 1, url: "https://cdn.test/negro.webp", alt: "N", color_id: 1, orden: 0 },
+    { id: 2, url: "https://cdn.test/general.webp", alt: "G", color_id: null, orden: 1 },
+    { id: 3, url: "https://cdn.test/negro2.webp", alt: "N2", color_id: 1, orden: 2 },
+  ]);
+  const altDe = (lista) => within(lista).getAllByRole("img").map((i) => i.getAttribute("alt"));
+
+  it("arriba quedan solo las generales y explica que las de cada color van en su tarjeta", () => {
+    renderizar(<ImagenesProducto producto={conFotos} />);
+    expect(screen.getByRole("heading", { name: "Fotos generales" })).toBeInTheDocument();
+    expect(screen.getByText(/Las fotos de cada color se suben más abajo, en la tarjeta de ese color/)).toBeInTheDocument();
+    expect(altDe(screen.getByRole("list", { name: "Fotos: fotos generales" }))).toEqual(["G"]);
+    expect(screen.getByText(/Ahora la principal es una foto de Negro/)).toBeInTheDocument();
   });
 
-  it("filtra por color y lo que se agrega con un color elegido queda con ese color", async () => {
+  it("la galería de un color muestra solo sus fotos y lo que se agrega queda con ese color", async () => {
     let cuerpo;
     servidorMock.use(
       mock.post(`${API}/catalogo/productos/10/imagenes/url`, async ({ request }) => {
@@ -165,57 +177,58 @@ describe("Admin · Fotos por color", () => {
         return HttpResponse.json({ ok: true, data: { id: 4 } }, { status: 201 });
       }),
     );
-    renderizar(<ImagenesProducto producto={remera} />);
+    renderizar(<GaleriaFotos producto={conFotos} fotosDe={1} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Negro (2/4)" }));
-    const lista = screen.getByRole("list", { name: "Imágenes del producto" });
-    expect(within(lista).getAllByRole("img").map((i) => i.getAttribute("alt"))).toEqual(["N", "N2"]);
+    expect(altDe(screen.getByRole("list", { name: "Fotos: fotos de Negro" }))).toEqual(["N", "N2"]);
     expect(screen.getByRole("button", { name: /^Subir fotos de Negro/ })).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText("O pegá la dirección de una imagen"), "https://web.com/n3.jpg");
-    await userEvent.click(screen.getByRole("button", { name: "Agregar" }));
+    // Enter en la dirección agrega la foto (no envía el formulario del producto que la contiene).
+    await userEvent.type(screen.getByLabelText("O pegá la dirección de una foto (Negro)"), "https://web.com/n3.jpg{Enter}");
     await waitFor(() => expect(cuerpo).toEqual({ url: "https://web.com/n3.jpg", color_id: 1 }));
   });
 
-  it("cambia el color de una foto y, filtrando, reordena entre las de ese color", async () => {
-    let color, orden;
+  it("cambia el color de una foto, reordena entre las de ese color y elige la principal", async () => {
+    let color;
+    const ordenes = [];
     servidorMock.use(
-      mock.patch(`${API}/catalogo/productos/10/imagenes/2`, async ({ request }) => {
+      mock.patch(`${API}/catalogo/productos/10/imagenes/3`, async ({ request }) => {
         color = (await request.json()).color_id;
         return HttpResponse.json({ ok: true, data: {} });
       }),
       mock.put(`${API}/catalogo/productos/10/imagenes/orden`, async ({ request }) => {
-        orden = (await request.json()).ids;
+        ordenes.push((await request.json()).ids);
         return HttpResponse.json({ ok: true, data: [] });
       }),
     );
-    renderizar(<ImagenesProducto producto={remera} />);
+    renderizar(<GaleriaFotos producto={conFotos} fotosDe={1} />);
 
-    await userEvent.selectOptions(screen.getByLabelText("Color de la imagen 2"), "Blanco");
+    await userEvent.selectOptions(screen.getByLabelText("Color de la imagen 3"), "Blanco");
     await waitFor(() => expect(color).toBe(2));
 
-    // Con "Negro" filtrado, la 3 (negra) pasa antes que la 1 (negra); la general queda en su lugar.
-    await userEvent.click(screen.getByRole("button", { name: "Negro (2/4)" }));
+    // La 3 (negra) pasa antes que la 1 (negra); la general queda en su lugar.
     await userEvent.click(screen.getByRole("button", { name: "Mover imagen 3 antes" }));
-    await waitFor(() => expect(orden).toEqual([3, 2, 1]));
+    await waitFor(() => expect(ordenes[0]).toEqual([3, 2, 1]));
+
+    expect(screen.getByRole("button", { name: "La imagen 1 es la principal" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "Usar la imagen 3 como principal" }));
+    await waitFor(() => expect(ordenes[1]).toEqual([3, 1, 2]));
   });
 
-  it("avisa el límite por color y no deja subir más fotos a un color completo", async () => {
+  it("un color completo no deja subir más y no se le pueden pasar fotos", async () => {
     const negras = [1, 2, 3, 4].map((n) => ({ id: n, url: `https://cdn.test/n${n}.webp`, alt: `N${n}`, color_id: 1, orden: n }));
-    const llena = { ...remera, imagenes: [...negras, { id: 5, url: "https://cdn.test/g.webp", alt: "G", color_id: null, orden: 5 }] };
-    renderizar(<ImagenesProducto producto={llena} />);
+    const llena = remera([...negras, { id: 5, url: "https://cdn.test/g.webp", alt: "G", color_id: null, orden: 5 }]);
+    renderizar(<GaleriaFotos producto={llena} fotosDe={1} />);
 
-    expect(screen.getByText("Hasta 4 fotos por color")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /^Negro \(4\/4\).*completo/ }));
-    expect(screen.getByRole("status")).toHaveTextContent("Negro ya tiene sus 4 fotos. Quitá una para subir otra.");
-    expect(screen.queryByLabelText("Elegir imágenes")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("O pegá la dirección de una imagen")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Ya están las 4 fotos de Negro (el máximo). Quitá una para subir otra.");
+    expect(screen.queryByLabelText("Elegir fotos de Negro")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/O pegá la dirección/)).not.toBeInTheDocument();
+  });
 
-    // A la foto general no se le puede poner Negro; Blanco sí tiene lugar.
-    await userEvent.click(screen.getByRole("button", { name: "Todas (5)" }));
+  it("en la galería general, Negro completo aparece deshabilitado y Blanco no", () => {
+    const negras = [1, 2, 3, 4].map((n) => ({ id: n, url: `https://cdn.test/n${n}.webp`, alt: `N${n}`, color_id: 1, orden: n }));
+    renderizar(<GaleriaFotos producto={remera([...negras, { id: 5, url: "https://cdn.test/g.webp", alt: "G", color_id: null, orden: 5 }])} fotosDe={null} />);
     const selector = screen.getByLabelText("Color de la imagen 5");
     expect(within(selector).getByRole("option", { name: "Negro · completo" })).toBeDisabled();
     expect(within(selector).getByRole("option", { name: "Blanco" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /Subir fotos generales/ })).toBeInTheDocument();
   });
 });

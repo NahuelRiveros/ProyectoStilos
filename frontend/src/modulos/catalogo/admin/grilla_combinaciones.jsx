@@ -1,12 +1,42 @@
 import { proyecto } from "compartido/proyecto.js";
 import CheckboxField from "@/componentes/ui/checkbox_field.jsx";
 import InputField from "@/componentes/ui/input_field.jsx";
+import { LIMITES_IMAGENES, contarImagenes } from "compartido/reglas/imagenes_producto.js";
+import GaleriaFotos from "./galeria_fotos.jsx";
 import { claveCombinacion, listarCombinaciones } from "./talle_color_valores.js";
 
 const CON_STOCK = proyecto.modulos.stock;
 
 /**
- * Una tarjeta por color con una fila por talle: código, stock y "A la venta" de cada combinación.
+ * Fotos de un color, dentro de su tarjeta: así queda claro a qué color pertenece cada foto. El color tiene que
+ * estar guardado en la prenda (el servidor no acepta fotos de un color que la prenda todavía no tiene).
+ */
+function FotosDelColor({ producto, color }) {
+  const guardado = producto?.variantes.some((v) => v.color_id === color.id);
+  return (
+    <div className="border-b border-borde px-4 py-3">
+      <p className="mb-2 text-sm font-semibold">
+        Fotos de {color.nombre}
+        {guardado && (
+          <span className="font-normal text-texto-suave">
+            {" "}
+            ({contarImagenes(producto.imagenes, color.id)} de {LIMITES_IMAGENES.por_color})
+          </span>
+        )}
+      </p>
+      {guardado ? (
+        <GaleriaFotos producto={producto} fotosDe={color.id} />
+      ) : (
+        <p className="text-sm text-texto-suave">
+          {producto ? "Guardá los cambios" : "Guardá el producto"} y vas a poder subir acá las fotos de {color.nombre}.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Una tarjeta por color con sus fotos y una fila por talle: código, stock y "A la venta" de cada combinación.
  * El stock inicial se carga solo en las combinaciones nuevas; el de las que ya existen se ajusta desde Stock.
  */
 export default function GrillaCombinaciones({ register, errors, colores, talles, coloresElegidos, tallesElegidos, producto = null }) {
@@ -52,6 +82,7 @@ export default function GrillaCombinaciones({ register, errors, colores, talles,
               {color && <span className="h-4 w-4 rounded-full border border-borde" style={{ backgroundColor: color.hex }} aria-hidden="true" />}
               {color?.nombre ?? "Sin color"}
             </h3>
+            {color && <FotosDelColor producto={producto} color={color} />}
             <ul className="divide-y divide-borde">
               {filas.map((talle_id) => {
                 const clave = claveCombinacion(color_id, talle_id);

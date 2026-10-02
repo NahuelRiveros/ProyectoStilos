@@ -51,7 +51,7 @@ export default function ProductoFormPage() {
         {esNuevo ? (
           <p className="rounded-xl bg-fondo p-3 text-sm text-texto-suave">
             <strong className="text-texto">Las fotos se suben después de guardar.</strong> Al tocar «Guardar producto» te quedás en esta pantalla y aparece
-            la sección de fotos.
+            el lugar para subir las fotos (en una prenda, dentro de la tarjeta de cada color).
           </p>
         ) : (
           <ImagenesProducto producto={producto.data} />

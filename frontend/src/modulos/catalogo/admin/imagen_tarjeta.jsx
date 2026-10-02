@@ -1,10 +1,26 @@
-import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Star, Trash2 } from "lucide-react";
 import Boton from "@/componentes/ui/boton.jsx";
 import Insignia from "@/componentes/ui/insignia.jsx";
 import { ANCHOS, urlImagen } from "@/utils/imagenes.js";
 
-/** Una foto de la galería del panel: mover, quitar y (en indumentaria) de qué color es. `completos`: ids de colores sin lugar (null = generales). */
-export default function ImagenTarjeta({ imagen, numero, principal = false, colores = [], completos = new Set(), puedeAntes, puedeDespues, ocupado = false, onMover, onQuitar, onCambiarColor }) {
+/**
+ * Una foto de la galería del panel: mover, usar como principal, quitar y (en indumentaria) de qué color es.
+ * `completos`: ids de colores sin lugar (null = generales).
+ */
+export default function ImagenTarjeta({
+  imagen,
+  numero,
+  principal = false,
+  colores = [],
+  completos = new Set(),
+  puedeAntes,
+  puedeDespues,
+  ocupado = false,
+  onMover,
+  onPrincipal,
+  onQuitar,
+  onCambiarColor,
+}) {
   const color = colores.find((c) => c.id === imagen.color_id);
   return (
     <li className="overflow-hidden rounded-xl border border-borde">
@@ -45,6 +61,16 @@ export default function ImagenTarjeta({ imagen, numero, principal = false, color
       <div className="flex justify-between p-1">
         <Boton variante="fantasma" tamano="icono" onClick={() => onMover(-1)} disabled={!puedeAntes || ocupado} aria-label={`Mover imagen ${numero} antes`}>
           <ArrowLeft className="h-4 w-4" />
+        </Boton>
+        <Boton
+          variante="fantasma"
+          tamano="icono"
+          onClick={onPrincipal}
+          disabled={principal || ocupado}
+          aria-label={principal ? `La imagen ${numero} es la principal` : `Usar la imagen ${numero} como principal`}
+          title={principal ? "Es la principal (la del listado)" : "Usar como principal (la del listado)"}
+        >
+          <Star className={principal ? "h-4 w-4 fill-current text-acento" : "h-4 w-4"} aria-hidden="true" />
         </Boton>
         <Boton variante="fantasma" tamano="icono" onClick={onQuitar} aria-label={`Quitar imagen ${numero}`}>
           <Trash2 className="h-4 w-4 text-peligro" />

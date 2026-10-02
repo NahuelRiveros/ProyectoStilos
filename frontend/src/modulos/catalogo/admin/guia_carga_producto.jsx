@@ -12,7 +12,7 @@ const PASOS = TALLE_COLOR
       ["Precio", "uno solo: vale para todos los colores y talles."],
       ["Colores y talles", "tocá los colores que tenés y elegí el grupo de talles. Se arma una fila por cada combinación (ej. Negro · M)."],
       ["Stock", "cargá cuántas unidades tenés de cada combinación (opcional) y tocá «Guardar producto»."],
-      ["Fotos", `al guardar te quedás en esta pantalla para subir hasta ${LIMITES_IMAGENES.por_color} fotos de cada color.`],
+      ["Fotos", `al guardar, cada color tiene en su tarjeta un lugar para subir sus fotos (hasta ${LIMITES_IMAGENES.por_color}). Las que sirven para todos los colores van arriba, en «Fotos generales».`],
     ]
   : [
       ["Datos", "nombre, categoría y marca."],
