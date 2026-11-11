@@ -6,6 +6,7 @@ import {
 import { linkWhatsapp, mensajePedido } from "../../frontend/src/modules/tienda_ropa/pedido/mensaje_whatsapp.js";
 import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
+import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
 import { cambiosPosibles, formasDePago, pasosDelPedido, pideMotivo as pideMotivoWeb, puedeSubirComprobante } from "../../frontend/src/modules/tienda_ropa/pedido/pago.js";
 import { ESTADOS_PEDIDO, pideMotivo, problemaTransicion } from "../src/modulos/tienda_ropa/reglas.js";
 import { formatearPrecio } from "../../frontend/src/modules/tienda_ropa/utils/dinero.js";
@@ -141,4 +142,13 @@ test("ROP-31: el middleware de Vercel responde la vista previa solo a los bots",
   } finally {
     globalThis.fetch = fetchOriginal;
   }
+});
+
+test("ROP-35: logo de la marca: el del panel, si no el de la configuración, si no ninguno", () => {
+  const logos = { MAYCLA: { logo: "/assets/maycla.webp", fondo: "#1E2D3D" }, Taverniti: { logo: "/assets/taverniti.webp" } };
+  assert.deepEqual(logoDeMarca({ nombre: "taverniti ", logo_url: null }, logos), { url: "/assets/taverniti.webp", fondo: null }, "sin importar mayúsculas ni espacios");
+  assert.deepEqual(logoDeMarca({ nombre: "Maycla", logo_url: "https://res.cloudinary.com/x/maycla.png" }, logos),
+    { url: "https://res.cloudinary.com/x/maycla.png", fondo: "#1E2D3D" }, "el subido en el panel gana, con el fondo de la configuración");
+  assert.equal(logoDeMarca({ nombre: "Raiders", logo_url: null }, logos), null, "sin logo: se muestra el nombre");
+  assert.equal(logoDeMarca({ nombre: "Raiders" }), null);
 });

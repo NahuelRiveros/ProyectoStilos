@@ -2,13 +2,15 @@ import { Layers, Palette, Ruler, Tag } from "lucide-react";
 import InputField from "../../../core/controls/ui/input_field.jsx";
 import ImageUploadField from "../../../core/controls/ui/image_upload_field.jsx";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
+import { LOGOS_MARCAS } from "../../../proyecto/config/marcas_config.js";
+import { logoDeMarca } from "../utils/logo_marca.js";
 import ListaSimplePage from "./lista_simple_page.jsx";
 
 // Marcas (ROP-02, ROP-24, ROP-25), diseños (ROP-23), colores (ROP-03) y grupos de talles (ROP-04) sobre el mismo molde.
 
 const MARCAS = {
   lista: "marcas", titulo: "Marcas", nuevo: "Nueva marca", icono: Tag, sugeridos: "Cargar marcas sugeridas",
-  descripcion: "Opcional en cada prenda. Con logo, se ven en el inicio de la tienda. Una marca desactivada no aparece en la tienda.",
+  descripcion: "Opcional en cada prenda. Las que tienen prendas se ven en el inicio, con su logo (el que subas acá o el de la configuración del proyecto). Una marca desactivada no aparece en la tienda.",
   vacio: "Todavía no hay marcas.", vacioDetalle: "Cargá las marcas que vende Stilos y después sumales el logo.",
   valores: (item) => ({ nombre: item?.nombre ?? "", activo: item?.activo ?? true, logo_url: item?.logo_url ?? "" }),
   armar: (v) => ({ nombre: v.nombre, activo: v.activo, logo_url: v.logo_url || null }),
@@ -20,14 +22,18 @@ const MARCAS = {
       <label className="flex min-h-11 items-center gap-2 text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Activa</label>
     </>
   ),
-  fila: (m) => (
+  // ROP-35: el subido acá, o el de proyecto/config/marcas_config.js, o ninguno.
+  fila: (m) => {
+    const logo = logoDeMarca(m, LOGOS_MARCAS);
+    return (
     <p className="flex items-center gap-3 font-semibold text-slate-900">
-      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-1">
-        {m.logo_url ? <img src={imagenCloudinary(m.logo_url, 128)} alt="" className="max-h-full max-w-full object-contain" /> : <Tag size={16} className="text-slate-300" aria-hidden="true" />}
+      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-1" style={logo?.fondo ? { backgroundColor: logo.fondo } : undefined}>
+        {logo ? <img src={imagenCloudinary(logo.url, 128)} alt="" className="max-h-full max-w-full object-contain" /> : <Tag size={16} className="text-slate-300" aria-hidden="true" />}
       </span>
       {m.nombre} {!m.activo && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">Inactiva</span>}
     </p>
-  ),
+    );
+  },
 };
 
 const DISENOS = {

@@ -88,3 +88,4 @@ prenda, un campo "modelo" aparte para agrupar colores (se agrupa por nombre y ma
 | 2026-11-11 | ROP-24 | Marcas: se suma US Amerika; "Niños" no es marca (es categoría). | Dueño del proyecto |
 | 2026-11-11 | ROP-29, ROP-30 | Cada color es una prenda aparte con hasta 3 fotos; la ficha muestra "También en:" con los otros colores (mismo nombre y marca). | Dueño del proyecto |
 | 2026-11-11 | ROP-04 | Talles de niños: 8, 10, 12, 14, 16. | Dueño del proyecto |
+| 2026-11-11 | ROP-35 | Logos de las marcas desde un archivo de configuración del proyecto (7 bajados de sus tiendas oficiales; Raiders, Bravo, BBN, AFF y US Amerika los agrega el dueño). Cinta en el inicio, solo con marcas que tienen prendas. | Dueño del proyecto |

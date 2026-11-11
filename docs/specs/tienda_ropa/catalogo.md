@@ -51,6 +51,7 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-31 | Al compartir el link de una prenda, WhatsApp y las redes muestran su nombre, marca, precio y foto (`frontend/middleware.js`, solo para esos bots). Si la API no responde, la vista previa de la tienda. | ✅ `ropa_web.test.mjs` › "ROP-31…" (2) |
 | ROP-26 | Inicio con "Ofertas" (hasta 8, si hay) y "Nuestras marcas" (con prendas a la vista, logo o nombre). | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" (marcas); pantalla: capturas |
 | ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
+| ROP-35 | Logos de marcas: el subido en el panel; si no, el de `frontend/src/proyecto/config/marcas_config.js` (imágenes en `proyecto/assets/marcas/`, con color de fondo para logos claros); si no, el nombre. En el inicio, "Nuestras marcas" es una cinta que se desplaza sola (con 5 o más), se frena al pasar el mouse y respeta "reducir movimiento". | ✅ `ropa_web.test.mjs` › "ROP-35…"; `tienda.spec.js` › "inicio: la cinta de marcas…" |
 | ROP-30 | "También en:": otras prendas visibles del mismo modelo (mismo nombre sin importar mayúsculas ni espacios, y misma marca). El panel muestra con cuáles quedó agrupada. | ✅ `ropa.integration.mjs` › "ROP-10 a ROP-12…" y "ROP-05 a ROP-08…" |
 
 ### Pedido

@@ -88,3 +88,19 @@ test("pedido sin cuenta: se arma en la ficha, pide dirección para envío y se e
   await page.goto("/pedido");
   await expect(page.getByRole("heading", { name: "Tu pedido está vacío" })).toBeVisible();
 });
+
+test("inicio: la cinta de marcas usa los logos de la configuración y lleva al catálogo de cada marca", async ({ page }) => {
+  const api = await simularApi(page);
+  const marcas = ["Taverniti", "MAYCLA", "Bando", "Mistral", "Panther", "Raiders"].map((nombre, i) => ({ id: i + 1, nombre, logo_url: null }));
+  api.responder("GET", "/ropa/catalogo/marcas", () => ({ json: { ok: true, data: marcas } }));
+  await page.goto("/");
+  const cinta = page.getByRole("heading", { name: "Nuestras marcas" }).locator("..");
+  // Las de proyecto/config/marcas_config.js se ven con su logo; Raiders (sin logo) con su nombre.
+  await expect(cinta.getByRole("img", { name: "Taverniti" })).toBeVisible();
+  await expect(cinta.getByRole("img", { name: "MAYCLA" })).toHaveAttribute("src", /maycla/);
+  await expect(cinta.getByRole("link", { name: "Ver Raiders" })).toContainText("Raiders");
+  // La copia que hace girar la cinta no se lee ni se enfoca: cada marca aparece una sola vez.
+  await expect(cinta.getByRole("link", { name: "Ver Taverniti" })).toHaveCount(1);
+  await expect(cinta.getByRole("link", { name: "Ver Bando" })).toHaveAttribute("href", "/catalogo?marca=3");
+  await sinDesborde(page);
+});

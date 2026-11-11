@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCatalogo, useCategoriasTienda, useMarcasTienda } from "../hooks/use_ropa.js";
-import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
+import CintaMarcas from "./cinta_marcas.jsx";
 import { brandConfig } from "../../../proyecto/config/brand_config.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
@@ -81,17 +81,7 @@ export default function InicioTienda({ textos }) {
         <section aria-labelledby="marcas" className="border-t border-(--kt-border) bg-(--kt-bg-soft) px-4 py-12 sm:px-6">
           <div className="mx-auto max-w-6xl">
             <h2 id="marcas" className="kt-display text-center text-3xl font-semibold sm:text-4xl">Nuestras marcas</h2>
-            <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-              {marcas.data.map((m) => (
-                <li key={m.id}>
-                  <Link to={`/catalogo?marca=${m.id}`} aria-label={`Ver ${m.nombre}`} className="flex h-20 items-center justify-center rounded-2xl border border-(--kt-border) bg-white p-3 transition hover:border-(--kt-petrol)">
-                    {m.logo_url
-                      ? <img src={imagenCloudinary(m.logo_url, 240)} alt={m.nombre} loading="lazy" className="max-h-full max-w-full object-contain" />
-                      : <span className="kt-display text-center text-xl font-semibold text-(--kt-petrol)">{m.nombre}</span>}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-8"><CintaMarcas marcas={marcas.data} /></div>
           </div>
         </section>
       )}
