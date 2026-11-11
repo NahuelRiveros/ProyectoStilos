@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Shirt, ShoppingBag } from "lucide-react";
+import { ChevronRight, Minus, Plus, Share2, Shirt, ShoppingBag } from "lucide-react";
 import { useToast } from "../../../core/controls/toast/use_toast.js";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { cn } from "../../../core/utils/cn.js";
@@ -8,9 +8,12 @@ import { usePrendaTienda } from "../hooks/use_ropa.js";
 import { usePedido } from "../pedido/pedido_context.js";
 import { ErrorReintentar } from "./estados.jsx";
 import Precio, { EtiquetaOferta } from "./precio.jsx";
+import PrendaCard from "./prenda_card.jsx";
+import { compartir } from "./compartir.js";
+import { brandConfig } from "../../../proyecto/config/brand_config.js";
 import { enOferta } from "../utils/dinero.js";
 
-/** Ficha (ROP-12): fotos del color elegido, color, talle (agotados tachados) y "Agregar al pedido". */
+/** Ficha (ROP-12, ROP-19, ROP-22): fotos, color, talle (agotados tachados), "Agregar al pedido", compartir y relacionadas. */
 export default function PrendaPage() {
   const { slug } = useParams();
   const consulta = usePrendaTienda(slug);
@@ -51,6 +54,12 @@ function Ficha({ prenda }) {
     setColorId(id);
     setFotoIdx(0);
     if (talleId && !prenda.variantes.some((v) => v.color_id === id && v.talle_id === talleId && v.disponible)) setTalleId(null);
+  }
+
+  async function compartirPrenda() {
+    const resultado = await compartir({ titulo: prenda.nombre, texto: `${prenda.nombre} en ${brandConfig.nombre}`, url: window.location.href }, navigator);
+    if (resultado === "copiado") toast.success("Copiamos el link de la prenda.");
+    if (resultado === "error") toast.error("No pudimos compartir. Copiá el link de la barra del navegador.");
   }
 
   function agregar() {
@@ -95,7 +104,9 @@ function Ficha({ prenda }) {
         </div>
 
         <div>
-          {prenda.marca && <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--kt-ink-soft)">{prenda.marca.nombre}</p>}
+          {(prenda.marca || prenda.diseno) && (
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--kt-ink-soft)">{[prenda.marca?.nombre, prenda.diseno?.nombre].filter(Boolean).join(" · ")}</p>
+          )}
           <h1 className="kt-display mt-1 text-4xl font-semibold leading-tight sm:text-5xl">{prenda.nombre}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Precio prenda={prenda} grande />
@@ -112,6 +123,19 @@ function Ficha({ prenda }) {
                 </button>
               ))}
             </div>
+            {prenda.otros_colores.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-semibold">También en:</p>
+                <div className="flex flex-wrap gap-2">
+                  {prenda.otros_colores.map((o) => (
+                    <Link key={o.slug} to={`/catalogo/${o.slug}`} aria-label={`Ver en ${o.color.nombre}`} title={o.color.nombre}
+                      className="h-11 w-11 rounded-full border-2 border-transparent p-1 hover:border-(--kt-border)">
+                      <span className="block h-full w-full rounded-full border border-black/15" style={{ backgroundColor: o.color.hex }} />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </fieldset>
 
           <fieldset className="mt-6">
@@ -147,9 +171,22 @@ function Ficha({ prenda }) {
           </div>
           {pedido.unidades > 0 && <Link to="/pedido" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-(--kt-petrol) underline-offset-4 hover:underline">Ver mi pedido ({pedido.unidades})</Link>}
 
+          <button type="button" onClick={compartirPrenda} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-(--kt-ink-soft) hover:text-(--kt-ink)">
+            <Share2 size={16} aria-hidden="true" /> Compartir
+          </button>
+
           {prenda.descripcion && <p className="mt-8 whitespace-pre-line border-t border-(--kt-border) pt-6 text-sm leading-relaxed text-(--kt-ink-soft)">{prenda.descripcion}</p>}
         </div>
       </div>
+
+      {prenda.relacionadas.length > 0 && (
+        <section aria-labelledby="relacionadas" className="mt-16 border-t border-(--kt-border) pt-10">
+          <h2 id="relacionadas" className="kt-display text-3xl font-semibold">También te puede gustar</h2>
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4">
+            {prenda.relacionadas.map((p) => <PrendaCard key={p.id} prenda={p} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

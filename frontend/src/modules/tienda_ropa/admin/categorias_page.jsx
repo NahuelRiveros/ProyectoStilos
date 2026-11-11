@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
+import { FolderTree, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import Modal from "../../../core/controls/ui/modal.jsx";
 import ConfirmDialog from "../../../core/controls/ui/confirm_dialog.jsx";
 import InputField from "../../../core/controls/ui/input_field.jsx";
@@ -13,10 +13,10 @@ import { BOTON_PELIGRO, BOTON_PRIMARIO, BOTON_SECUNDARIO, Encabezado, Pantalla, 
 const aplanar = (nodos, nivel = 0) => nodos.flatMap((n) => [{ ...n, nivel }, ...aplanar(n.hijas, nivel + 1)]);
 const ids = (nodo) => [nodo.id, ...nodo.hijas.flatMap(ids)];
 
-/** Categorías (ROP-01): árbol, alta de subcategorías, mover, ocultar y borrar. */
+/** Categorías (ROP-01, ROP-27): árbol, alta de subcategorías, mover, ocultar, borrar y cargar las principales sugeridas. */
 export default function CategoriasPage() {
   const consulta = useLista("categorias");
-  const { guardar, eliminar } = useGestionLista("categorias");
+  const { guardar, eliminar, sugeridos } = useGestionLista("categorias");
   const toast = useToast();
   const [editando, setEditando] = useState(null); // null · { padre_id } nueva · categoría
   const [aBorrar, setABorrar] = useState(null);
@@ -29,6 +29,16 @@ export default function CategoriasPage() {
     setABorrar(null);
   }
 
+  async function cargarSugeridas() {
+    try { toast.success((await sugeridos.mutateAsync()).mensaje); }
+    catch (error) { toast.error(mensajeError(error, "No se pudieron cargar las sugeridas.")); }
+  }
+  const sugerir = (
+    <button type="button" onClick={cargarSugeridas} disabled={sugeridos.isPending} className={BOTON_SECUNDARIO}>
+      <Sparkles size={16} aria-hidden="true" /> {sugeridos.isPending ? "Cargando…" : "Cargar categorías sugeridas"}
+    </button>
+  );
+
   async function alternarVisible(c) {
     try {
       await guardar.mutateAsync({ id: c.id, nombre: c.nombre, padre_id: c.padre_id, orden: c.orden, activo: !c.activo });
@@ -39,10 +49,11 @@ export default function CategoriasPage() {
   return (
     <Pantalla>
       <Encabezado titulo="Categorías" descripcion="Organizan la tienda (ej. Mujer › Remeras). Ocultar una oculta también las de adentro.">
+        {arbol.length > 0 && sugerir}
         <button type="button" onClick={() => setEditando({ padre_id: null })} className={BOTON_PRIMARIO}><Plus size={16} aria-hidden="true" /> Nueva categoría</button>
       </Encabezado>
 
-      <SegunConsulta consulta={consulta} vacia={arbol.length === 0} icono={FolderTree} tituloVacio="Todavía no hay categorías." descripcionVacio="Creá las principales (ej. Mujer, Hombre) y adentro sus subcategorías.">
+      <SegunConsulta consulta={consulta} vacia={arbol.length === 0} icono={FolderTree} tituloVacio="Todavía no hay categorías." descripcionVacio="Cargá las principales (Mujer, Hombre, Niños y Calzado) y adentro sus subcategorías." accionVacio={sugerir}>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {planas.map((c) => (
             <li key={c.id} className="flex flex-wrap items-center gap-2 px-4 py-3" style={{ paddingLeft: `${1 + c.nivel * 1.5}rem` }}>

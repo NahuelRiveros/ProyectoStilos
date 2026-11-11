@@ -9,7 +9,7 @@ import { useGestionLista, useLista, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PELIGRO, BOTON_PRIMARIO, BOTON_SECUNDARIO, Encabezado, Pantalla, SegunConsulta } from "./comunes.jsx";
 
 /**
- * Pantalla de una lista simple del panel (marcas, colores, grupos de talles): listado, alta y edición
+ * Pantalla de una lista simple del panel (marcas, diseños, colores, grupos de talles): listado, alta y edición
  * en un modal, borrado con confirmación y, si la lista lo ofrece, "Cargar sugeridos".
  * `config` describe la lista: textos, campos del formulario y cómo se ve cada fila.
  */
@@ -77,7 +77,7 @@ export default function ListaSimplePage({ config }) {
 
 function Formulario({ config, item, guardar, onClose }) {
   const toast = useToast();
-  const { register, handleSubmit, setError, watch, formState: { errors } } = useForm({ defaultValues: config.valores(item) });
+  const { register, handleSubmit, setError, setValue, watch, formState: { errors } } = useForm({ defaultValues: config.valores(item) });
 
   async function enviar(valores) {
     try {
@@ -94,7 +94,7 @@ function Formulario({ config, item, guardar, onClose }) {
   return (
     <Modal open onClose={onClose} busy={guardar.isPending} title={item ? `Editar ${item.nombre}` : config.nuevo}>
       <form onSubmit={handleSubmit(enviar)} noValidate className="space-y-4">
-        {config.campos({ register, errors, watch })}
+        {config.campos({ register, errors, watch, setValue })}
         <FormError message={errors.root?.message} />
         <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} disabled={guardar.isPending} className={BOTON_SECUNDARIO}>Cancelar</button>

@@ -1,9 +1,9 @@
-import { Op } from "sequelize";
+import { Op, col, fn } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
 import { normalizarPaginacion, armarPaginacion } from "../../../core/services/common/pagination.js";
-import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante, PrendaImagen } from "../models/index.js";
-import { conDescendientes } from "../reglas.js";
+import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante, PrendaImagen } from "../models/index.js";
+import { claveModelo, conDescendientes } from "../reglas.js";
 import { slugLibre } from "./listas_service.js";
 
 // Prendas del panel (ROP-05 a ROP-09). Datos validados por esquemaPrenda; errores como ErrorApp.
@@ -12,7 +12,7 @@ const POR_PAGINA = 20;
 const ORDEN_FOTOS = [["orden", "ASC"], ["id", "ASC"]];
 
 /** Filtro de texto, categoría (con subcategorías), marca, color y talle: compartido con la tienda. */
-export async function wherePrendas({ q, categoria, marca, color, talle }) {
+export async function wherePrendas({ q, categoria, marca, color, talle, diseno }) {
   const condiciones = [];
   if (q) condiciones.push({ nombre: { [Op.iLike]: `%${q}%` } });
   if (categoria) {
@@ -20,6 +20,7 @@ export async function wherePrendas({ q, categoria, marca, color, talle }) {
     condiciones.push({ categoria_id: conDescendientes(todas, categoria) });
   }
   if (marca) condiciones.push({ marca_id: marca });
+  if (diseno) condiciones.push({ diseno_id: diseno });
   if (color || talle) {
     // Color y talle se cumplen en la MISMA variante y disponible: "remera roja talle M que haya".
     const variantes = await PrendaVariante.findAll({
@@ -70,7 +71,25 @@ export async function obtenerPrenda(id) {
     order: [[{ model: PrendaImagen, as: "imagenes" }, "orden", "ASC"]],
   });
   if (!prenda) throw noExiste("La prenda no existe.");
-  return prenda;
+  // En el panel se ven todos los del modelo, también los ocultos, para detectar nombres mal escritos.
+  return { ...prenda.toJSON(), otros_colores: await otrosColores(prenda) };
+}
+
+/**
+ * ROP-30: las otras prendas del mismo modelo (mismo nombre, sin importar mayúsculas ni espacios, y
+ * misma marca), cada una con su color. `filtro`: condiciones extra (la tienda pide solo las visibles).
+ */
+export async function otrosColores({ id, nombre, marca_id }, filtro = {}) {
+  const nombreNormalizado = fn("lower", fn("regexp_replace", fn("trim", col("Prenda.nombre")), "\\s+", " ", "g"));
+  const mismas = await Prenda.findAll({
+    where: { [Op.and]: [{ id: { [Op.ne]: id }, marca_id: marca_id ?? null, ...filtro }, sequelize.where(nombreNormalizado, claveModelo(nombre))] },
+    attributes: ["id", "slug", "activo"],
+    include: [{ model: PrendaVariante, as: "variantes", attributes: ["color_id"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "orden"] }] }],
+  });
+  return mismas
+    .filter((p) => p.variantes.length)
+    .map((p) => ({ id: p.id, slug: p.slug, activo: p.activo, color: p.variantes[0].color.toJSON() }))
+    .sort((a, b) => a.color.orden - b.color.orden || a.color.nombre.localeCompare(b.color.nombre));
 }
 
 /** Que la categoría, la marca, los colores y los talles existan, y los talles sean del grupo elegido. */
@@ -78,6 +97,7 @@ async function verificarReferencias(datos, transaction) {
   const falta = (mensaje) => new ErrorApp("DATOS_INVALIDOS", mensaje, 400);
   if (!await CategoriaRopa.findByPk(datos.categoria_id, { transaction })) throw falta("La categoría elegida no existe.");
   if (datos.marca_id && !await MarcaRopa.findByPk(datos.marca_id, { transaction })) throw falta("La marca elegida no existe.");
+  if (datos.diseno_id && !await DisenoRopa.findByPk(datos.diseno_id, { transaction })) throw falta("El diseño elegido no existe.");
   if (!await GrupoTalle.findByPk(datos.grupo_talle_id, { transaction })) throw falta("El grupo de talles no existe.");
   const tallesDelGrupo = new Set((await Talle.findAll({ where: { grupo_talle_id: datos.grupo_talle_id }, attributes: ["id"], raw: true, transaction })).map((t) => t.id));
   if (datos.variantes.some((v) => !tallesDelGrupo.has(v.talle_id))) throw falta("Hay talles que no son del grupo elegido.");
@@ -105,10 +125,17 @@ async function guardarImagenes(prendaId, imagenes, transaction) {
   if (imagenes.length) await PrendaImagen.bulkCreate(imagenes.map((img, orden) => ({ ...img, prenda_id: prendaId, orden })), { transaction });
 }
 
+/** ROP-29: la URL lleva el color ("remera-taverniti-rojo"), así dos colores del mismo modelo no chocan. */
+async function textoSlug(nombre, colorId, transaction) {
+  const color = await ColorRopa.findByPk(colorId, { attributes: ["nombre"], transaction });
+  return `${nombre} ${color?.nombre ?? ""}`;
+}
+
 export async function crearPrenda({ variantes, imagenes, ...datos }) {
   const id = await sequelize.transaction(async (transaction) => {
     await verificarReferencias({ ...datos, variantes }, transaction);
-    const prenda = await Prenda.create({ ...datos, slug: await slugLibre(Prenda, datos.nombre) }, { transaction });
+    const slugNuevo = await slugLibre(Prenda, await textoSlug(datos.nombre, variantes[0].color_id, transaction));
+    const prenda = await Prenda.create({ ...datos, slug: slugNuevo }, { transaction });
     await guardarVariantes(prenda.id, variantes, transaction);
     await guardarImagenes(prenda.id, imagenes, transaction);
     return prenda.id;
@@ -121,7 +148,9 @@ export async function actualizarPrenda(id, { variantes, imagenes, ...datos }) {
   if (!prenda) throw noExiste("La prenda no existe.");
   await sequelize.transaction(async (transaction) => {
     await verificarReferencias({ ...datos, variantes }, transaction);
-    const slugNuevo = datos.nombre !== prenda.nombre ? await slugLibre(Prenda, datos.nombre, prenda.id) : prenda.slug;
+    const colorAntes = (await PrendaVariante.findOne({ where: { prenda_id: prenda.id }, attributes: ["color_id"], transaction }))?.color_id;
+    const cambio = datos.nombre !== prenda.nombre || colorAntes !== variantes[0].color_id;
+    const slugNuevo = cambio ? await slugLibre(Prenda, await textoSlug(datos.nombre, variantes[0].color_id, transaction), prenda.id) : prenda.slug;
     await prenda.update({ ...datos, slug: slugNuevo, actualizado_en: new Date() }, { transaction });
     await guardarVariantes(prenda.id, variantes, transaction);
     await guardarImagenes(prenda.id, imagenes, transaction);

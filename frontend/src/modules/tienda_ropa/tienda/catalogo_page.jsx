@@ -8,7 +8,7 @@ import { cn } from "../../../core/utils/cn.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
 
-const CAMPOS = ["q", "categoria", "marca", "color", "talle", "ofertas", "orden", "pagina"];
+const CAMPOS = ["q", "categoria", "marca", "color", "talle", "diseno", "ofertas", "orden", "pagina"];
 const ORDENES = [["novedades", "Novedades"], ["menor_precio", "Menor precio"], ["mayor_precio", "Mayor precio"]];
 
 /** Camino de la raíz a la categoría `id` dentro del árbol, o []. */
@@ -21,7 +21,7 @@ function caminoA(arbol, id) {
   return [];
 }
 
-/** Catálogo (ROP-11): búsqueda, categorías por niveles con migas, marca, color, talle, ofertas y orden. Todo en la URL. */
+/** Catálogo (ROP-11, ROP-23, ROP-28): búsqueda, categorías con migas, marca, color, talle, diseño, ofertas y orden. Todo en la URL. */
 export default function CatalogoPage() {
   const [params, setParams] = useSearchParams();
   const filtros = useMemo(() => Object.fromEntries(CAMPOS.map((c) => [c, params.get(c) ?? ""]).filter(([, v]) => v)), [params]);
@@ -29,7 +29,8 @@ export default function CatalogoPage() {
 
   const prendas = useCatalogo({ ...filtros, pagina: filtros.pagina ?? 1 });
   const categorias = useCategoriasTienda();
-  const opciones = useFiltrosTienda();
+  // ROP-28: las opciones son las de la categoría elegida (en Calzado, solo números de calzado).
+  const opciones = useFiltrosTienda(filtros.categoria);
 
   const [verFiltros, setVerFiltros] = useState(false);
 
@@ -51,7 +52,7 @@ export default function CatalogoPage() {
   const camino = caminoA(arbol, numero("categoria"));
   const actual = camino.at(-1);
   const hijas = actual ? actual.hijas : arbol;
-  const hayFiltros = ["marca", "color", "talle", "q", "ofertas"].some((c) => filtros[c]);
+  const hayFiltros = ["marca", "color", "talle", "diseno", "q", "ofertas"].some((c) => filtros[c]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -102,14 +103,35 @@ export default function CatalogoPage() {
                 </div>
               </fieldset>
             )}
-            {(opciones.data?.talles.length ?? 0) > 0 && (
+            {(opciones.data?.grupos_talle.length ?? 0) > 0 && (
               <fieldset>
                 <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">Talle</legend>
+                <div className="space-y-3">
+                  {opciones.data.grupos_talle.map((g) => (
+                    <div key={g.id}>
+                      {/* Con un solo grupo no hace falta el título (ej. en Calzado). */}
+                      {opciones.data.grupos_talle.length > 1 && <p className="mb-1.5 text-xs text-(--kt-ink-soft)">{g.nombre}</p>}
+                      <div className="flex flex-wrap gap-2">
+                        {g.talles.map((t) => (
+                          <button key={t.id} type="button" aria-pressed={numero("talle") === t.id} aria-label={`Talle ${t.nombre} (${g.nombre})`} onClick={() => alternar("talle", t.id)}
+                            className={cn("min-h-11 min-w-11 rounded-xl border px-3 text-sm font-semibold", numero("talle") === t.id ? "border-(--kt-petrol) bg-(--kt-petrol) text-(--kt-accent-on-dark)" : "border-(--kt-border) hover:border-(--kt-petrol)")}>
+                            {t.nombre}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            {(opciones.data?.disenos.length ?? 0) > 0 && (
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">Diseño</legend>
                 <div className="flex flex-wrap gap-2">
-                  {opciones.data.talles.map((t) => (
-                    <button key={t.id} type="button" aria-pressed={numero("talle") === t.id} onClick={() => alternar("talle", t.id)}
-                      className={cn("min-h-11 min-w-11 rounded-xl border px-3 text-sm font-semibold", numero("talle") === t.id ? "border-(--kt-petrol) bg-(--kt-petrol) text-(--kt-accent-on-dark)" : "border-(--kt-border) hover:border-(--kt-petrol)")}>
-                      {t.nombre}
+                  {opciones.data.disenos.map((d) => (
+                    <button key={d.id} type="button" aria-pressed={numero("diseno") === d.id} onClick={() => alternar("diseno", d.id)}
+                      className={cn("min-h-11 rounded-full border px-4 text-sm font-semibold", numero("diseno") === d.id ? "border-(--kt-petrol) bg-(--kt-petrol) text-(--kt-accent-on-dark)" : "border-(--kt-border) hover:border-(--kt-petrol)")}>
+                      {d.nombre}
                     </button>
                   ))}
                 </div>

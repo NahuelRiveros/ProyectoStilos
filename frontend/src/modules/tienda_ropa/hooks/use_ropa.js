@@ -6,7 +6,9 @@ const MIN = 60 * 1000;
 
 // ── Tienda ──────────────────────────────────────────────────────────────────────
 export const useCategoriasTienda = () => useQuery({ queryKey: ["ropa", "tienda", "categorias"], queryFn: api.getCategoriasTienda, staleTime: 5 * MIN });
-export const useFiltrosTienda = () => useQuery({ queryKey: ["ropa", "tienda", "filtros"], queryFn: api.getFiltrosTienda, staleTime: 5 * MIN });
+// ROP-28: las opciones dependen de la categoría; cambian poco, así que se cachean 5 minutos.
+export const useFiltrosTienda = (categoria) => useQuery({ queryKey: ["ropa", "tienda", "filtros", categoria ?? null], queryFn: () => api.getFiltrosTienda(categoria), staleTime: 5 * MIN, placeholderData: keepPreviousData });
+export const useMarcasTienda = () => useQuery({ queryKey: ["ropa", "tienda", "marcas"], queryFn: api.getMarcasTienda, staleTime: 5 * MIN });
 export const useCatalogo = (filtros) => useQuery({
   queryKey: ["ropa", "tienda", "prendas", filtros],
   queryFn: ({ signal }) => api.getCatalogo(filtros, signal),
@@ -48,9 +50,33 @@ export function useGestionPrendas() {
 export const usePedidos = (filtros) => useQuery({ queryKey: ["ropa", "pedidos", filtros], queryFn: () => api.getPedidos(filtros), placeholderData: keepPreviousData });
 export const usePedido = (id) => useQuery({ queryKey: ["ropa", "pedido", id], queryFn: () => api.getPedido(id), enabled: Boolean(id) });
 export const useResumenPedidos = () => useQuery({ queryKey: ["ropa", "pedidos", "resumen"], queryFn: api.getResumenPedidos, staleTime: MIN });
-export function useEstadoPedido() {
+/** Acciones del panel sobre un pedido (ROP-54 a ROP-57). Cada una refresca listas y detalle. */
+export function useAccionesPedido() {
   const onSuccess = useRefrescar();
-  return useMutation({ mutationFn: ({ id, estado }) => api.cambiarEstadoPedido(id, estado), onSuccess });
+  return {
+    estado: useMutation({ mutationFn: ({ id, ...cambio }) => api.cambiarEstadoPedido(id, cambio), onSuccess }),
+    pagado: useMutation({ mutationFn: api.marcarPagado, onSuccess }),
+    aceptar: useMutation({ mutationFn: ({ id, comprobanteId }) => api.aceptarComprobante(id, comprobanteId), onSuccess }),
+    rechazar: useMutation({ mutationFn: ({ id, comprobanteId, motivo }) => api.rechazarComprobante(id, comprobanteId, motivo), onSuccess }),
+    enlace: useMutation({ mutationFn: ({ id, comprobanteId }) => api.enlaceComprobantePanel(id, comprobanteId) }),
+  };
+}
+
+// ── Cuenta del cliente ──────────────────────────────────────────────────────────
+export const useMisDatos = (activo = true) => useQuery({ queryKey: ["ropa", "cuenta", "datos"], queryFn: api.getMisDatos, enabled: activo, staleTime: 5 * MIN });
+export const useMisPedidos = () => useQuery({ queryKey: ["ropa", "cuenta", "pedidos"], queryFn: api.getMisPedidos });
+export const useMiPedido = (id) => useQuery({ queryKey: ["ropa", "cuenta", "pedido", id], queryFn: () => api.getMiPedido(id), enabled: Boolean(id) });
+
+export function useAccionesCuenta() {
+  const queryClient = useQueryClient();
+  const onSuccess = () => queryClient.invalidateQueries({ queryKey: ["ropa", "cuenta"] });
+  return {
+    guardarDatos: useMutation({ mutationFn: api.guardarMisDatos, onSuccess }),
+    enviar: useMutation({ mutationFn: api.enviarPedidoCuenta, onSuccess }),
+    cancelar: useMutation({ mutationFn: ({ id, motivo }) => api.cancelarMiPedido(id, motivo), onSuccess }),
+    subir: useMutation({ mutationFn: ({ id, archivo }) => api.subirComprobante(id, archivo), onSuccess }),
+    enlace: useMutation({ mutationFn: ({ id, comprobanteId }) => api.enlaceMiComprobante(id, comprobanteId) }),
+  };
 }
 
 /** El mensaje en español que manda el servidor, o uno genérico. */

@@ -11,8 +11,14 @@ export const COLORES_SUGERIDOS = [
   ["Naranja", "#EA7A2A"], ["Terracota", "#B5573A"],
 ].map(([nombre, hex], orden) => ({ nombre, hex, orden }));
 
+// ROP-24: marcas que vende Stilos (decididas por el dueño, 2026-11-11).
+export const MARCAS_SUGERIDAS = ["Taverniti", "Bando", "Raiders", "Bravo", "BBN", "Panther", "AFF", "MAYCLA", "Isostasia", "Cataleia", "Mistral", "US Amerika"];
+export const DISENOS_SUGERIDOS = ["Lisa", "Rayada", "Estampada"]; // ROP-23
+export const CATEGORIAS_SUGERIDAS = ["Mujer", "Hombre", "Niños", "Calzado"]; // ROP-27
+
 export const GRUPOS_TALLE_SUGERIDOS = [
   { nombre: "Ropa", talles: ["S", "M", "L", "XL", "XXL", "XXXL"] },
   { nombre: "Jeans", talles: ["36", "38", "40", "42", "44", "46", "48", "50", "52", "54", "56"] },
   { nombre: "Calzado", talles: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"] },
+  { nombre: "Niños", talles: ["8", "10", "12", "14", "16"] },
 ];

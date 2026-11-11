@@ -12,17 +12,16 @@ import { cn } from "../../../core/utils/cn.js";
 import { useGestionPrendas, useLista, usePrendaPanel, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PRIMARIO, BOTON_SECUNDARIO, Pantalla, SegunConsulta } from "./comunes.jsx";
 
-// Mismos límites que el servidor (servidor/src/modulos/tienda_ropa/reglas.js, ROP-06).
-const MAX_FOTOS_POR_COLOR = 3;
-const MAX_FOTOS_GENERALES = 10;
+// Mismo límite que el servidor (servidor/src/modulos/tienda_ropa/reglas.js, ROP-29).
+const MAX_FOTOS = 3;
 const aplanar = (nodos, nivel = 0) => nodos.flatMap((n) => [{ ...n, nivel }, ...aplanar(n.hijas, nivel + 1)]);
 const clave = (colorId, talleId) => `${colorId}-${talleId}`;
 
-/** Alta y edición de una prenda (ROP-05 a ROP-08). */
+/** Alta y edición de una prenda (ROP-05 a ROP-08, ROP-29: un color por prenda). */
 export default function PrendaFormPage() {
   const { id } = useParams();
   const prenda = usePrendaPanel(id);
-  const listas = { categorias: useLista("categorias"), marcas: useLista("marcas"), colores: useLista("colores"), talles: useLista("talles") };
+  const listas = { categorias: useLista("categorias"), marcas: useLista("marcas"), disenos: useLista("disenos"), colores: useLista("colores"), talles: useLista("talles") };
   const consultas = [...Object.values(listas), ...(id ? [prenda] : [])];
   const cargando = consultas.find((c) => c.isPending || c.isError) ?? consultas[0];
   const faltaBase = !listas.categorias.data?.length || !listas.colores.data?.length || !listas.talles.data?.length;
@@ -50,16 +49,21 @@ function Formulario({ prenda, listas }) {
   const { register, handleSubmit, setError, formState: { errors } } = useForm({
     defaultValues: {
       nombre: prenda?.nombre ?? "", descripcion: prenda?.descripcion ?? "",
-      categoria_id: String(prenda?.categoria_id ?? ""), marca_id: String(prenda?.marca_id ?? ""),
+      categoria_id: String(prenda?.categoria_id ?? ""), marca_id: String(prenda?.marca_id ?? ""), diseno_id: String(prenda?.diseno_id ?? ""),
       precio: prenda ? Number(prenda.precio) : "", activo: prenda?.activo ?? true,
       precio_anterior: prenda?.precio_anterior ? Number(prenda.precio_anterior) : "",
     },
   });
   const [grupoId, setGrupoId] = useState(prenda?.grupo_talle_id ?? grupos[0]?.id);
-  const [elegidos, setElegidos] = useState(() => [...new Set((prenda?.variantes ?? []).map((v) => v.color_id))]);
+  // ROP-29: un solo color. Una prenda vieja con varios se queda con el primero (los otros, como prendas nuevas).
+  const coloresAntes = [...new Set((prenda?.variantes ?? []).map((v) => v.color_id))];
+  const [elegidos, setElegidos] = useState(() => coloresAntes.slice(0, 1));
   // clave color-talle → "hay" | "agotado"; sin clave = no se vende.
-  const [celdas, setCeldas] = useState(() => Object.fromEntries((prenda?.variantes ?? []).map((v) => [clave(v.color_id, v.talle_id), v.disponible ? "hay" : "agotado"])));
-  const [fotos, setFotos] = useState(() => (prenda?.imagenes ?? []).map(({ url, color_id }) => ({ url, color_id })));
+  const [celdas, setCeldas] = useState(() => Object.fromEntries((prenda?.variantes ?? []).filter((v) => v.color_id === coloresAntes[0]).map((v) => [clave(v.color_id, v.talle_id), v.disponible ? "hay" : "agotado"])));
+  // Las fotos son de la prenda: las generales de antes pasan a su color.
+  const [fotos, setFotos] = useState(() => (prenda?.imagenes ?? [])
+    .filter((i) => i.color_id === null || i.color_id === coloresAntes[0])
+    .map(({ url }) => ({ url, color_id: coloresAntes[0] ?? null })));
   const [errorVariantes, setErrorVariantes] = useState("");
 
   const talles = grupos.find((g) => g.id === grupoId)?.talles ?? [];
@@ -72,15 +76,14 @@ function Formulario({ prenda, listas }) {
     setCeldas(Object.fromEntries(elegidos.flatMap((c) => tallesNuevos.map((t) => [clave(c, t.id), "hay"]))));
   }
 
-  function alternarColor(colorId) {
-    if (elegidos.includes(colorId)) {
-      setElegidos(elegidos.filter((c) => c !== colorId));
-      setCeldas((actual) => Object.fromEntries(Object.entries(actual).filter(([k]) => !k.startsWith(`${colorId}-`))));
-      setFotos((actual) => actual.filter((f) => f.color_id !== colorId));
-    } else {
-      setElegidos([...elegidos, colorId]);
-      setCeldas((actual) => ({ ...actual, ...todasHay(colorId) }));
-    }
+  // Cambiar el color conserva qué hay en cada talle y las fotos (pasan al color nuevo).
+  function elegirColor(colorId) {
+    const anterior = elegidos[0];
+    if (anterior === colorId) return;
+    setElegidos([colorId]);
+    setCeldas((actual) => (anterior === undefined ? todasHay(colorId)
+      : Object.fromEntries(Object.entries(actual).map(([k, v]) => [clave(colorId, k.split("-")[1]), v]))));
+    setFotos((actual) => actual.map((foto) => ({ ...foto, color_id: colorId })));
   }
 
   function cambiarCelda(colorId, talleId, valor) {
@@ -93,12 +96,13 @@ function Formulario({ prenda, listas }) {
 
   async function enviar(valores) {
     const variantes = elegidos.flatMap((c) => talles.filter((t) => celdas[clave(c, t.id)]).map((t) => ({ color_id: c, talle_id: t.id, disponible: celdas[clave(c, t.id)] === "hay" })));
-    if (!variantes.length) { setErrorVariantes("Elegí al menos un color y un talle que se venda."); return; }
+    if (!variantes.length) { setErrorVariantes("Elegí el color y al menos un talle que se venda."); return; }
     setErrorVariantes("");
     try {
       const r = await guardar.mutateAsync({
         id: prenda?.id, nombre: valores.nombre, descripcion: valores.descripcion,
         categoria_id: Number(valores.categoria_id), marca_id: valores.marca_id ? Number(valores.marca_id) : null,
+        diseno_id: valores.diseno_id ? Number(valores.diseno_id) : null,
         grupo_talle_id: grupoId, precio: Number(valores.precio), activo: valores.activo,
         precio_anterior: valores.precio_anterior === "" ? null : Number(valores.precio_anterior),
         variantes, imagenes: fotos,
@@ -133,24 +137,46 @@ function Formulario({ prenda, listas }) {
               {listas.marcas.data.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
             </select>
           </label>
-          <InputField name="precio" type="number" min={1} step="0.01" inputMode="decimal" label="Precio ($)" helperText="El mismo para todos los talles y colores." register={register} required requiredMessage="Escribí el precio." error={errors.precio?.message} />
+          <label className="block text-sm font-semibold text-gray-700">Diseño (opcional)
+            <select {...register("diseno_id")} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
+              <option value="">Sin diseño</option>
+              {listas.disenos.data.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+            </select>
+          </label>
+          <InputField name="precio" type="number" min={1} step="0.01" inputMode="decimal" label="Precio ($)" helperText="El mismo para todos los talles." register={register} required requiredMessage="Escribí el precio." error={errors.precio?.message} />
           <InputField name="precio_anterior" type="number" min={1} step="0.01" inputMode="decimal" label="Precio anterior ($, opcional)" helperText="Para marcarla en oferta: se ve tachado. Vacío = sin oferta." register={register} error={errors.precio_anterior?.message} />
           <label className="flex min-h-11 items-center gap-2 self-end text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
           <div className="sm:col-span-2"><TextareaField name="descripcion" label="Descripción (opcional)" rows={4} placeholder="Tela, calce, cuidados…" register={register} error={errors.descripcion?.message} /></div>
         </div>
       </Seccion>
 
-      <Seccion titulo="Talles y colores" descripcion="Tildá los colores y marcá qué hay en cada talle.">
+      <Seccion titulo="Color y talles" descripcion="Una prenda es de un solo color: los otros colores del mismo modelo se cargan como prendas aparte, con el mismo nombre y marca.">
+        {coloresAntes.length > 1 && (
+          <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            Esta prenda tenía varios colores. Al guardarla queda solo {colores.find((c) => c.id === coloresAntes[0])?.nombre}: cargá los otros como prendas nuevas.
+          </p>
+        )}
+        {prenda?.otros_colores?.length > 0 && (
+          <p className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            También está en:
+            {prenda.otros_colores.map((o) => (
+              <Link key={o.id} to={`/admin/ropa/prendas/${o.id}`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 px-2.5 font-semibold text-slate-800 hover:border-slate-400">
+                <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ backgroundColor: o.color.hex }} aria-hidden="true" />
+                {o.color.nombre}{!o.activo && <span className="font-normal text-slate-400">(oculta)</span>}
+              </Link>
+            ))}
+          </p>
+        )}
         <label className="block max-w-xs text-sm font-semibold text-gray-700">Grupo de talles
           <select value={grupoId} onChange={(e) => cambiarGrupo(Number(e.target.value))} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
             {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre} ({g.talles.map((t) => t.nombre).join(", ")})</option>)}
           </select>
         </label>
         <fieldset className="mt-4">
-          <legend className="mb-2 text-sm font-semibold text-gray-700">Colores</legend>
+          <legend className="mb-2 text-sm font-semibold text-gray-700">Color</legend>
           <div className="flex flex-wrap gap-2">
             {colores.map((c) => (
-              <button key={c.id} type="button" onClick={() => alternarColor(c.id)} aria-pressed={elegidos.includes(c.id)}
+              <button key={c.id} type="button" onClick={() => elegirColor(c.id)} aria-pressed={elegidos.includes(c.id)}
                 className={cn("inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold", elegidos.includes(c.id) ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700")}>
                 <span className="h-4 w-4 rounded-full border border-black/20" style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.nombre}
               </button>
@@ -190,14 +216,13 @@ function Formulario({ prenda, listas }) {
         {errorVariantes && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorVariantes}</p>}
       </Seccion>
 
-      <Seccion titulo="Fotos" descripcion={`Hasta ${MAX_FOTOS_POR_COLOR} por color y ${MAX_FOTOS_GENERALES} generales (se ven con todos los colores). La primera es la de la tarjeta.`}>
-        <div className="space-y-5">
-          <GrupoFotos titulo="Generales" colorId={null} fotos={fotos} setFotos={setFotos} max={MAX_FOTOS_GENERALES} />
-          {elegidos.map((colorId) => {
+      <Seccion titulo="Fotos" descripcion={`Hasta ${MAX_FOTOS}. La primera es la de la tarjeta.`}>
+        {elegidos.length
+          ? elegidos.map((colorId) => {
             const color = colores.find((c) => c.id === colorId);
-            return <GrupoFotos key={colorId} titulo={color?.nombre} hex={color?.hex} colorId={colorId} fotos={fotos} setFotos={setFotos} max={MAX_FOTOS_POR_COLOR} />;
-          })}
-        </div>
+            return <GrupoFotos key={colorId} titulo={color?.nombre} hex={color?.hex} colorId={colorId} fotos={fotos} setFotos={setFotos} max={MAX_FOTOS} />;
+          })
+          : <p className="text-sm text-slate-500">Elegí el color para cargar las fotos.</p>}
       </Seccion>
 
       <FormError message={errors.root?.message} />

@@ -7,7 +7,8 @@ const publico = { publicAccess: true };
 
 // ── Tienda (sin ingresar) ───────────────────────────────────────────────────────
 export const getCategoriasTienda = () => datos(http.get("/ropa/catalogo/categorias", publico));
-export const getFiltrosTienda = () => datos(http.get("/ropa/catalogo/filtros", publico));
+export const getFiltrosTienda = (categoria) => datos(http.get("/ropa/catalogo/filtros", { ...publico, params: categoria ? { categoria } : {} }));
+export const getMarcasTienda = () => datos(http.get("/ropa/catalogo/marcas", publico));
 export const getCatalogo = (filtros, signal) => datos(http.get("/ropa/catalogo/prendas", { ...publico, params: filtros, signal }));
 export const getPrendaTienda = (slug) => datos(http.get(`/ropa/catalogo/prendas/${slug}`, publico));
 export const enviarPedido = (pedido) => datos(http.post("/ropa/catalogo/pedidos", pedido, publico));
@@ -29,4 +30,22 @@ export const eliminarPrenda = (id) => respuesta(http.delete(`/ropa/panel/prendas
 export const getPedidos = (filtros) => datos(http.get("/ropa/pedidos", { params: filtros }));
 export const getPedido = (id) => datos(http.get(`/ropa/pedidos/${id}`));
 export const getResumenPedidos = () => datos(http.get("/ropa/pedidos/resumen"));
-export const cambiarEstadoPedido = (id, estado) => respuesta(http.patch(`/ropa/pedidos/${id}/estado`, { estado }));
+export const cambiarEstadoPedido = (id, cambio) => respuesta(http.patch(`/ropa/pedidos/${id}/estado`, cambio));
+export const marcarPagado = (id) => respuesta(http.post(`/ropa/pedidos/${id}/pagado`));
+export const aceptarComprobante = (id, comprobanteId) => respuesta(http.post(`/ropa/pedidos/${id}/comprobantes/${comprobanteId}/aceptar`));
+export const rechazarComprobante = (id, comprobanteId, motivo) => respuesta(http.post(`/ropa/pedidos/${id}/comprobantes/${comprobanteId}/rechazar`, { motivo }));
+export const enlaceComprobantePanel = (id, comprobanteId) => datos(http.get(`/ropa/pedidos/${id}/comprobantes/${comprobanteId}/enlace`));
+
+// ── Cuenta del cliente (ROP-40 a ROP-53) ────────────────────────────────────────
+export const getMisDatos = () => datos(http.get("/ropa/mi-cuenta/datos"));
+export const guardarMisDatos = (valores) => respuesta(http.put("/ropa/mi-cuenta/datos", valores));
+export const getMisPedidos = () => datos(http.get("/ropa/mi-cuenta/pedidos"));
+export const getMiPedido = (id) => datos(http.get(`/ropa/mi-cuenta/pedidos/${id}`));
+export const enviarPedidoCuenta = (pedido) => respuesta(http.post("/ropa/mi-cuenta/pedidos", pedido));
+export const cancelarMiPedido = (id, motivo) => respuesta(http.post(`/ropa/mi-cuenta/pedidos/${id}/cancelar`, { motivo }));
+export function subirComprobante(id, archivo) {
+  const formulario = new FormData();
+  formulario.append("archivo", archivo);
+  return respuesta(http.post(`/ropa/mi-cuenta/pedidos/${id}/comprobantes`, formulario));
+}
+export const enlaceMiComprobante = (id, comprobanteId) => datos(http.get(`/ropa/mi-cuenta/pedidos/${id}/comprobantes/${comprobanteId}/enlace`));

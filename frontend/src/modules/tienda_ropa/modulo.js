@@ -1,4 +1,4 @@
-import { ClipboardList, FolderTree, Palette, Phone, Ruler, Shirt, ShoppingBag, Tag } from "lucide-react";
+import { ClipboardList, FolderTree, Layers, Package, Palette, Phone, Ruler, Shirt, ShoppingBag, Tag, UserCircle } from "lucide-react";
 
 // Lo que el core (menús, footer, panel, login) necesita saber de este rubro. Solo datos, sin
 // pantallas: también lo leen los tests de Node (ver modulo_pantallas.jsx).
@@ -13,7 +13,10 @@ export const moduloTiendaRopa = {
       { label: "Colección", to: "/catalogo", icon: Shirt },
       { label: "Contacto", to: "/#contacto", icon: Phone },
     ],
-    cuenta: [],
+    cuenta: [
+      { label: "Mis pedidos", to: "/mis-pedidos", requiereAuth: true, icon: Package },
+      { label: "Mis datos", to: "/mi-cuenta", requiereAuth: true, icon: UserCircle },
+    ],
     panel: [{
       id: "tienda",
       titulo: "Tienda",
@@ -24,6 +27,7 @@ export const moduloTiendaRopa = {
         { label: "Colores", to: "/admin/ropa/colores", ...CATALOGO, icon: Palette },
         { label: "Talles", to: "/admin/ropa/talles", ...CATALOGO, icon: Ruler },
         { label: "Marcas", to: "/admin/ropa/marcas", ...CATALOGO, icon: Tag },
+        { label: "Diseños", to: "/admin/ropa/disenos", ...CATALOGO, icon: Layers },
       ],
     }],
   },
@@ -33,7 +37,7 @@ export const moduloTiendaRopa = {
     catalogo: "/catalogo",
     aviso: "Los pedidos se confirman por WhatsApp según disponibilidad.",
     llamado: { titulo: "¿Ya elegiste tu próxima prenda?", texto: "Armá tu pedido y envialo por WhatsApp." },
-    textoLogin: "Acceso para el equipo de la tienda.",
+    textoLogin: "Ingresá para seguir tus pedidos y pagar por transferencia.",
     linksFooter: [
       { label: "Colección", to: "/catalogo", icon: Shirt },
       { label: "Mi pedido", to: "/pedido", icon: ShoppingBag },

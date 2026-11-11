@@ -1,16 +1,21 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { useCatalogo, useCategoriasTienda } from "../hooks/use_ropa.js";
+import { useCatalogo, useCategoriasTienda, useMarcasTienda } from "../hooks/use_ropa.js";
+import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { brandConfig } from "../../../proyecto/config/brand_config.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
 
 const PRIMERA_PAGINA = { pagina: 1 };
+const OFERTAS = { pagina: 1, ofertas: "1" };
+const MAX_OFERTAS = 8; // ROP-26
 
-/** Inicio de la tienda (ROP-10), debajo del carrusel del core: nombre, categorías y novedades. */
+/** Inicio de la tienda (ROP-10, ROP-26), debajo del carrusel del core: nombre, categorías, ofertas, novedades y marcas. */
 export default function InicioTienda({ textos }) {
   const categorias = useCategoriasTienda();
   const novedades = useCatalogo(PRIMERA_PAGINA);
+  const ofertas = useCatalogo(OFERTAS);
+  const marcas = useMarcasTienda();
 
   return (
     <>
@@ -30,6 +35,24 @@ export default function InicioTienda({ textos }) {
           )}
         </div>
       </section>
+
+      {/* Sin ofertas no se muestra la sección; si falla, lo importante (novedades) sigue abajo. */}
+      {ofertas.isError && <div className="px-4 pt-8 sm:px-6"><div className="mx-auto max-w-6xl"><ErrorReintentar consulta={ofertas} mensaje="No pudimos cargar las ofertas." /></div></div>}
+      {(ofertas.data?.items.length ?? 0) > 0 && (
+        <section aria-labelledby="ofertas" className="px-4 pt-12 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <h2 id="ofertas" className="kt-display text-3xl font-semibold sm:text-4xl">Ofertas</h2>
+              <Link to="/catalogo?ofertas=1" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-(--kt-petrol) underline-offset-4 hover:underline">
+                Ver todas <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {ofertas.data.items.slice(0, MAX_OFERTAS).map((p) => <PrendaCard key={p.id} prenda={p} />)}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="novedades" className="px-4 py-12 sm:px-6">
         <div className="mx-auto max-w-6xl">
@@ -52,6 +75,26 @@ export default function InicioTienda({ textos }) {
             )}
         </div>
       </section>
+
+      {marcas.isError && <div className="px-4 pb-12 sm:px-6"><div className="mx-auto max-w-6xl"><ErrorReintentar consulta={marcas} mensaje="No pudimos cargar las marcas." /></div></div>}
+      {(marcas.data?.length ?? 0) > 0 && (
+        <section aria-labelledby="marcas" className="border-t border-(--kt-border) bg-(--kt-bg-soft) px-4 py-12 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 id="marcas" className="kt-display text-center text-3xl font-semibold sm:text-4xl">Nuestras marcas</h2>
+            <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              {marcas.data.map((m) => (
+                <li key={m.id}>
+                  <Link to={`/catalogo?marca=${m.id}`} aria-label={`Ver ${m.nombre}`} className="flex h-20 items-center justify-center rounded-2xl border border-(--kt-border) bg-white p-3 transition hover:border-(--kt-petrol)">
+                    {m.logo_url
+                      ? <img src={imagenCloudinary(m.logo_url, 240)} alt={m.nombre} loading="lazy" className="max-h-full max-w-full object-contain" />
+                      : <span className="kt-display text-center text-xl font-semibold text-(--kt-petrol)">{m.nombre}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
     </>
   );
 }

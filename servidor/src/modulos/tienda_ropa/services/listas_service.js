@@ -1,9 +1,9 @@
 import { Op, UniqueConstraintError } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
-import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante } from "../models/index.js";
+import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante } from "../models/index.js";
 import { armarArbol, creaCiclo, slug } from "../reglas.js";
-import { COLORES_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS } from "../sugeridos.js";
+import { CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, DISENOS_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS } from "../sugeridos.js";
 
 // Listas del panel (ROP-01 a ROP-04). Reciben datos validados por reglas.js y lanzan ErrorApp.
 
@@ -34,6 +34,13 @@ export async function slugLibre(Modelo, texto, excluirId = null) {
   let candidato = base;
   for (let n = 2; usados.has(candidato); n++) candidato = `${base}-${n}`;
   return candidato;
+}
+
+/** ROP-27: Mujer, Hombre, Niños y Calzado como categorías principales, sin duplicar. */
+export async function cargarCategoriasSugeridas() {
+  const nuevas = await faltantes(CategoriaRopa, CATEGORIAS_SUGERIDAS, { padre_id: null });
+  for (const nombre of nuevas) await crearCategoria({ nombre, padre_id: null, orden: CATEGORIAS_SUGERIDAS.indexOf(nombre), activo: true });
+  return nuevas.length;
 }
 
 // ── Categorías (ROP-01) ─────────────────────────────────────────────────────────
@@ -92,6 +99,42 @@ export async function eliminarMarca(id) {
   const prendas = await Prenda.count({ where: { marca_id: id } });
   if (prendas) throw enUso(prendas, "prendas", "Si ya no la usás, desactivala.");
   await marca.destroy();
+}
+
+/** Nombres sugeridos que todavía no están (sin distinguir mayúsculas). */
+async function faltantes(Modelo, nombres, where = {}) {
+  const existentes = new Set((await Modelo.findAll({ where, attributes: ["nombre"], raw: true })).map((f) => f.nombre.toLowerCase()));
+  return nombres.filter((n) => !existentes.has(n.toLowerCase()));
+}
+
+/** ROP-24: suma las marcas que vende Stilos sin duplicar. Devuelve cuántas agregó. */
+export async function cargarMarcasSugeridas() {
+  const nuevas = await faltantes(MarcaRopa, MARCAS_SUGERIDAS);
+  if (nuevas.length) await MarcaRopa.bulkCreate(nuevas.map((nombre) => ({ nombre })));
+  return nuevas.length;
+}
+
+// ── Diseños (ROP-23) ────────────────────────────────────────────────────────────
+export const listarDisenos = () => DisenoRopa.findAll({ order: [["orden", "ASC"], ["nombre", "ASC"]] });
+
+export const crearDiseno = (datos) => nombreUnico(() => DisenoRopa.create(datos), `Ya existe el diseño "${datos.nombre}".`);
+
+export async function actualizarDiseno(id, datos) {
+  const diseno = await buscar(DisenoRopa, id, "El diseño no existe.");
+  return nombreUnico(() => diseno.update({ ...datos, actualizado_en: new Date() }), `Ya existe el diseño "${datos.nombre}".`);
+}
+
+export async function eliminarDiseno(id) {
+  const diseno = await buscar(DisenoRopa, id, "El diseño no existe.");
+  const prendas = await Prenda.count({ where: { diseno_id: id } });
+  if (prendas) throw enUso(prendas, "prendas");
+  await diseno.destroy();
+}
+
+export async function cargarDisenosSugeridos() {
+  const nuevos = await faltantes(DisenoRopa, DISENOS_SUGERIDOS);
+  if (nuevos.length) await DisenoRopa.bulkCreate(nuevos.map((nombre) => ({ nombre, orden: DISENOS_SUGERIDOS.indexOf(nombre) })));
+  return nuevos.length;
 }
 
 // ── Colores (ROP-03) ────────────────────────────────────────────────────────────
@@ -165,6 +208,7 @@ export async function eliminarGrupoTalle(id) {
 export async function cargarGruposSugeridos() {
   const existentes = new Set((await GrupoTalle.findAll({ attributes: ["nombre"], raw: true })).map((g) => g.nombre.toLowerCase()));
   const nuevos = GRUPOS_TALLE_SUGERIDOS.filter((g) => !existentes.has(g.nombre.toLowerCase()));
-  for (const [orden, grupo] of nuevos.entries()) await crearGrupoTalle({ ...grupo, orden });
+  // El orden es el de la lista sugerida: un grupo que se suma después (Niños) no queda primero.
+  for (const grupo of nuevos) await crearGrupoTalle({ ...grupo, orden: GRUPOS_TALLE_SUGERIDOS.indexOf(grupo) });
   return nuevos.length;
 }

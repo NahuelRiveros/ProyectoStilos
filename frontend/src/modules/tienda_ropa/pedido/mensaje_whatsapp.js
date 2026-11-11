@@ -1,4 +1,5 @@
 import { formatearPrecio } from "../utils/dinero.js";
+import { textoEntrega } from "./entrega.js";
 
 /**
  * ROP-14: texto que el cliente le manda al negocio. Usa el pedido que devolvió el servidor (número,
@@ -10,6 +11,8 @@ export function mensajePedido(pedido, negocio) {
     `¡Hola ${negocio}! Te envío mi pedido ${pedido.numero}:`,
     ...lineas,
     `Total: ${formatearPrecio(pedido.total)}`,
+    `Entrega: ${textoEntrega(pedido)}`,
+    ...(pedido.entrega === "envio" ? [pedido.envio_gratis ? "Envío gratis." : "¿Cuánto sale el envío?"] : []),
     `A nombre de: ${pedido.nombre}`,
     "¿Me confirmás si hay disponibilidad? Gracias.",
   ].join("\n");
