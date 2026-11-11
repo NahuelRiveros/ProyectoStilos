@@ -53,7 +53,7 @@ prenda, un campo "modelo" aparte para agrupar colores (se agrupa por nombre y ma
   - Tienda: secciones "Marcas" y "Ofertas" en el inicio; filtro "Diseño" y talles agrupados en el catálogo;
     en la ficha, diseño y "También en:" en lugar del selector de color. Estados de carga, error con
     reintentar y vacío; pensado para celular.
-- **Neon:** marcas y filtros cambian poco: caché de TanStack Query (5 minutos) para no consultar de más.
+- **Base (Supabase):** marcas y filtros cambian poco: caché de TanStack Query (5 minutos) para no consultar de más.
 
 ## Tareas
 

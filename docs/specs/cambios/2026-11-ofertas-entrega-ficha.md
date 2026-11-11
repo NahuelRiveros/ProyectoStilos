@@ -47,7 +47,7 @@ función en Vercel: queda para otro cambio), stock con unidades (se mantiene "ha
 ## Riesgos
 
 - **Datos existentes:** las columnas nuevas son opcionales; prendas y pedidos guardados siguen igual.
-- **Neon:** las relacionadas llegan con la ficha (una consulta más en el mismo pedido, sin rutas nuevas).
+- **Base (Supabase):** las relacionadas llegan con la ficha (una consulta más en el mismo pedido, sin rutas nuevas).
 
 ## Decisiones
 

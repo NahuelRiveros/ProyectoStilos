@@ -125,7 +125,7 @@ unidades (sigue "hay / agotado": el equipo confirma), costo de envío calculado,
 - **Datos bancarios reales:** nunca van en el repo con valores inventados; se completan en
   `client_config.js` antes de publicar. Si faltan, la opción "Transferencia" no se ofrece.
 - **Comprobantes:** tienen datos bancarios del cliente: privados, enlace corto y solo para quien corresponde.
-- **Neon y Render:** "Mis pedidos" se consulta al abrirla (sin actualizar solo cada X segundos). El panel
+- **Supabase y Render:** "Mis pedidos" se consulta al abrirla (sin actualizar solo cada X segundos). El panel
   refresca al volver a la pestaña, no en un intervalo fijo.
 - **Correo:** si el SMTP no está configurado, los pedidos funcionan igual y los avisos se omiten.
 - **Tamaño:** es el cambio más grande hasta ahora. Va por etapas, cada una con sus tests y capturas.
