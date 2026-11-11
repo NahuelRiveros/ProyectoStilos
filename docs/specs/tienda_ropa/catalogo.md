@@ -47,7 +47,8 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-11 | Catálogo con búsqueda, categorías por niveles con migas, color y talle (en la misma variante y disponible), marca, diseño, "Solo ofertas" y orden (novedades, menor o mayor precio); todo en la URL. | ✅ `ropa_reglas.test.mjs` › "ROP-11…"; `ropa.integration.mjs` › "ROP-10 a ROP-12…" y "ROP-17…" |
 | ROP-12 | Ficha: fotos, marca y diseño, talles agotados tachados, migas y "También en:" (ROP-30). | ✅ `ropa.integration.mjs` (datos); pantalla: capturas |
 | ROP-19 | "También te puede gustar": hasta 4 de la misma categoría, sin la prenda ni sus otros colores. | ✅ `ropa.integration.mjs` › "ROP-17…" |
-| ROP-22 | "Compartir": menú del teléfono o copiar el link. | ✅ `ropa_web.test.mjs` › "ROP-22…" |
+| ROP-22 | "Compartir": menú del teléfono o copiar el link. | ✅ `ropa_web.test.mjs` › "ROP-22…"; `tienda.spec.js` › "ficha…" |
+| ROP-31 | Al compartir el link de una prenda, WhatsApp y las redes muestran su nombre, marca, precio y foto (`frontend/middleware.js`, solo para esos bots). Si la API no responde, la vista previa de la tienda. | ✅ `ropa_web.test.mjs` › "ROP-31…" (2) |
 | ROP-26 | Inicio con "Ofertas" (hasta 8, si hay) y "Nuestras marcas" (con prendas a la vista, logo o nombre). | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" (marcas); pantalla: capturas |
 | ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
 | ROP-30 | "También en:": otras prendas visibles del mismo modelo (mismo nombre sin importar mayúsculas ni espacios, y misma marca). El panel muestra con cuáles quedó agrupada. | ✅ `ropa.integration.mjs` › "ROP-10 a ROP-12…" y "ROP-05 a ROP-08…" |
@@ -69,6 +70,12 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | --- | --- | --- |
 | ROP-20 | Permisos: "Editar productos" (Encargado), "Ver pedidos" y "Gestionar pedidos" (Encargado y Vendedor), "Registrar pagos" (Encargado). El panel pide ingresar. | ✅ `ropa_api.test.mjs`; `ropa.integration.mjs` › "ROP-20 por HTTP…" |
 | ROP-21 | Registro público prendido para clientes (ROP-40); el personal sigue entrando con su usuario. | ✅ `ropa.integration.mjs` › "ROP-20 por HTTP…" (cliente) |
+
+## Pruebas de navegador
+
+`frontend/tests/browser/` (Playwright, API simulada, escritorio y dos celulares): `tienda.spec.js` (catálogo, ficha, pedido
+por WhatsApp), `cuenta.spec.js` (checkout con cuenta, Mis datos, comprobante, cancelar) y `panel_pedidos.spec.js`
+(próximo paso, comprobantes, cambios simultáneos, permisos en pantalla). Corren con `node scripts/verificar.mjs --completo`.
 
 ## Configuración
 

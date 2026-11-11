@@ -9,6 +9,7 @@ import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compart
 import { cambiosPosibles, formasDePago, pasosDelPedido, pideMotivo as pideMotivoWeb, puedeSubirComprobante } from "../../frontend/src/modules/tienda_ropa/pedido/pago.js";
 import { ESTADOS_PEDIDO, pideMotivo, problemaTransicion } from "../src/modulos/tienda_ropa/reglas.js";
 import { formatearPrecio } from "../../frontend/src/modules/tienda_ropa/utils/dinero.js";
+import { datosVistaPrevia, esBotDeVistaPrevia, htmlVistaPrevia, imagenParaCompartir, slugDeRuta } from "../../frontend/src/modules/tienda_ropa/tienda/vista_previa.js";
 
 const memoria = () => { const datos = new Map(); return { getItem: (k) => datos.get(k) ?? null, setItem: (k, v) => datos.set(k, v), removeItem: (k) => datos.delete(k) }; };
 const linea = (variante_id, cantidad = 1) => ({ variante_id, cantidad, nombre: "Remera", color: "Negro", talle: "M", precio: 15000.5 });
@@ -90,5 +91,54 @@ test("ROP-44 a ROP-48: formas de pago, comprobante y estados en la web, iguales 
       assert.deepEqual(cambiosPosibles({ estado: desde, entrega }).sort(), validos.sort(), `${desde} (${entrega})`);
       for (const hacia of validos) assert.equal(pideMotivoWeb(desde, hacia), pideMotivo(desde, hacia), `${desde} → ${hacia}`);
     }
+  }
+});
+
+test("ROP-31: vista previa al compartir: solo para bots, con datos de la prenda y escapada", () => {
+  assert.equal(esBotDeVistaPrevia("WhatsApp/2.23.20.0 A"), true);
+  assert.equal(esBotDeVistaPrevia("facebookexternalhit/1.1"), true);
+  assert.equal(esBotDeVistaPrevia("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Safari/604.1"), false, "una persona ve la tienda de siempre");
+  assert.equal(slugDeRuta("/catalogo/remera-taverniti-negro"), "remera-taverniti-negro");
+  assert.equal(slugDeRuta("/catalogo"), null);
+  assert.equal(slugDeRuta("/catalogo/../admin"), null);
+  assert.equal(imagenParaCompartir("https://res.cloudinary.com/x/image/upload/v1/stilos/a.jpg"), "https://res.cloudinary.com/x/image/upload/w_1200,h_630,c_pad,b_white,f_jpg,q_auto/v1/stilos/a.jpg");
+  const prenda = {
+    nombre: "Remera <b>Taverniti</b>", marca: { nombre: "Taverniti" }, precio: 18500, precio_anterior: 26000,
+    colores: [{ nombre: "Negro" }], descripcion: "Algodón\n peinado", imagenes: [{ url: "https://res.cloudinary.com/x/image/upload/a.jpg" }],
+  };
+  const datos = datosVistaPrevia(prenda, "Stilos");
+  assert.equal(datos.titulo, "Remera <b>Taverniti</b> · Taverniti | Stilos");
+  assert.equal(datos.descripcion, "$ 18.500 (antes $ 26.000) · Negro · Algodón peinado");
+  const html = htmlVistaPrevia({ prenda, url: "https://stilos.test/catalogo/remera", sitio: "Stilos" });
+  assert.match(html, /<meta property="og:title" content="Remera &lt;b&gt;Taverniti&lt;\/b&gt; · Taverniti \| Stilos">/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/res\.cloudinary\.com\/x\/image\/upload\/w_1200/);
+  assert.doesNotMatch(html, /<b>/, "el nombre no puede meter HTML");
+  const generica = htmlVistaPrevia({ prenda: null, url: "https://stilos.test/catalogo/x", sitio: "Stilos" });
+  assert.match(generica, /og:title" content="Stilos"/);
+  assert.doesNotMatch(generica, /og:image/, "si la API no respondió, la de la tienda, sin foto");
+});
+
+test("ROP-31: el middleware de Vercel responde la vista previa solo a los bots", async () => {
+  const { default: middleware, config } = await import("../../frontend/middleware.js");
+  assert.equal(config.matcher, "/catalogo/:slug");
+  const fetchOriginal = globalThis.fetch;
+  const pedidas = [];
+  globalThis.fetch = async (url) => {
+    pedidas.push(String(url));
+    if (String(url).endsWith("/no-existe")) return new Response("{}", { status: 404 });
+    return Response.json({ ok: true, data: { nombre: "Jean Bando", precio: 41000, precio_anterior: null, imagenes: [] } });
+  };
+  try {
+    const pedir = (ruta, userAgent) => middleware(new Request(`https://stilos.test${ruta}`, { headers: { "user-agent": userAgent } }));
+    assert.equal(await pedir("/catalogo/jean-bando-azul", "Mozilla/5.0 Chrome/120"), undefined, "a las personas les sigue la tienda");
+    const respuesta = await pedir("/catalogo/jean-bando-azul", "WhatsApp/2.24");
+    assert.match(await respuesta.text(), /og:title" content="Jean Bando \| Stilos"/);
+    assert.match(respuesta.headers.get("cache-control"), /s-maxage=3600/);
+    assert.match(pedidas[0], /\/api\/ropa\/catalogo\/prendas\/jean-bando-azul$/);
+    const sinPrenda = await pedir("/catalogo/no-existe", "WhatsApp/2.24");
+    assert.match(await sinPrenda.text(), /og:title" content="Stilos"/);
+    assert.match(sinPrenda.headers.get("cache-control"), /s-maxage=60/, "caché corta para reintentar cuando Render despierte");
+  } finally {
+    globalThis.fetch = fetchOriginal;
   }
 });
