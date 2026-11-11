@@ -137,7 +137,7 @@ unidades (sigue "hay / agotado": el equipo confirma), costo de envío calculado,
 | 2026-11-11 | ROP-40, ROP-46 | Las cuentas conviven con el pedido por WhatsApp sin registro. | Dueño del proyecto |
 | 2026-11-11 | ROP-44 | Formas de pago: transferencia con comprobante, efectivo al retirar y a coordinar por WhatsApp. | Dueño del proyecto |
 | 2026-11-11 | — | Estados: Recibido → Confirmado → Listo para retirar / Enviado → Entregado, y Cancelado. | Dueño del proyecto |
-| 2026-11-11 | — | Orden: terminar la v2 (etapas 3 y 4), después un color por prenda y marcas, después este cambio. | Dueño del proyecto |
+| 2026-11-11 | — | Orden: terminar ofertas, entrega y ficha (etapas 3 y 4), después un color por prenda y marcas, después este cambio. | Dueño del proyecto |
 | 2026-11-11 | ROP-57 | "Registrar pagos" solo para el Encargado (recomendación aceptada al pedir seguir con todo). | Dueño del proyecto |
 | 2026-11-11 | ROP-48 | Hasta 3 comprobantes por pedido (recomendación aceptada). | Dueño del proyecto |
 | 2026-11-11 | — | Los pedidos Nuevo / Atendido de antes no se migran: no hay datos reales en producción. | Dueño del proyecto |

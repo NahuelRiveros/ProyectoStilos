@@ -91,5 +91,5 @@ por WhatsApp), `cuenta.spec.js` (checkout con cuenta, Mis datos, comprobante, ca
 
 ## Decisiones
 
-Ver las specs de los cambios: [catálogo](../cambios/2026-11-catalogo-ropa.md), [tienda v2](../cambios/2026-11-tienda-v2.md),
+Ver las specs de los cambios: [catálogo](../cambios/2026-11-catalogo-ropa.md), [ofertas, entrega y ficha](../cambios/2026-11-ofertas-entrega-ficha.md),
 [marcas y diseño](../cambios/2026-11-tienda-marcas-diseno.md) y [cuentas y transferencias](../cambios/2026-11-cuentas-y-transferencias.md).

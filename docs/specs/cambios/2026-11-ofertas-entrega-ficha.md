@@ -1,4 +1,4 @@
-# Cambio: tienda v2 (ofertas, orden, entrega y ficha)
+# Cambio: ofertas, orden, entrega y ficha
 
 | Estado | Pedido por | Fecha | Spec del módulo |
 | --- | --- | --- | --- |
