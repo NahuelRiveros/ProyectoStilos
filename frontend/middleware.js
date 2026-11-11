@@ -19,7 +19,7 @@ export default async function middleware(request) {
   return new Response(htmlVistaPrevia({ prenda, url: url.href, sitio: deploymentConfig.nombre }), {
     headers: {
       "content-type": "text/html; charset=utf-8",
-      // Con la prenda, la CDN de Vercel la guarda una hora: compartir mucho no despierta a Render ni consulta Neon cada vez.
+      // Con la prenda, la CDN de Vercel la guarda una hora: compartir mucho no despierta a Render ni consulta la base cada vez.
       "cache-control": prenda ? "public, s-maxage=3600, stale-while-revalidate=86400" : "public, s-maxage=60",
     },
   });

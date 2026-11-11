@@ -9,11 +9,13 @@ import { fileURLToPath } from "node:url";
 dotenv.config({ path: fileURLToPath(new URL("../.env.local", import.meta.url)), quiet: true });
 process.env.NODE_ENV = "test";
 process.env.BD_URL = "";
+process.env.BD_URL_SUPABASE = "";
 process.env.DB_HOST = "127.0.0.1";
 process.env.DB_SSL = "false";
 for (const clave of ["SMTP_USER", "SMTP_PASS"]) process.env[clave] = "";
 const schema = "stilos_test_" + randomUUID().replaceAll("-", "");
 process.env.DB_SCHEMA = schema;
+process.env.BD_ESQUEMA = schema;
 process.env.ESQUEMA_SUSCRIPCION = schema;
 
 const { sequelize, DB_SCHEMA } = await import("../src/core/database/sequelize.js");
@@ -30,6 +32,9 @@ const { moduloTiendaRopa } = await import("../src/modulos/tienda_ropa/modulo.js"
 const { esquemaPrenda } = await import("../src/modulos/tienda_ropa/reglas.js");
 const { sincronizarPermisos } = await import("../src/core/services/usuarios/permisos_service.js");
 const { sembrarRolesDelSistema } = await import("../src/core/database/seed/seed_rbac.js");
+const { seed_super_admin } = await import("../src/core/database/seed/seed_super_admin.js");
+const { diagnosticarSuperAdmin } = await import("../src/core/services/common/diagnostico_super_admin.js");
+const { SUPERADMIN_EMAIL_FIJO } = await import("../src/core/configuracion_servidor/env.js");
 const { createApp } = await import("../src/core/app.js");
 const bcrypt = (await import("bcrypt")).default;
 
@@ -51,6 +56,27 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
     }
     await sembrarRolesDelSistema();
     await sincronizarPermisos();
+
+    await t.test("Super admin (core): solo usuario y contraseña, email fijo y no pisa la contraseña", async () => {
+      assert.equal(await seed_super_admin({ config: { SUPERADMIN_USUARIO: "", SUPERADMIN_CONTRASENA: "x" } }), null, "sin usuario no se crea");
+      assert.equal(await seed_super_admin({ config: { SUPERADMIN_USUARIO: "con@arroba", SUPERADMIN_CONTRASENA: "x" } }), null, "usuario inválido");
+      const admin = await seed_super_admin({ config: { SUPERADMIN_USUARIO: " Dueño.Admin ".replace("ñ", "n"), SUPERADMIN_CONTRASENA: "Clave-1234" } });
+      assert.equal(admin.nombre_usuario, "dueno.admin", "se guarda en minúsculas");
+      const persona = await core.Persona.findByPk(admin.persona_id);
+      assert.equal(persona.email, SUPERADMIN_EMAIL_FIJO);
+      const roles = (await admin.getRoles()).map((r) => r.codigo).sort();
+      assert.deepEqual(roles, ["admin", "super_admin"]);
+      // Un deploy con otra contraseña no pisa la que ya tiene la cuenta.
+      const otraVez = await seed_super_admin({ config: { SUPERADMIN_USUARIO: "dueno.admin", SUPERADMIN_CONTRASENA: "Otra-5678" } });
+      assert.equal(otraVez.id, admin.id);
+      assert.equal(await core.Persona.count({ where: { email: SUPERADMIN_EMAIL_FIJO } }), 1, "no duplica la persona");
+      const ok = await diagnosticarSuperAdmin({ config: { SUPERADMIN_USUARIO: "dueno.admin", SUPERADMIN_CONTRASENA: "Clave-1234" }, Usuario: core.Usuario });
+      assert.equal(ok.codigo, "CREDENCIALES_CORRECTAS");
+      const mal = await diagnosticarSuperAdmin({ config: { SUPERADMIN_USUARIO: "dueno.admin", SUPERADMIN_CONTRASENA: "Otra-5678" }, Usuario: core.Usuario });
+      assert.equal(mal.codigo, "CONTRASENA_DIFERENTE");
+      const falta = await diagnosticarSuperAdmin({ config: { SUPERADMIN_USUARIO: "", SUPERADMIN_CONTRASENA: "" }, Usuario: core.Usuario });
+      assert.equal(falta.codigo, "CONFIGURACION_INCOMPLETA");
+    });
 
     const mujer = await listas.crearCategoria({ nombre: "Mujer", padre_id: null, orden: 0, activo: true });
     const remeras = await listas.crearCategoria({ nombre: "Remeras", padre_id: mujer.id, orden: 0, activo: true });

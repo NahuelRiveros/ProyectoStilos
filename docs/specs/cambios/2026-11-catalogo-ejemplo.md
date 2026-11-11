@@ -15,7 +15,7 @@ a mano desde el panel.
 | Código | Requisito | Estado |
 | --- | --- | --- |
 | ROP-32 | `node src/modulos/tienda_ropa/seed_catalogo_ejemplo.js` (desde `servidor/`) carga 3 prendas de ejemplo de Taverniti (zapatilla, remera lisa, jean), **ocultas**, pasando por los mismos servicios y reglas que el panel (un color por prenda, talles del grupo, slug con el color). Primero carga los sugeridos (marcas, categorías, colores, talles y diseños) sin duplicar. Volver a correrlo no duplica nada. | ✅ revisado a mano contra la base local |
-| ROP-33 | No corre contra producción: se niega con `NODE_ENV=production` o con una `BD_URL` configurada (la base remota). | ✅ revisado a mano |
+| ROP-33 | No corre contra producción: se niega con `NODE_ENV=production` o con una `BD_URL_SUPABASE` configurada (la base remota). | ✅ revisado a mano |
 | ROP-34 | Las fotos se bajan a `frontend/public/catalogo-inicial/`, que **no va a git** (son de otras tiendas: solo para probar). Las fotos de prenda aceptan esas rutas locales además de URLs https. | ✅ `ropa_reglas.test.mjs` › "ROP-34…" |
 
 **Fuera de alcance:** logos de marcas (los favicons de los sitios no sirven como logo: sin logo, el inicio
