@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Shirt } from "lucide-react";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
-import { formatearPrecio } from "../utils/dinero.js";
+import Precio, { EtiquetaOferta } from "./precio.jsx";
+import { enOferta } from "../utils/dinero.js";
 
 const MAX_PUNTOS = 5;
 
@@ -23,10 +24,11 @@ export default function PrendaCard({ prenda }) {
         {prenda.agotada && (
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-(--kt-ink)">Agotada</span>
         )}
+        {enOferta(prenda) && <EtiquetaOferta className="absolute right-3 top-3" />}
       </div>
       <div className="mt-3 px-0.5">
         <h3 className="truncate text-sm font-semibold text-(--kt-ink)">{prenda.nombre}</h3>
-        <p className="mt-0.5 text-sm font-bold text-(--kt-accent-comercial)">{formatearPrecio(prenda.precio)}</p>
+        <Precio prenda={prenda} className="mt-0.5" />
         {prenda.colores.length > 0 && (
           <div className="mt-2 flex items-center gap-1.5" aria-label={`Colores: ${prenda.colores.map((c) => c.nombre).join(", ")}`}>
             {prenda.colores.slice(0, MAX_PUNTOS).map((c) => (

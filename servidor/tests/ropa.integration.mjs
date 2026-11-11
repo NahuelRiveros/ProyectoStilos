@@ -126,6 +126,7 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       assert.deepEqual(ficha.migas.map((m) => m.nombre), ["Mujer", "Remeras"]);
       assert.deepEqual(ficha.talles.map((x) => x.nombre), ["S", "M", "L"]);
       assert.equal(ficha.precio, 16000);
+      assert.equal(ficha.precio_anterior, null);
       const filtros = await catalogo.opcionesDeFiltro();
       assert.deepEqual(filtros.marcas.map((m) => m.nombre), ["Stilos"]);
 
@@ -134,6 +135,32 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       assert.equal((await catalogo.listarCatalogo({ pagina: 1 })).items.length, 0);
       await assert.rejects(catalogo.detallePrenda(remera.slug), { codigo: "NO_EXISTE" });
       await listas.actualizarCategoria(mujer.id, { nombre: "Mujer", padre_id: null, orden: 0, activo: true });
+    });
+
+    await t.test("ROP-17: el precio anterior se guarda y se muestra, pero el pedido cobra el precio", async () => {
+      const oferta = await prendas.crearPrenda(prendaValida({
+        nombre: "Remera oferta", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 10000, precio_anterior: 14000,
+        variantes: [{ color_id: colores.Negro, talle_id: talles.S }],
+      }));
+      const enLista = (await catalogo.listarCatalogo({ pagina: 1 })).items.find((p) => p.id === oferta.id);
+      assert.equal(enLista.precio_anterior, 14000);
+      assert.equal((await catalogo.detallePrenda(oferta.slug)).precio_anterior, 14000);
+      // ROP-11: orden por precio y "Solo ofertas" (la remera lisa vale 16000, la oferta 10000).
+      const nombres = async (filtros) => (await catalogo.listarCatalogo({ pagina: 1, ...filtros })).items.map((p) => p.nombre);
+      assert.deepEqual(await nombres({ orden: "menor_precio" }), ["Remera oferta", "Remera lisa"]);
+      assert.deepEqual(await nombres({ orden: "mayor_precio" }), ["Remera lisa", "Remera oferta"]);
+      assert.deepEqual(await nombres({ ofertas: true }), ["Remera oferta"]);
+      assert.deepEqual(await nombres({ ofertas: true, color: colores.Rojo }), [], "las ofertas se combinan con los otros filtros");
+      const pedido = await pedidos.crearPedido({ nombre: "Ana", celular: "3704123456", items: [{ variante_id: oferta.variantes[0].id, cantidad: 2 }] });
+      assert.equal(pedido.total, "20000.00");
+      // Sacar la oferta al editar: el campo vacío la borra.
+      const sinOferta = await prendas.actualizarPrenda(oferta.id, prendaValida({
+        nombre: "Remera oferta", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 10000, precio_anterior: "",
+        variantes: [{ color_id: colores.Negro, talle_id: talles.S }],
+      }));
+      assert.equal(sinOferta.precio_anterior, null);
+      await pedidos.cambiarEstadoPedido(pedido.id, "cancelado");
+      await prendas.eliminarPrenda(oferta.id);
     });
 
     await t.test("ROP-14 y ROP-15: el pedido usa el precio de la base, rechaza lo agotado y queda en el panel", async () => {

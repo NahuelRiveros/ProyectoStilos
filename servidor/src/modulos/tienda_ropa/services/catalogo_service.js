@@ -8,6 +8,7 @@ import { wherePrendas } from "./prendas_service.js";
 // Tienda pública (ROP-10 a ROP-12): solo prendas activas de categorías visibles.
 
 const POR_PAGINA = 24;
+const aNumero = (v) => (v === null || v === undefined ? null : Number(v));
 
 /** Una categoría se ve si está activa y todas las de arriba también. */
 async function categoriasVisibles() {
@@ -39,13 +40,22 @@ export async function opcionesDeFiltro() {
   return { marcas: listaMarcas, colores, talles };
 }
 
-export async function listarCatalogo({ pagina, ...filtros }) {
+// El id al final desempata: sin él, dos prendas al mismo precio pueden repetirse entre páginas.
+const ORDEN = {
+  novedades: [["creado_en", "DESC"], ["id", "DESC"]],
+  menor_precio: [["precio", "ASC"], ["id", "DESC"]],
+  mayor_precio: [["precio", "DESC"], ["id", "DESC"]],
+};
+
+export async function listarCatalogo({ pagina, orden = "novedades", ofertas = false, ...filtros }) {
   const { page, limit, offset } = normalizarPaginacion({ page: pagina, limit: POR_PAGINA });
   const visibles = (await categoriasVisibles()).map((c) => c.id);
-  const where = { [Op.and]: [await wherePrendas(filtros), { activo: true, categoria_id: visibles }] };
+  const condiciones = [await wherePrendas(filtros), { activo: true, categoria_id: visibles }];
+  // ROP-17: el esquema de la prenda asegura que precio_anterior, si está, es mayor que el precio.
+  if (ofertas) condiciones.push({ precio_anterior: { [Op.ne]: null } });
   const { rows, count } = await Prenda.findAndCountAll({
-    where, attributes: ["id", "slug", "nombre", "precio", "marca_id"],
-    order: [["creado_en", "DESC"], ["id", "DESC"]], limit, offset,
+    where: { [Op.and]: condiciones }, attributes: ["id", "slug", "nombre", "precio", "precio_anterior", "marca_id"],
+    order: ORDEN[orden], limit, offset,
   });
   const ids = rows.map((p) => p.id);
   const [fotos, variantes] = await Promise.all([
@@ -60,7 +70,7 @@ export async function listarCatalogo({ pagina, ...filtros }) {
     const colores = new Map(variantes.filter((v) => v.prenda_id === p.id).map((v) => [v.color.id, v.color.toJSON()]));
     const suyas = fotos.filter((f) => f.prenda_id === p.id);
     return {
-      id: p.id, slug: p.slug, nombre: p.nombre, precio: Number(p.precio),
+      id: p.id, slug: p.slug, nombre: p.nombre, precio: Number(p.precio), precio_anterior: aNumero(p.precio_anterior),
       // Primero una foto general; si no hay, la primera de algún color.
       foto: (suyas.find((f) => f.color_id === null) ?? suyas[0])?.url ?? null,
       colores: [...colores.values()],
@@ -97,7 +107,7 @@ export async function detallePrenda(slug) {
   const tallesUsados = new Set(datos.variantes.map((v) => v.talle_id));
   return {
     id: datos.id, slug: datos.slug, nombre: datos.nombre, descripcion: datos.descripcion,
-    precio: Number(datos.precio), marca: datos.marca, migas,
+    precio: Number(datos.precio), precio_anterior: aNumero(datos.precio_anterior), marca: datos.marca, migas,
     colores: [...colores.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre)),
     talles: (datos.grupo_talle?.talles ?? []).filter((t) => tallesUsados.has(t.id)),
     variantes: datos.variantes.map(({ id, color_id, talle_id, disponible }) => ({ id, color_id, talle_id, disponible })),

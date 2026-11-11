@@ -8,7 +8,8 @@ import { cn } from "../../../core/utils/cn.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
 
-const CAMPOS = ["q", "categoria", "marca", "color", "talle", "pagina"];
+const CAMPOS = ["q", "categoria", "marca", "color", "talle", "ofertas", "orden", "pagina"];
+const ORDENES = [["novedades", "Novedades"], ["menor_precio", "Menor precio"], ["mayor_precio", "Mayor precio"]];
 
 /** Camino de la raíz a la categoría `id` dentro del árbol, o []. */
 function caminoA(arbol, id) {
@@ -20,7 +21,7 @@ function caminoA(arbol, id) {
   return [];
 }
 
-/** Catálogo (ROP-11): búsqueda, categorías por niveles con migas, marca, color y talle. Todo en la URL. */
+/** Catálogo (ROP-11): búsqueda, categorías por niveles con migas, marca, color, talle, ofertas y orden. Todo en la URL. */
 export default function CatalogoPage() {
   const [params, setParams] = useSearchParams();
   const filtros = useMemo(() => Object.fromEntries(CAMPOS.map((c) => [c, params.get(c) ?? ""]).filter(([, v]) => v)), [params]);
@@ -43,13 +44,14 @@ export default function CatalogoPage() {
   }, [setParams]);
   // alternar: tocar el color o talle ya elegido lo saca.
   const alternar = (campo, valor) => poner(campo, numero(campo) === valor ? "" : valor);
-  const limpiar = () => setParams(actual ? { categoria: String(actual.id) } : {});
+  // El orden no es un filtro: se mantiene al quitar filtros.
+  const limpiar = () => setParams({ ...(actual && { categoria: String(actual.id) }), ...(filtros.orden && { orden: filtros.orden }) });
 
   const arbol = categorias.data ?? [];
   const camino = caminoA(arbol, numero("categoria"));
   const actual = camino.at(-1);
   const hijas = actual ? actual.hijas : arbol;
-  const hayFiltros = ["marca", "color", "talle", "q"].some((c) => filtros[c]);
+  const hayFiltros = ["marca", "color", "talle", "q", "ofertas"].some((c) => filtros[c]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -83,6 +85,10 @@ export default function CatalogoPage() {
           <p className="hidden min-h-11 items-center gap-2 font-semibold lg:flex"><SlidersHorizontal size={17} aria-hidden="true" /> Filtrar</p>
           <div id="filtros-catalogo" className={cn("mt-3 space-y-5 lg:block", !verFiltros && "hidden")}>
             <SearchField value={filtros.q ?? ""} onSearch={(q) => poner("q", q)} label="Buscar prendas" placeholder="Buscar…" />
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={filtros.ofertas === "1"} onChange={(e) => poner("ofertas", e.target.checked ? "1" : "")} className="h-5 w-5 accent-(--kt-accent-comercial)" />
+              Solo ofertas
+            </label>
             {(opciones.data?.colores.length ?? 0) > 0 && (
               <fieldset>
                 <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">Color</legend>
@@ -122,11 +128,19 @@ export default function CatalogoPage() {
         </aside>
 
         <div className="min-w-0">
-          {hayFiltros && (
-            <button type="button" onClick={limpiar} className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-(--kt-accent-comercial)">
-              <X size={15} aria-hidden="true" /> Quitar filtros
-            </button>
-          )}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            {hayFiltros ? (
+              <button type="button" onClick={limpiar} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-(--kt-accent-comercial)">
+                <X size={15} aria-hidden="true" /> Quitar filtros
+              </button>
+            ) : <span />}
+            <label className="flex items-center gap-2 text-sm">
+              <span className="text-(--kt-ink-soft)">Ordenar</span>
+              <select value={filtros.orden ?? "novedades"} onChange={(e) => poner("orden", e.target.value === "novedades" ? "" : e.target.value)} className="min-h-11 rounded-xl border border-(--kt-border) bg-white px-3 font-semibold">
+                {ORDENES.map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}
+              </select>
+            </label>
+          </div>
           {prendas.isPending ? <GrillaCargando cantidad={12} />
             : prendas.isError ? <ErrorReintentar consulta={prendas} mensaje="No pudimos cargar las prendas." />
             : prendas.data.items.length === 0 ? (

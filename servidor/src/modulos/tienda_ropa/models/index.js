@@ -47,15 +47,16 @@ export const Talle = defineModel("Talle", {
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
 }, { tableName: "talle", indexes: [{ unique: true, fields: ["grupo_talle_id", "nombre"] }] });
 
-/** ROP-05 y ROP-07: un precio por prenda. */
+/** ROP-05 y ROP-07: un precio por prenda. ROP-17: precio_anterior solo se muestra (tachado). */
 export const Prenda = defineModel("Prenda", {
-  nombre:         { type: DataTypes.STRING(120), allowNull: false },
-  slug:           { type: DataTypes.STRING(90), allowNull: false, unique: true },
-  descripcion:    { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-  categoria_id:   { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" } },
-  marca_id:       { type: DataTypes.INTEGER, allowNull: true, references: { model: "marca_ropa", key: "id" } },
-  grupo_talle_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_talle", key: "id" } },
-  precio:         { type: DataTypes.DECIMAL(12, 2), allowNull: false },
+  nombre:          { type: DataTypes.STRING(120), allowNull: false },
+  slug:            { type: DataTypes.STRING(90), allowNull: false, unique: true },
+  descripcion:     { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
+  categoria_id:    { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" } },
+  marca_id:        { type: DataTypes.INTEGER, allowNull: true, references: { model: "marca_ropa", key: "id" } },
+  grupo_talle_id:  { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_talle", key: "id" } },
+  precio:          { type: DataTypes.DECIMAL(12, 2), allowNull: false },
+  precio_anterior: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
   activo:         { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   ...fechas,
 }, { tableName: "prenda", indexes: [{ fields: ["categoria_id"] }, { fields: ["activo"] }] });

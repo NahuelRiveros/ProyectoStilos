@@ -89,10 +89,18 @@ export const esquemaPrenda = z.object({
   grupo_talle_id: z.coerce.number({ error: "Elegí el grupo de talles." }).int().positive("Elegí el grupo de talles."),
   // ROP-07: un precio por prenda.
   precio: z.coerce.number({ error: "Escribí el precio." }).positive("El precio tiene que ser mayor a 0.").max(99999999),
+  // ROP-17: vacío = sin oferta.
+  precio_anterior: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    z.coerce.number({ error: "El precio anterior tiene que ser un número." }).positive().max(99999999).nullable(),
+  ).default(null),
   activo: z.boolean().default(true),
   variantes: z.array(variante).min(1, "Tildá al menos un talle y un color.").max(400),
   imagenes: z.array(imagen).max(200).default([]),
 }).superRefine((prenda, ctx) => {
+  if (prenda.precio_anterior !== null && prenda.precio_anterior <= prenda.precio) {
+    ctx.addIssue({ code: "custom", path: ["precio_anterior"], message: "El precio anterior tiene que ser mayor que el precio actual." });
+  }
   const claves = prenda.variantes.map((v) => `${v.color_id}-${v.talle_id}`);
   if (new Set(claves).size !== claves.length) ctx.addIssue({ code: "custom", path: ["variantes"], message: "Hay talles y colores repetidos." });
   const problema = problemaFotos(prenda.imagenes, [...new Set(prenda.variantes.map((v) => v.color_id))]);
@@ -102,12 +110,18 @@ export const esquemaPrenda = z.object({
 export const esquemaEstado = z.object({ activo: z.boolean({ error: "Indicá si queda activa o no." }) });
 
 const filtroId = z.preprocess((v) => (v === "" || v === undefined ? undefined : v), z.coerce.number().int().positive().optional());
-export const esquemaFiltrosCatalogo = z.object({
+const filtrosPrendas = z.object({
   q: z.string().trim().max(80).optional(),
   categoria: filtroId, marca: filtroId, color: filtroId, talle: filtroId,
   pagina: z.coerce.number().int().min(1).max(10000).default(1),
 });
-export const esquemaFiltrosPanel = esquemaFiltrosCatalogo.extend({
+export const ORDENES_CATALOGO = ["novedades", "menor_precio", "mayor_precio"]; // ROP-11
+export const esquemaFiltrosCatalogo = filtrosPrendas.extend({
+  orden: z.enum(ORDENES_CATALOGO, { error: "Orden no válido." }).default("novedades"),
+  // Llega de la URL como texto: solo "1" o "true" lo prenden.
+  ofertas: z.preprocess((v) => v === "1" || v === "true" || v === true, z.boolean()),
+});
+export const esquemaFiltrosPanel = filtrosPrendas.extend({
   estado: z.enum(["activas", "inactivas", "todas"]).default("todas"),
 });
 export const esquemaSlug = z.object({ slug: z.string().trim().regex(/^[a-z0-9-]{1,90}$/, "Prenda no válida.") });

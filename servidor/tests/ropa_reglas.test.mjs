@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  armarArbol, conDescendientes, creaCiclo, esquemaColor, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
+  armarArbol, conDescendientes, creaCiclo, esquemaColor, esquemaFiltrosCatalogo, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
 } from "../src/modulos/tienda_ropa/reglas.js";
 
 const CATEGORIAS = [
@@ -48,6 +48,28 @@ test("ROP-05 y ROP-07: prenda con un precio y al menos un talle × color, sin re
   assert.equal(esquemaPrenda.safeParse(prenda({ precio: 0 })).success, false);
   const repetida = esquemaPrenda.safeParse(prenda({ variantes: [{ color_id: 1, talle_id: 1 }, { color_id: 1, talle_id: 1 }] }));
   assert.equal(repetida.error.issues[0].message, "Hay talles y colores repetidos.");
+});
+
+test("ROP-17: el precio anterior es opcional y tiene que ser mayor que el precio", () => {
+  assert.equal(esquemaPrenda.parse(prenda()).precio_anterior, null, "sin oferta por defecto");
+  assert.equal(esquemaPrenda.parse(prenda({ precio_anterior: "" })).precio_anterior, null, "el campo vacío del formulario");
+  assert.equal(esquemaPrenda.parse(prenda({ precio_anterior: "20000" })).precio_anterior, 20000);
+  for (const precio_anterior of [15000, 9000]) {
+    const r = esquemaPrenda.safeParse(prenda({ precio_anterior }));
+    assert.equal(r.success, false, `${precio_anterior} no es mayor que 15000`);
+    assert.deepEqual(r.error.issues[0].path, ["precio_anterior"]);
+    assert.equal(r.error.issues[0].message, "El precio anterior tiene que ser mayor que el precio actual.");
+  }
+});
+
+test("ROP-11: el catálogo se ordena por novedades por defecto y 'Solo ofertas' llega de la URL", () => {
+  assert.deepEqual(esquemaFiltrosCatalogo.parse({}), { pagina: 1, orden: "novedades", ofertas: false });
+  const r = esquemaFiltrosCatalogo.parse({ orden: "menor_precio", ofertas: "1" });
+  assert.equal(r.orden, "menor_precio");
+  assert.equal(r.ofertas, true);
+  assert.equal(esquemaFiltrosCatalogo.parse({ ofertas: "no" }).ofertas, false);
+  assert.equal(esquemaFiltrosCatalogo.safeParse({ orden: "precio; DROP TABLE" }).error.issues[0].message, "Orden no válido.");
+  assert.equal("orden" in esquemaFiltrosPanel.parse({}), false, "el panel no usa el orden de la tienda");
 });
 
 test("ROP-06: hasta 3 fotos por color y 10 generales, solo de colores que tiene la prenda", () => {

@@ -52,6 +52,7 @@ function Formulario({ prenda, listas }) {
       nombre: prenda?.nombre ?? "", descripcion: prenda?.descripcion ?? "",
       categoria_id: String(prenda?.categoria_id ?? ""), marca_id: String(prenda?.marca_id ?? ""),
       precio: prenda ? Number(prenda.precio) : "", activo: prenda?.activo ?? true,
+      precio_anterior: prenda?.precio_anterior ? Number(prenda.precio_anterior) : "",
     },
   });
   const [grupoId, setGrupoId] = useState(prenda?.grupo_talle_id ?? grupos[0]?.id);
@@ -99,6 +100,7 @@ function Formulario({ prenda, listas }) {
         id: prenda?.id, nombre: valores.nombre, descripcion: valores.descripcion,
         categoria_id: Number(valores.categoria_id), marca_id: valores.marca_id ? Number(valores.marca_id) : null,
         grupo_talle_id: grupoId, precio: Number(valores.precio), activo: valores.activo,
+        precio_anterior: valores.precio_anterior === "" ? null : Number(valores.precio_anterior),
         variantes, imagenes: fotos,
       });
       toast.success(r.mensaje);
@@ -132,6 +134,7 @@ function Formulario({ prenda, listas }) {
             </select>
           </label>
           <InputField name="precio" type="number" min={1} step="0.01" inputMode="decimal" label="Precio ($)" helperText="El mismo para todos los talles y colores." register={register} required requiredMessage="Escribí el precio." error={errors.precio?.message} />
+          <InputField name="precio_anterior" type="number" min={1} step="0.01" inputMode="decimal" label="Precio anterior ($, opcional)" helperText="Para marcarla en oferta: se ve tachado. Vacío = sin oferta." register={register} error={errors.precio_anterior?.message} />
           <label className="flex min-h-11 items-center gap-2 self-end text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
           <div className="sm:col-span-2"><TextareaField name="descripcion" label="Descripción (opcional)" rows={4} placeholder="Tela, calce, cuidados…" register={register} error={errors.descripcion?.message} /></div>
         </div>

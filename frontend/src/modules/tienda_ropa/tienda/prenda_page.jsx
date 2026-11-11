@@ -6,8 +6,9 @@ import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { cn } from "../../../core/utils/cn.js";
 import { usePrendaTienda } from "../hooks/use_ropa.js";
 import { usePedido } from "../pedido/pedido_context.js";
-import { formatearPrecio } from "../utils/dinero.js";
 import { ErrorReintentar } from "./estados.jsx";
+import Precio, { EtiquetaOferta } from "./precio.jsx";
+import { enOferta } from "../utils/dinero.js";
 
 /** Ficha (ROP-12): fotos del color elegido, color, talle (agotados tachados) y "Agregar al pedido". */
 export default function PrendaPage() {
@@ -96,7 +97,10 @@ function Ficha({ prenda }) {
         <div>
           {prenda.marca && <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--kt-ink-soft)">{prenda.marca.nombre}</p>}
           <h1 className="kt-display mt-1 text-4xl font-semibold leading-tight sm:text-5xl">{prenda.nombre}</h1>
-          <p className="mt-3 text-2xl font-bold text-(--kt-accent-comercial)">{formatearPrecio(prenda.precio)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Precio prenda={prenda} grande />
+            {enOferta(prenda) && <EtiquetaOferta />}
+          </div>
 
           <fieldset className="mt-8">
             <legend className="mb-3 text-sm font-semibold">Color: <span className="font-normal text-(--kt-ink-soft)">{color?.nombre}</span></legend>
