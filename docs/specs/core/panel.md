@@ -46,7 +46,7 @@ gestionar, sin ver lo que no le corresponde, en computadora y en celular.
 | Código | Regla | Estado |
 | --- | --- | --- |
 | PAN-10 | El menú muestra solo los ítems que el rol permite; un grupo que se queda sin ítems no aparece. | ✅ `ux_rules.test.mjs` › "panel de gestión: cada uno ve las secciones de sus permisos…"; `storefront.spec.js` › "vendedor ve solo pedidos…" |
-| PAN-11 | Los ítems de un rubro aparecen solo si ese rubro está en `gate_config.js`; dentro, cada ítem se muestra según sus roles o permisos. | ✅ `ux_rules.test.mjs` › "navbar filtra árboles por rol…" (en DistribuCG; hay que ajustarlo al quitar el filtro por módulo) |
+| PAN-11 | Los ítems de un rubro aparecen solo si ese rubro está en `gate_config.js`; dentro, cada ítem se muestra según sus roles o permisos. | ✅ `ux_rules.test.mjs` › "PAN-11: navbar filtra árboles por rol, sin acoplarse a un rubro" |
 | PAN-12 | Los grupos de cada rubro los aporta el rubro: el panel no conoce sus pantallas (sacar un rubro saca su grupo). | ✅ `ux_rules.test.mjs` › "panel de gestión…" (arma el menú desde los rubros activos) |
 | PAN-13 | En computadora el menú se puede achicar a íconos, y ese navegador lo recuerda. | ⚠️ sin test |
 | PAN-14 | En celular el menú se oculta y se abre con el botón ☰. | ✅ `storefront.spec.js` › "supervisor entra al panel desde el navbar…" (corre en escritorio, celular y celular chico) |

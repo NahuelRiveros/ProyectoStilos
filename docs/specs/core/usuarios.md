@@ -27,7 +27,7 @@ seguir sus pedidos, el personal para trabajar en el panel.
 
 | Código | Regla | Estado |
 | --- | --- | --- |
-| USU-01 | Se ingresa con email **o** nombre de usuario en el mismo campo, sin distinguir mayúsculas. Con "@" se trata como email; sin "@", como usuario. | ✅ `checkout.integration.mjs` › "login con email o nombre de usuario, sin distinguir mayúsculas"; `ux_rules.test.mjs` › "login distingue email de nombre de usuario…" |
+| USU-01 | Se ingresa con email **o** nombre de usuario en el mismo campo, sin distinguir mayúsculas. Con "@" se trata como email; sin "@", como usuario. Con el campo vacío se pide \"Ingresá tu email o usuario.\" sin buscar ninguna cuenta. | ✅ `checkout.integration.mjs` › "login con email o nombre de usuario, sin distinguir mayúsculas"; `ux_rules.test.mjs` › "login distingue email de nombre de usuario…" |
 | USU-02 | Con datos incorrectos se muestra "Email, usuario o contraseña incorrectos", sin decir cuál de los dos falló. | ✅ `storefront.spec.js` › "inicia sesión con nombre de usuario y muestra el error de credenciales" |
 | USU-03 | Una cuenta dada de baja recibe el mismo mensaje que una contraseña incorrecta. | ⚠️ sin test |
 | USU-04 | Una cuenta desactivada o una persona cargada sin usuario recibe el mismo mensaje que USU-02, también al ingresar con Google: nadie puede averiguar si una cuenta existe. Por qué no entra alguien del personal lo ve el admin en "Personal". | ✅ `checkout.integration.mjs` › "USU-04, USU-06 y USU-09: mensaje genérico, 30 días de sesión para clientes y 24 h para el personal" |

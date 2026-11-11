@@ -48,23 +48,23 @@ arranca y responde de forma segura.
 
 | Código | Regla | Estado |
 | --- | --- | --- |
-| SIS-30 | El home muestra, en este orden: el carrusel de promociones, el nombre y la frase de la tienda (con "Ver catálogo" si hay tienda) y los productos que aporta el rubro. Sin banners vigentes, el nombre pasa a ser la portada. Si los banners no cargan, la tienda se sigue viendo, sin mensaje de error. | ⚠️ sin test (revisado en capturas) |
+| SIS-30 | El home muestra arriba el carrusel de promociones y, debajo, el inicio que aporta el rubro (su propia portada y productos). Sin rubro, el core muestra el nombre y la frase de la tienda, con "Ver catálogo" si hay tienda. Si los banners no cargan, el carrusel no aparece y la tienda se sigue viendo, sin mensaje de error. | ⚠️ sin test (revisado en capturas) |
 | SIS-31 | El carrusel pasa solo cada 5 segundos (se frena con el mouse o el foco encima, y no se mueve si la persona pidió menos movimiento), tiene flechas, puntos y se desliza con el dedo. Con un solo banner no hay controles. | ⚠️ sin test (revisado en capturas) |
-| SIS-32 | Un banner es de **carrusel** (imagen) o de **cinta** (texto en la franja superior, en todo el sitio). Ambos se cargan en "Banners y promociones". | ✅ `core_banners.test.mjs` › "SIS-32: …" |
+| SIS-32 | Un banner es de **carrusel** (imagen) o de **cinta** (texto en la franja superior, en todo el sitio). Ambos se cargan en "Banners y promociones". | ✅ `core_banners.test.mjs` › \"SIS-32: …\"; migración de la cinta vieja: `checkout.integration.mjs` › "SIS-32, SIS-34, SIS-39 y COR-10: …" |
 | SIS-33 | Subir o borrar imágenes (a Cloudinary) lo puede hacer quien tiene "Editar banners" o "Editar artículos". | ⚠️ sin test |
-| SIS-34 | Un banner se ve solo si está activo y hoy (hora de Argentina) está entre su "desde" y su "hasta", ambos incluidos. Sin "desde" vale desde ya; sin "hasta" no vence. | ✅ `core_banners.test.mjs` › "SIS-34: …" |
+| SIS-34 | Un banner se ve solo si está activo y hoy (hora de Argentina) está entre su "desde" y su "hasta", ambos incluidos. Sin "desde" vale desde ya; sin "hasta" no vence. | ✅ `core_banners.test.mjs` › \"SIS-34: …\"; `checkout.integration.mjs` › "SIS-32, SIS-34, SIS-39 y COR-10: …" |
 | SIS-35 | El enlace de un banner solo puede ser una página de la tienda (empieza con "/") o un sitio `https://`. | ✅ `core_banners.test.mjs` › "SIS-35: …" |
 | SIS-36 | El panel muestra cada banner con su estado: Vigente, Programado, Vencido o Inactivo. | ✅ `core_banners.test.mjs` › "SIS-34 y SIS-36: …" |
 | SIS-37 | Ver los banners vigentes no pide ingresar; crearlos, editarlos, activarlos o borrarlos pide "Editar banners". | ✅ `core_api.test.mjs` › "SIS-37: …" (con el permiso: ⚠️) |
 | SIS-38 | Las imágenes se piden a Cloudinary al ancho en que se muestran. | ⚠️ sin test |
-| SIS-39 | Como máximo 8 banners de carrusel y 4 de cinta activos a la vez (los vencidos no cuentan); al pasarse: "Desactivá uno antes de sumar otro". | ⚠️ sin test con base (el tope: `core_banners.test.mjs`) |
+| SIS-39 | Como máximo 8 banners de carrusel y 4 de cinta activos a la vez (los vencidos no cuentan); al pasarse: "Desactivá uno antes de sumar otro". | ✅ `checkout.integration.mjs` › "SIS-32, SIS-34, SIS-39 y COR-10: …" |
 | SIS-50 | Un banner de carrusel puede tener una imagen vertical para el celular. Se usa si todos los banners del carrusel la tienen, para que todas las diapositivas midan lo mismo; si no, se recorta la de computadora. | ⚠️ sin test (revisado en capturas) |
 
 ### Seguridad y API del core
 
 | Código | Regla | Estado |
 | --- | --- | --- |
-| COR-10 | Al arrancar, todas las tablas del schema quedan con RLS activado y, en Supabase, sin acceso para `anon` ni `authenticated`: la API REST de Supabase no puede leer ni escribir nada. Avisa si `DB_SCHEMA=public`. | ✅ `core_seguridad.test.mjs` (contra una base real: ⚠️) |
+| COR-10 | Al arrancar, todas las tablas del schema quedan con RLS activado y, en Supabase, sin acceso para `anon` ni `authenticated`: la API REST de Supabase no puede leer ni escribir nada. Avisa si `DB_SCHEMA=public`. | ✅ `core_seguridad.test.mjs`; `checkout.integration.mjs` › "SIS-32, SIS-34, SIS-39 y COR-10: …" |
 | COR-20 | Una entrada inválida responde 400 `DATOS_INVALIDOS` con el primer error en español y la lista por campo; los errores esperados de un service (`ErrorApp`) responden con su código y estado. | ✅ `core_api.test.mjs` › "COR-20: …" |
 
 ### Servidor y despliegue
