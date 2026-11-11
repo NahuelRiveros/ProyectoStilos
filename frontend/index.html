@@ -2,7 +2,13 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Íconos dibujados desde public/favicon.svg: la "S" usa Georgia, que no está en Android, así que
+         se sirven como imagen para que se vea igual en todos lados. /favicon.ico también evita que
+         Vercel responda la página HTML a quien lo pide sin leer este HEAD (Google, lectores RSS). -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" href="/icono-192.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#19273A" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stilos · Moda y estilo</title>
     <!-- Vista previa al compartir el sitio (la de cada prenda la arma middleware.js, ROP-31). -->
