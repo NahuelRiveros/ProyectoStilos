@@ -130,11 +130,16 @@ const orden = z.coerce.number().int().min(0).max(9999).default(0);
 export const esquemaId = z.object({ id: z.coerce.number().int().positive("Id no válido.") });
 
 export const esquemaCategoria = z.object({ nombre: nombre(), padre_id: idOpcional, orden, activo: z.boolean().default(true) });
+const urlImagen = (mensaje) => z.string().trim().max(500).refine(
+  // ROP-34: o https, o una foto del catálogo de ejemplo (solo en tu PC; esa carpeta no va a git).
+  (v) => /^https:\/\//.test(v) || /^\/catalogo-inicial\/[a-z0-9][a-z0-9_-]*\.(jpg|jpeg|png|webp)$/i.test(v),
+  mensaje,
+);
 const urlOpcional = (mensaje) => z.preprocess(
   (v) => (v === "" || v === undefined ? null : v),
-  z.string().trim().max(500).regex(/^https:\/\//, mensaje).nullable(),
+  urlImagen(mensaje).nullable(),
 ).default(null);
-export const esquemaMarca = z.object({ nombre: nombre(), activo: z.boolean().default(true), logo_url: urlOpcional("El logo tiene que ser una dirección https.") });
+export const esquemaMarca = z.object({ nombre: nombre(), activo: z.boolean().default(true), logo_url: urlOpcional("El logo tiene que ser una URL https o una imagen local del catálogo inicial.") });
 export const esquemaDiseno = z.object({ nombre: nombre(40), orden }); // ROP-23
 export const esquemaColor = z.object({
   nombre: nombre(40),
@@ -150,7 +155,7 @@ export const esquemaGrupoTalle = z.object({
 
 const variante = z.object({ color_id: z.coerce.number().int().positive(), talle_id: z.coerce.number().int().positive(), disponible: z.boolean().default(true) });
 const imagen = z.object({
-  url: z.string().trim().max(500).regex(/^https:\/\//, "La foto tiene que ser una dirección https."),
+  url: urlImagen("La foto tiene que ser una URL https o una imagen local del catálogo inicial."),
   color_id: idOpcional,
 });
 

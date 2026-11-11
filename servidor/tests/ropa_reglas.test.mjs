@@ -126,7 +126,7 @@ test("ROP-23 y ROP-25: diseño opcional en la prenda y logo https opcional en la
   assert.equal(esquemaPrenda.parse(prenda({ diseno_id: "3" })).diseno_id, 3);
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: "" }).logo_url, null);
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: " https://x.test/bando.png " }).logo_url, "https://x.test/bando.png");
-  assert.equal(esquemaMarca.safeParse({ nombre: "Bando", logo_url: "http://x.test/bando.png" }).error.issues[0].message, "El logo tiene que ser una dirección https.");
+  assert.equal(esquemaMarca.safeParse({ nombre: "Bando", logo_url: "http://x.test/bando.png" }).error.issues[0].message, "El logo tiene que ser una URL https o una imagen local del catálogo inicial.");
   assert.equal(esquemaDiseno.safeParse({ nombre: "" }).success, false);
 });
 
@@ -171,4 +171,13 @@ test("ROP-41 a ROP-44: pedido con cuenta y mis datos", () => {
   const datos = esquemaMisDatos.parse({ nombre: "Ana", apellido: "Gómez", celular: "(370) 412-3456" });
   assert.deepEqual([datos.celular, datos.direccion], ["3704123456", ""]);
   assert.equal(esquemaMisDatos.safeParse({ nombre: "A", apellido: "Gómez", celular: "3704123456" }).error.issues[0].message, "Escribí tu nombre.");
+});
+
+test("ROP-34: las fotos aceptan https o una imagen local del catálogo de ejemplo, nada más", () => {
+  const conFoto = (url) => esquemaPrenda.safeParse(prenda({ imagenes: [{ url, color_id: 1 }] }));
+  assert.equal(conFoto("https://res.cloudinary.com/x/a.jpg").success, true);
+  assert.equal(conFoto("/catalogo-inicial/ejemplo-remera-blanco.jpg").success, true);
+  for (const url of ["http://x.test/a.jpg", "/catalogo-inicial/..", "/catalogo-inicial/.oculto.png", "/catalogo-inicial/nota.txt", "/catalogo-inicial/../admin", "/otra-carpeta/a.jpg", "javascript:alert(1)", "/catalogo-inicial/"]) {
+    assert.equal(conFoto(url).success, false, url);
+  }
 });
