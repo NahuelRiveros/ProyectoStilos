@@ -97,9 +97,28 @@ test("pedido sin cuenta: se arma en la ficha, pide dirección para envío y se e
   expect(enviados[0].cuerpo).toEqual({ nombre: "Ana", celular: "3704 123456", entrega: "envio", direccion: "San Martín 123", localidad: "Formosa", items: [{ variante_id: 12, cantidad: 2 }] });
   const whatsapp = await page.getByRole("link", { name: "Abrir WhatsApp" }).getAttribute("href");
   expect(decodeURIComponent(whatsapp)).toContain("Entrega: Envío a San Martín 123, Formosa");
+  // ROP-62: el mensaje y la pantalla llevan el link de seguimiento.
+  expect(decodeURIComponent(whatsapp)).toMatch(/Sigo mi pedido acá: http:\/\/[^/]+\/seguimiento\/k7Qx2abcdefghijklmnopq/);
+  await expect(page.getByRole("link", { name: "seguir mi pedido" })).toHaveAttribute("href", "/seguimiento/k7Qx2abcdefghijklmnopq");
   // El pedido del navegador se vació.
   await page.goto("/pedido");
   await expect(page.getByRole("heading", { name: "Tu pedido está vacío" })).toBeVisible();
+});
+
+test("seguimiento sin cuenta: estado, qué sigue y prendas, sin datos personales; un link inventado no muestra nada (ROP-62, ROP-67)", async ({ page }) => {
+  const api = await simularApi(page);
+  const inventada = "z".repeat(22);
+  api.responder("GET", `/ropa/catalogo/seguimiento/${inventada}`, () => ({ status: 404, json: { ok: false, codigo: "NO_EXISTE", mensaje: "No encontramos ese pedido." } }));
+  await page.goto("/seguimiento/k7Qx2abcdefghijklmnopq");
+  await expect(page.getByRole("heading", { name: "Pedido #00013", level: 1 })).toBeVisible();
+  await expect(page.getByText("Está confirmado. Te avisamos cuando esté listo para retirar.")).toBeVisible();
+  await expect(page.getByText("Remera Taverniti")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Consultar por WhatsApp" })).toHaveAttribute("href", /wa\.me\/.+%2300013/);
+  await expect(page.getByText("3704123456")).toHaveCount(0);
+  await sinDesborde(page);
+
+  await page.goto(`/seguimiento/${inventada}`);
+  await expect(page.getByRole("heading", { name: "No encontramos ese pedido" })).toBeVisible();
 });
 
 test("inicio: la cinta de marcas usa los logos de la configuración y lleva al catálogo de cada marca", async ({ page }) => {

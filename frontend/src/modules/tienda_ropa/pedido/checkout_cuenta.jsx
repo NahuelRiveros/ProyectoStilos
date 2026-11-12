@@ -27,7 +27,7 @@ export default function CheckoutCuenta({ pedido }) {
     return (
       <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
         <p>Antes de confirmar, completá tu nombre, apellido y celular.</p>
-        <Link to="/mi-cuenta" className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-(--kt-petrol) px-4 font-semibold text-(--kt-accent-on-dark)">Completar mis datos</Link>
+        <Link to="/mi-cuenta?volver=/pedido" className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-(--kt-petrol) px-4 font-semibold text-(--kt-accent-on-dark)">Completar mis datos</Link>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  armarArbol, conDescendientes, creaCiclo, claveModelo, esEnvioGratis, esquemaColor, esquemaEstadoPedido, esquemaGrupoCaracteristica, esquemaMarca, esquemaMisDatos, esquemaPedidoCuenta, formatoComprobante, pideMotivo, problemaComprobante, problemaTransicion, proximoPaso, transferenciaDisponible, esquemaFiltrosCatalogo, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
+  avisaAlCliente, esquemaClaveSeguimiento, armarArbol, conDescendientes, creaCiclo, claveModelo, esEnvioGratis, esquemaColor, esquemaEstadoPedido, esquemaGrupoCaracteristica, esquemaMarca, esquemaMisDatos, esquemaPedidoCuenta, formatoComprobante, pideMotivo, problemaComprobante, problemaTransicion, proximoPaso, transferenciaDisponible, esquemaFiltrosCatalogo, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
 } from "../src/modulos/tienda_ropa/reglas.js";
 
 const CATEGORIAS = [
@@ -154,6 +154,21 @@ test("Estados del pedido: pasos válidos, motivo al volver o cancelar y próximo
   assert.equal(proximoPaso({ estado: "confirmado", entrega: "envio" }), "enviado");
   assert.equal(proximoPaso({ estado: "confirmado", entrega: "retiro" }), "listo_retirar");
   assert.equal(proximoPaso({ estado: "entregado" }), null);
+});
+
+test("ROP-62 y ROP-63: link de seguimiento válido y mail solo en los cambios importantes", () => {
+  assert.equal(avisaAlCliente("recibido", "confirmado"), true);
+  assert.equal(avisaAlCliente("confirmado", "listo_retirar"), true);
+  assert.equal(avisaAlCliente("confirmado", "enviado"), true);
+  assert.equal(avisaAlCliente("enviado", "entregado"), true);
+  assert.equal(avisaAlCliente("recibido", "cancelado"), true);
+  assert.equal(avisaAlCliente("listo_retirar", "confirmado"), false, "volver atrás no avisa");
+  assert.equal(avisaAlCliente("confirmado", "recibido"), false);
+  assert.equal(avisaAlCliente("entregado", "confirmado"), false);
+  assert.equal(avisaAlCliente("cancelado", "recibido"), false, "reabrir no avisa");
+  assert.equal(esquemaClaveSeguimiento.safeParse({ clave: "A".repeat(22) }).success, true);
+  assert.equal(esquemaClaveSeguimiento.safeParse({ clave: "corta" }).success, false);
+  assert.equal(esquemaClaveSeguimiento.safeParse({ clave: "a/b".padEnd(22, "x") }).success, false);
   assert.equal(esquemaEstadoPedido.safeParse({ estado: "confirmado" }).success, false, "sin la versión que vio no se cambia");
 });
 

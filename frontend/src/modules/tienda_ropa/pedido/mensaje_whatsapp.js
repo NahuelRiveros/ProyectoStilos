@@ -5,7 +5,7 @@ import { textoEntrega } from "./entrega.js";
  * ROP-14: texto que el cliente le manda al negocio. Usa el pedido que devolvió el servidor (número,
  * precios y total de la base), así el negocio lo encuentra en el panel por su número.
  */
-export function mensajePedido(pedido, negocio) {
+export function mensajePedido(pedido, negocio, seguimiento = null) {
   const lineas = pedido.items.map((i) => `• ${i.cantidad} × ${i.nombre_prenda} (${i.color}, talle ${i.talle}): ${formatearPrecio(i.subtotal)}`);
   return [
     `¡Hola ${negocio}! Te envío mi pedido ${pedido.numero}:`,
@@ -15,6 +15,8 @@ export function mensajePedido(pedido, negocio) {
     ...(pedido.entrega === "envio" ? [pedido.envio_gratis ? "Envío gratis." : "¿Cuánto sale el envío?"] : []),
     `A nombre de: ${pedido.nombre}`,
     "¿Me confirmás si hay disponibilidad? Gracias.",
+    // ROP-62: el cliente se guarda el link en el chat para ver cómo va.
+    ...(seguimiento ? ["", `Sigo mi pedido acá: ${seguimiento}`] : []),
   ].join("\n");
 }
 

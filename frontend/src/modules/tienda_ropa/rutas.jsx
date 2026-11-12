@@ -7,6 +7,7 @@ const PedidoPage = lazy(() => import("./pedido/pedido_page.jsx"));
 const MisDatosPage = lazy(() => import("./cuenta/mis_datos_page.jsx"));
 const MisPedidosPage = lazy(() => import("./cuenta/mis_pedidos_page.jsx"));
 const MiPedidoPage = lazy(() => import("./cuenta/mi_pedido_page.jsx"));
+const SeguimientoPage = lazy(() => import("./cuenta/seguimiento_page.jsx"));
 const PrendasPage = lazy(() => import("./admin/prendas_page.jsx"));
 const PrendaFormPage = lazy(() => import("./admin/prenda_form_page.jsx"));
 const CategoriasPage = lazy(() => import("./admin/categorias_page.jsx"));
@@ -29,6 +30,7 @@ export const rutasTienda = [
   { path: "/mi-cuenta", element: protegida(<MisDatosPage />) },
   { path: "/mis-pedidos", element: protegida(<MisPedidosPage />) },
   { path: "/mis-pedidos/:id", element: protegida(<MiPedidoPage />) },
+  { path: "/seguimiento/:clave", element: <SeguimientoPage /> }, // ROP-62: sin cuenta
 ];
 
 export const rutasPanel = [

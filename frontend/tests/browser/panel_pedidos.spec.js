@@ -16,6 +16,12 @@ test("encargado: busca, confirma con la versión que vio y revisa el comprobante
   await page.getByRole("button", { name: /#00013/ }).click();
   const dialogo = page.getByRole("dialog");
   await expect(dialogo.getByText("Comprobante en revisión")).toBeVisible();
+  // ROP-64: el aviso por WhatsApp lleva el estado y el link de seguimiento.
+  const aviso = dialogo.getByRole("link", { name: "Avisarle por WhatsApp: Recibido" });
+  const texto = decodeURIComponent(await aviso.getAttribute("href"));
+  expect(texto).toContain("¡Hola Ana! Te escribimos de");
+  expect(texto).toContain("por tu pedido #00013: lo recibimos y lo estamos revisando.");
+  expect(texto).toMatch(/Podés seguirlo acá: http:\/\/[^/]+\/seguimiento\/k7Qx2abcdefghijklmnopq/);
 
   // ROP-50: rechazar pide motivo (lo lee el cliente).
   await dialogo.getByRole("button", { name: "Rechazar" }).click();

@@ -14,6 +14,7 @@ import { useEnviarPedido, mensajeError } from "../hooks/use_ropa.js";
 import { formatearPrecio } from "../utils/dinero.js";
 import { usePedido } from "./pedido_context.js";
 import { linkWhatsapp, mensajePedido } from "./mensaje_whatsapp.js";
+import { urlSeguimiento } from "./mensajes_estado.js";
 import { avisoEnvioGratis, textoEntrega } from "./entrega.js";
 import SelectorEntrega from "./selector_entrega.jsx";
 import CheckoutCuenta from "./checkout_cuenta.jsx";
@@ -51,7 +52,8 @@ export default function PedidoPage() {
   }
 
   if (enviado) {
-    const link = linkWhatsapp(clientConfig.whatsapp, mensajePedido(enviado, brandConfig.nombre));
+    const seguimiento = urlSeguimiento(window.location.origin, enviado.clave_seguimiento);
+    const link = linkWhatsapp(clientConfig.whatsapp, mensajePedido(enviado, brandConfig.nombre, seguimiento));
     return (
       <div className="mx-auto max-w-lg px-4 py-14 text-center">
         <CheckCircle2 size={48} className="mx-auto text-(--kt-success)" aria-hidden="true" />
@@ -62,7 +64,12 @@ export default function PedidoPage() {
         </a>
         <p className="mt-4 text-sm text-(--kt-ink-soft)">Total: <strong className="text-(--kt-ink)">{formatearPrecio(enviado.total)}</strong></p>
         <p className="mt-1 text-sm text-(--kt-ink-soft)">{textoEntrega(enviado)}{enviado.envio_gratis && " · Envío gratis"}</p>
-        <Link to="/catalogo" className="mt-6 inline-flex min-h-11 items-center font-semibold text-(--kt-petrol) underline-offset-4 hover:underline">Seguir mirando</Link>
+        {enviado.clave_seguimiento && (
+          <p className="mt-6 rounded-xl bg-(--kt-bg-soft) p-3 text-sm text-(--kt-ink-soft)">
+            Podés ver cómo va tu pedido cuando quieras: <Link to={`/seguimiento/${enviado.clave_seguimiento}`} className="font-semibold text-(--kt-petrol) underline">seguir mi pedido</Link>. El link también va en tu mensaje de WhatsApp.
+          </p>
+        )}
+        <Link to="/catalogo" className="mt-4 inline-flex min-h-11 items-center font-semibold text-(--kt-petrol) underline-offset-4 hover:underline">Seguir mirando</Link>
       </div>
     );
   }

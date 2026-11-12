@@ -90,7 +90,10 @@ export const PrendaVariante = defineModel("PrendaVariante", {
 export const GrupoCaracteristicaCategoria = defineModel("GrupoCaracteristicaCategoria", {
   grupo_caracteristica_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_caracteristica", key: "id" }, onDelete: "CASCADE" },
   categoria_id:            { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" }, onDelete: "CASCADE" },
-}, { tableName: "grupo_caracteristica_categoria", indexes: [{ unique: true, fields: ["grupo_caracteristica_id", "categoria_id"] }] });
+  // Nombre explícito: el automático pasa los 63 caracteres de PostgreSQL, se corta, y el siguiente
+  // sync({ alter: true }) no lo reconoce e intenta crearlo de nuevo (el servidor no arranca). Es el
+  // mismo nombre cortado que ya quedó en las bases creadas antes de este arreglo.
+}, { tableName: "grupo_caracteristica_categoria", indexes: [{ name: "grupo_caracteristica_categoria_grupo_caracteristica_id_categori", unique: true, fields: ["grupo_caracteristica_id", "categoria_id"] }] });
 
 /** ROP-38: varias características por prenda. */
 export const PrendaCaracteristica = defineModel("PrendaCaracteristica", {
@@ -127,6 +130,8 @@ export const PedidoWhatsapp = defineModel("PedidoWhatsapp", {
   direccion:    { type: DataTypes.STRING(120), allowNull: true },
   localidad:    { type: DataTypes.STRING(80), allowNull: true },
   envio_gratis: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  // ROP-62: link secreto para seguir el pedido sin cuenta (los pedidos anteriores no tienen).
+  clave_seguimiento: { type: DataTypes.STRING(32), allowNull: true, unique: true },
   ...fechas,
 }, { tableName: "pedido_whatsapp", indexes: [{ fields: ["estado"] }, { fields: ["usuario_id"] }, { fields: ["estado_pago"] }] });
 

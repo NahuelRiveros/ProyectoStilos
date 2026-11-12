@@ -12,6 +12,7 @@ export const getMarcasTienda = () => datos(http.get("/ropa/catalogo/marcas", pub
 export const getCatalogo = (filtros, signal) => datos(http.get("/ropa/catalogo/prendas", { ...publico, params: filtros, signal }));
 export const getPrendaTienda = (slug) => datos(http.get(`/ropa/catalogo/prendas/${slug}`, publico));
 export const enviarPedido = (pedido) => datos(http.post("/ropa/catalogo/pedidos", pedido, publico));
+export const getSeguimiento = (clave) => datos(http.get(`/ropa/catalogo/seguimiento/${clave}`, publico));
 
 // ── Panel: listas (categorías, marcas, colores, talles) ─────────────────────────
 export const getLista = (lista) => datos(http.get(`/ropa/panel/${lista}`));

@@ -50,6 +50,8 @@ test("con datos incompletos pide completarlos antes de confirmar y los guarda", 
   await page.getByRole("button", { name: "Guardar mis datos" }).click();
   await expect(page.getByText("Guardamos tus datos.")).toBeVisible();
   expect(api.ultimo("PUT", "/ropa/mi-cuenta/datos").cuerpo).toMatchObject({ nombre: "Ana", apellido: "Gómez", celular: "3704 555555", direccion: "Belgrano 50" });
+  // ROP-65: al guardar vuelve al pedido para confirmarlo.
+  await expect(page).toHaveURL(/\/pedido$/);
   await sinDesborde(page);
 });
 

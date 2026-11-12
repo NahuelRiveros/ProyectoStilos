@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import InputField from "../../../core/controls/ui/input_field.jsx";
 import FormError from "../../../core/controls/ui/form_error.jsx";
 import { useToast } from "../../../core/controls/toast/use_toast.js";
@@ -23,13 +24,21 @@ export default function MisDatosPage() {
   );
 }
 
+// ROP-65: a dónde volver después de guardar. Solo rutas propias: un link armado no manda a otro sitio.
+const VUELTAS = new Set(["/pedido"]);
+
 function Formulario({ datos }) {
   const { guardarDatos } = useAccionesCuenta();
   const toast = useToast();
+  const navigate = useNavigate();
+  const volver = useSearchParams()[0].get("volver");
   const { register, handleSubmit, setError, formState: { errors } } = useForm({ defaultValues: Object.fromEntries(CAMPOS.map((c) => [c, datos[c] ?? ""])) });
 
   async function guardar(valores) {
-    try { toast.success((await guardarDatos.mutateAsync(valores)).mensaje); }
+    try {
+      toast.success((await guardarDatos.mutateAsync(valores)).mensaje);
+      if (VUELTAS.has(volver)) navigate(volver);
+    }
     catch (error) {
       const porCampo = error?.response?.data?.errores ?? [];
       porCampo.forEach((e) => setError(e.campo, { message: e.mensaje }));

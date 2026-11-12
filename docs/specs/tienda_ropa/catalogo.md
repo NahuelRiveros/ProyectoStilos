@@ -71,6 +71,12 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-15 | El pedido queda en el panel con copia de la prenda (borrarla no lo cambia). Estados: Recibido → Confirmado → Listo para retirar / Enviado → Entregado, y Cancelado. | ✅ `ropa.integration.mjs` › "ROP-14 y ROP-15…" |
 | ROP-16 | Sin cuenta se piden nombre y celular (8 a 15 números). Enviar pedidos se limita a 10 por hora por IP. | ✅ `ropa_reglas.test.mjs`; `ropa_api.test.mjs` (el límite: ⚠️) |
 | ROP-18 | Retiro o envío (dirección y localidad obligatorias). El envío se coordina; es gratis desde el mínimo, según el total de la base. | ✅ `ropa_reglas.test.mjs`, `ropa_web.test.mjs` y `ropa.integration.mjs` › "ROP-18…" |
+| ROP-62 | Seguimiento sin cuenta: link secreto `/seguimiento/<clave>` en el mensaje de WhatsApp y en "pedido registrado"; muestra estado, prendas, total y pago, sin nombre, celular ni dirección ([cambio](../cambios/2026-11-seguimiento-y-avisos.md)). | ✅ `ropa.integration.mjs` › "ROP-14 y ROP-15…"; `tienda.spec.js` › "seguimiento sin cuenta…" |
+| ROP-63 | Mail al cliente con cuenta solo al confirmar, listo para retirar, enviado, entregado o cancelado; volver atrás no avisa. | ✅ `ropa_reglas.test.mjs` › "ROP-62 y ROP-63…" |
+| ROP-64 | "Avisarle por WhatsApp" en el panel: mensaje según el estado, con el link de seguimiento. | ✅ `ropa_web.test.mjs` › "ROP-62, ROP-64 y ROP-67…"; `panel_pedidos.spec.js` › "encargado…" |
+| ROP-65 | "Completar mis datos" desde el pedido vuelve al pedido al guardar. | ✅ `cuenta.spec.js` › "con datos incompletos…" |
+| ROP-66 | "Mi pedido" y el seguimiento se actualizan al volver a la pestaña (sin consultas periódicas). | ✅ prueba de punta a punta 2026-11-12 |
+| ROP-67 | La pantalla del pedido dice qué sigue y ofrece consultar por WhatsApp. | ✅ `ropa_web.test.mjs` › "ROP-62, ROP-64 y ROP-67…"; `tienda.spec.js` › "seguimiento sin cuenta…" |
 | ROP-40 a ROP-57 | Cuentas de cliente, pedido con forma de pago, transferencia con comprobante, "Mis pedidos", historial, avisos por correo y permiso "Registrar pagos". | ✅ ver [la spec del cambio](../cambios/2026-11-cuentas-y-transferencias.md) |
 
 ### Equipo

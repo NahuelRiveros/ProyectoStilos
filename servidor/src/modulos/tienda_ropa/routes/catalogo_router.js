@@ -1,8 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { validar } from "../../../core/middleware/validar.js";
-import { categoriasController, filtrosController, marcasController, listarController, detalleController, enviarPedidoController } from "../controllers/catalogo_controller.js";
-import { esquemaFiltrosCatalogo, esquemaOpcionesFiltro, esquemaPedido, esquemaSlug } from "../reglas.js";
+import { categoriasController, filtrosController, marcasController, listarController, detalleController, enviarPedidoController, seguimientoController } from "../controllers/catalogo_controller.js";
+import { esquemaClaveSeguimiento, esquemaFiltrosCatalogo, esquemaOpcionesFiltro, esquemaPedido, esquemaSlug } from "../reglas.js";
 
 // Tienda pública: no pide ingresar (ROP-10 a ROP-16).
 export const catalogoRopaRouter = Router();
@@ -21,4 +21,5 @@ catalogoRopaRouter.get("/filtros", validar({ query: esquemaOpcionesFiltro }), fi
 catalogoRopaRouter.get("/marcas", marcasController);
 catalogoRopaRouter.get("/prendas", validar({ query: esquemaFiltrosCatalogo }), listarController);
 catalogoRopaRouter.get("/prendas/:slug", validar({ params: esquemaSlug }), detalleController);
+catalogoRopaRouter.get("/seguimiento/:clave", validar({ params: esquemaClaveSeguimiento }), seguimientoController); // ROP-62
 catalogoRopaRouter.post("/pedidos", limitePedidos, validar({ body: esquemaPedido }), enviarPedidoController);

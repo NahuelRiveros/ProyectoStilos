@@ -4,6 +4,8 @@ import {
   agregarLinea, cambiarCantidad, CLAVE_PEDIDO, guardarPedido, leerPedido, quitarLinea, totalEstimado, unidades,
 } from "../../frontend/src/modules/tienda_ropa/pedido/pedido_local.js";
 import { linkWhatsapp, mensajePedido } from "../../frontend/src/modules/tienda_ropa/pedido/mensaje_whatsapp.js";
+import { mensajeEstadoCliente, queSigue, urlSeguimiento } from "../../frontend/src/modules/tienda_ropa/pedido/mensajes_estado.js";
+import { textoEntrega } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
 import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
@@ -55,6 +57,19 @@ test("ROP-18: el mensaje lleva la entrega y si el envío es gratis", () => {
   const envio = { numero: "#00013", nombre: "Ana", total: "160000.00", entrega: "envio", direccion: "San Martín 123", localidad: "Formosa", items: [] };
   assert.match(mensajePedido({ ...envio, envio_gratis: true }, "Stilos"), /Entrega: Envío a San Martín 123, Formosa\nEnvío gratis\./);
   assert.match(mensajePedido({ ...envio, envio_gratis: false }, "Stilos"), /Formosa\n¿Cuánto sale el envío\?/);
+});
+
+test("ROP-62, ROP-64 y ROP-67: link de seguimiento, mensaje del local según el estado y qué sigue", () => {
+  const url = urlSeguimiento("https://stilos.test", "k7Qx2abcdefghijklmnopq");
+  assert.equal(url, "https://stilos.test/seguimiento/k7Qx2abcdefghijklmnopq");
+  assert.equal(urlSeguimiento("https://stilos.test", null), null, "pedidos viejos, sin link");
+  const pedido = { numero: "#00012", nombre: "Ana Gómez", estado: "listo_retirar", entrega: "retiro", items: [], total: "1000.00" };
+  assert.equal(mensajeEstadoCliente(pedido, "Stilos", url), "¡Hola Ana! Te escribimos de Stilos por tu pedido #00012: ya está listo para retirar.\nPodés seguirlo acá: " + url);
+  assert.doesNotMatch(mensajeEstadoCliente(pedido, "Stilos", null), /seguirlo/);
+  assert.match(mensajePedido({ ...pedido, items: [] }, "Stilos", url), /Sigo mi pedido acá: https:\/\/stilos\.test\/seguimiento\//);
+  assert.equal(queSigue({ estado: "confirmado", entrega: "retiro" }), "Está confirmado. Te avisamos cuando esté listo para retirar.");
+  assert.match(queSigue({ estado: "confirmado", entrega: "envio" }), /enviarlo/);
+  assert.equal(textoEntrega({ entrega: "envio" }), "Envío a domicilio", "el seguimiento no trae la dirección");
 });
 
 test("ROP-18: aviso de cuánto falta para el envío gratis", () => {

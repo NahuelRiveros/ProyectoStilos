@@ -31,7 +31,7 @@ const fecha = "2026-11-11T14:30:00.000Z";
 export const PEDIDO_CUENTA = {
   id: 13, numero: "#00013", nombre: "Ana Gómez", celular: "3704123456", total: "37000.00", estado: "recibido", estado_pago: "pendiente",
   forma_pago: "transferencia", origen: "cuenta", entrega: "retiro", direccion: null, localidad: null, envio_gratis: false,
-  version: 2, proximo: "confirmado", creado_en: fecha,
+  version: 2, proximo: "confirmado", creado_en: fecha, clave_seguimiento: "k7Qx2abcdefghijklmnopq",
   items: [{ id: 1, nombre_prenda: "Remera Taverniti", color: "Negro", talle: "M", cantidad: 2, precio_unitario: "18500.00", subtotal: "37000.00" }],
   historial: [{ id: 1, estado_anterior: null, estado_nuevo: "recibido", motivo: null, creado_en: fecha }],
   comprobantes: [],
@@ -60,7 +60,12 @@ export async function simularApi(page, { rol = null, datosCompletos = true } = {
     [`GET /ropa/catalogo/prendas/${FICHA.slug}`]: () => FICHA,
     "GET /ropa/catalogo/prendas/remera-taverniti-rojo": () => ({ ...FICHA, id: 2, slug: "remera-taverniti-rojo", colores: [rojo], otros_colores: [{ slug: FICHA.slug, color: negro }],
       variantes: [{ id: 21, color_id: 22, talle_id: 1, disponible: true }] }),
-    "POST /ropa/catalogo/pedidos": ({ cuerpo }) => ({ id: 7, numero: "#00007", nombre: cuerpo.nombre, celular: cuerpo.celular, total: "37000.00",
+    // ROP-62: seguimiento sin cuenta (sin nombre, celular ni dirección).
+    "GET /ropa/catalogo/seguimiento/k7Qx2abcdefghijklmnopq": () => ({
+      numero: "#00013", estado: "confirmado", entrega: "retiro", envio_gratis: false, forma_pago: null, estado_pago: "pendiente", total: "37000.00", creado_en: fecha,
+      items: PEDIDO_CUENTA.items, historial: [...PEDIDO_CUENTA.historial, { id: 2, estado_anterior: "recibido", estado_nuevo: "confirmado", motivo: null, creado_en: fecha }],
+    }),
+    "POST /ropa/catalogo/pedidos": ({ cuerpo }) => ({ id: 7, numero: "#00007", clave_seguimiento: "k7Qx2abcdefghijklmnopq", nombre: cuerpo.nombre, celular: cuerpo.celular, total: "37000.00",
       entrega: cuerpo.entrega, direccion: cuerpo.direccion ?? null, localidad: cuerpo.localidad ?? null, envio_gratis: false,
       items: [{ cantidad: 2, nombre_prenda: "Remera Taverniti", color: "Negro", talle: "M", subtotal: "37000.00" }] }),
     "GET /ropa/mi-cuenta/datos": () => ({ nombre: "Ana", apellido: "Gómez", email: "ana@ejemplo.test", celular: datosCompletos ? "3704123456" : "",

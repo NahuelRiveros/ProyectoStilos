@@ -65,7 +65,9 @@ export function useAccionesPedido() {
 // ── Cuenta del cliente ──────────────────────────────────────────────────────────
 export const useMisDatos = (activo = true) => useQuery({ queryKey: ["ropa", "cuenta", "datos"], queryFn: api.getMisDatos, enabled: activo, staleTime: 5 * MIN });
 export const useMisPedidos = () => useQuery({ queryKey: ["ropa", "cuenta", "pedidos"], queryFn: api.getMisPedidos });
-export const useMiPedido = (id) => useQuery({ queryKey: ["ropa", "cuenta", "pedido", id], queryFn: () => api.getMiPedido(id), enabled: Boolean(id) });
+// ROP-66: el estado se actualiza al volver a la pestaña; sin consultas periódicas (la base cobra despierta).
+export const useMiPedido = (id) => useQuery({ queryKey: ["ropa", "cuenta", "pedido", id], queryFn: () => api.getMiPedido(id), enabled: Boolean(id), staleTime: 30 * 1000, refetchOnWindowFocus: true });
+export const useSeguimiento = (clave) => useQuery({ queryKey: ["ropa", "seguimiento", clave], queryFn: () => api.getSeguimiento(clave), enabled: Boolean(clave), staleTime: 30 * 1000, refetchOnWindowFocus: true, retry: false });
 
 export function useAccionesCuenta() {
   const queryClient = useQueryClient();

@@ -61,6 +61,19 @@ export function formatoComprobante(buffer) {
 export const transferenciaDisponible = (datos) =>
   ["titular", "banco", "cbu", "alias", "cuit"].every((campo) => String(datos?.[campo] ?? "").trim() !== "");
 
+/**
+ * ROP-63: el mail al cliente sale solo en los cambios importantes. Volver un paso atrás (o reabrir)
+ * no avisa: suele ser una corrección del local.
+ */
+export const avisaAlCliente = (desde, hacia) => {
+  if (hacia === "cancelado") return desde !== "cancelado";
+  if (desde === "cancelado" || desde === "entregado") return false;
+  return ["confirmado", "listo_retirar", "enviado", "entregado"].includes(hacia) && ORDEN_ESTADOS[hacia] > ORDEN_ESTADOS[desde];
+};
+
+/** ROP-62: 22 caracteres de base64url (16 bytes al azar). */
+export const esquemaClaveSeguimiento = z.object({ clave: z.string().regex(/^[A-Za-z0-9_-]{22}$/, "No encontramos ese pedido.") });
+
 export const ETIQUETA_ESTADO = {
   recibido: "Recibido", confirmado: "Confirmado", listo_retirar: "Listo para retirar",
   enviado: "Enviado", entregado: "Entregado", cancelado: "Cancelado",

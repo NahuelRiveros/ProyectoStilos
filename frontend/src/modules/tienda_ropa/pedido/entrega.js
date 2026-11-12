@@ -1,8 +1,10 @@
 // ROP-18: entrega del pedido. Funciones puras (las prueban servidor/tests/ropa_web.test.mjs).
 
-/** "Retiro en el local" o "Envío a San Martín 123, Formosa". */
-export const textoEntrega = (pedido) =>
-  pedido.entrega === "envio" ? `Envío a ${pedido.direccion}, ${pedido.localidad}` : "Retiro en el local";
+/** "Retiro en el local", "Envío a San Martín 123, Formosa" o, sin la dirección (seguimiento, ROP-62), "Envío a domicilio". */
+export function textoEntrega(pedido) {
+  if (pedido.entrega !== "envio") return "Retiro en el local";
+  return pedido.direccion ? `Envío a ${pedido.direccion}, ${pedido.localidad}` : "Envío a domicilio";
+}
 
 /**
  * Cuánto falta para el envío gratis con el total estimado del navegador (el que vale es el del servidor).

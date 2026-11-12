@@ -11,9 +11,9 @@ import { useAccionesCuenta, useMiPedido, mensajeError } from "../hooks/use_ropa.
 import { formatearPrecio } from "../utils/dinero.js";
 import { textoEntrega } from "../pedido/entrega.js";
 import { linkWhatsapp } from "../pedido/mensaje_whatsapp.js";
-import { ETIQUETA_ESTADO, ETIQUETA_FORMA_PAGO, puedeSubirComprobante, transferenciaDisponible } from "../pedido/pago.js";
+import { ETIQUETA_FORMA_PAGO, puedeSubirComprobante, transferenciaDisponible } from "../pedido/pago.js";
 import { ErrorReintentar } from "../tienda/estados.jsx";
-import { DatosBancarios, EtiquetaEstado, EtiquetaPago, PasosPedido } from "./comunes.jsx";
+import { DatosBancarios, EtiquetaEstado, EtiquetaPago, HistorialPedido, PasosPedido, PrendasPedido, QueSigue } from "./comunes.jsx";
 
 const ESTADO_COMPROBANTE = { en_revision: "En revisión", aceptado: "Aceptado", rechazado: "Rechazado" };
 
@@ -44,6 +44,7 @@ function Detalle({ pedido }) {
       <p className="-mt-4 text-sm text-(--kt-ink-soft)">{formatearFechaAR(pedido.creado_en)} · {textoEntrega(pedido)}</p>
 
       <PasosPedido pedido={pedido} />
+      <QueSigue pedido={pedido} />
 
       <section aria-labelledby="pago" className="space-y-3 rounded-2xl border border-(--kt-border) bg-(--kt-bg-soft) p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -60,36 +61,13 @@ function Detalle({ pedido }) {
         )}
       </section>
 
-      <section aria-labelledby="prendas">
-        <h2 id="prendas" className="font-semibold">Prendas</h2>
-        <ul className="mt-2 divide-y divide-(--kt-border) border-y border-(--kt-border) text-sm">
-          {pedido.items.map((i) => (
-            <li key={i.id} className="flex justify-between gap-3 py-3">
-              <span><strong>{i.cantidad} ×</strong> {i.nombre_prenda} <span className="text-(--kt-ink-soft)">({i.color}, talle {i.talle})</span></span>
-              <span className="whitespace-nowrap font-semibold">{formatearPrecio(i.subtotal)}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 flex justify-between text-lg font-bold"><span>Total</span><span>{formatearPrecio(pedido.total)}</span></p>
-        {pedido.envio_gratis && <p className="text-sm font-semibold text-(--kt-success)">Envío gratis</p>}
-      </section>
+      <PrendasPedido pedido={pedido} />
 
       {pedido.estado === "recibido" && (
         <button type="button" onClick={() => setCancelando(true)} className="inline-flex min-h-11 items-center font-semibold text-(--kt-danger) underline-offset-4 hover:underline">Cancelar pedido</button>
       )}
 
-      <section aria-labelledby="historial">
-        <h2 id="historial" className="font-semibold">Historial</h2>
-        <ol className="mt-2 space-y-2 border-l-2 border-(--kt-border) pl-4 text-sm">
-          {pedido.historial.map((h) => (
-            <li key={h.id}>
-              <span className="font-semibold">{ETIQUETA_ESTADO[h.estado_nuevo]}</span>
-              <span className="text-(--kt-ink-soft)"> · {formatearFechaAR(h.creado_en)}</span>
-              {h.estado_nuevo === "cancelado" && h.motivo && <p className="text-(--kt-ink-soft)">{h.motivo}</p>}
-            </li>
-          ))}
-        </ol>
-      </section>
+      <HistorialPedido pedido={pedido} />
 
       {cancelando && <Cancelar pedido={pedido} onClose={() => setCancelando(false)} />}
     </div>

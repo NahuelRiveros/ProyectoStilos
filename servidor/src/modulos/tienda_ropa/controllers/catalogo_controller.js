@@ -1,5 +1,5 @@
 import { arbolCategorias, opcionesDeFiltro, listarCatalogo, detallePrenda, marcasTienda } from "../services/catalogo_service.js";
-import { crearPedido } from "../services/pedidos_service.js";
+import { crearPedido, seguimientoPedido } from "../services/pedidos_service.js";
 
 // Tienda pública. Entrada validada en req.datos; los errores los responde app.js.
 
@@ -8,6 +8,7 @@ export const filtrosController = async (req, res) => res.json({ ok: true, data: 
 export const marcasController = async (_req, res) => res.json({ ok: true, data: await marcasTienda() });
 export const listarController = async (req, res) => res.json({ ok: true, data: await listarCatalogo(req.datos.query) });
 export const detalleController = async (req, res) => res.json({ ok: true, data: await detallePrenda(req.datos.params.slug) });
+export const seguimientoController = async (req, res) => res.json({ ok: true, data: await seguimientoPedido(req.datos.params.clave) });
 
 export async function enviarPedidoController(req, res) {
   const data = await crearPedido(req.datos.body);

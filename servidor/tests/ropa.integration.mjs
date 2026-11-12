@@ -58,6 +58,13 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
     await sembrarRolesDelSistema();
     await sincronizarPermisos();
 
+    await t.test("Arranque: sincronizar dos veces (como dos deploys) no falla", async () => {
+      // El bootstrap hace sync({ alter: true }) cuando cambian los modelos; sobre tablas que ya
+      // existen no puede intentar recrear índices (nombres de más de 63 caracteres lo rompían).
+      for (const modelo of moduloTiendaRopa.modelos) await modelo.sync({ alter: true });
+      for (const modelo of moduloTiendaRopa.modelos) await modelo.sync({ alter: true });
+    });
+
     await t.test("Super admin (core): solo usuario y contraseña, email fijo y no pisa la contraseña", async () => {
       assert.equal(await seed_super_admin({ config: { SUPERADMIN_USUARIO: "", SUPERADMIN_CONTRASENA: "x" } }), null, "sin usuario no se crea");
       assert.equal(await seed_super_admin({ config: { SUPERADMIN_USUARIO: "con@arroba", SUPERADMIN_CONTRASENA: "x" } }), null, "usuario inválido");
@@ -432,7 +439,16 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       );
       assert.equal(await pedidos.contarNuevos(), 1);
       assert.equal(pedido.envio_gratis, false);
+      // ROP-62: link secreto de seguimiento, sin datos personales; una clave inventada no muestra nada.
+      assert.match(pedido.clave_seguimiento, /^[A-Za-z0-9_-]{22}$/);
+      const seguido = await pedidos.seguimientoPedido(pedido.clave_seguimiento);
+      assert.equal(seguido.numero, pedido.numero);
+      assert.equal(seguido.estado, "recibido");
+      assert.equal(seguido.items[0].nombre_prenda, "Remera lisa");
+      for (const privado of ["nombre", "celular", "direccion", "localidad", "usuario_id", "id", "clave_seguimiento"]) assert.equal(privado in seguido, false, privado);
+      await assert.rejects(pedidos.seguimientoPedido("x".repeat(22)), { codigo: "NO_EXISTE" });
       const confirmado = await cambiarA(pedido.id, "confirmado");
+      assert.equal((await pedidos.seguimientoPedido(pedido.clave_seguimiento)).estado, "confirmado", "el link muestra el estado al día");
       assert.equal(confirmado.estado, "confirmado");
       assert.deepEqual(confirmado.historial.map((h) => h.estado_nuevo), ["recibido", "confirmado"]);
       assert.equal((await pedidos.listarPedidos({ estado: "recibido", pago: "todos", pagina: 1 })).items.length, 0);

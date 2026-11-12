@@ -17,6 +17,8 @@ import { textoEntrega } from "../pedido/entrega.js";
 import { ETIQUETA_ESTADO, ETIQUETA_FORMA_PAGO, ETIQUETA_PAGO, cambiosPosibles, pideMotivo } from "../pedido/pago.js";
 import { EtiquetaEstado, EtiquetaPago } from "../cuenta/comunes.jsx";
 import { BOTON_PRIMARIO, BOTON_SECUNDARIO, Encabezado, Pantalla, SegunConsulta } from "./comunes.jsx";
+import { mensajeEstadoCliente, urlSeguimiento } from "../pedido/mensajes_estado.js";
+import { brandConfig } from "../../../proyecto/config/brand_config.js";
 
 const PESTANAS = [["recibido", "Recibidos"], ["confirmado", "Confirmados"], ["listo_retirar", "Para retirar"], ["enviado", "Enviados"], ["todos", "Todos"]];
 const hora = (fecha) => new Date(fecha).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
@@ -125,9 +127,10 @@ function DetallePedido({ id, onClose }) {
 
             <Pago pedido={pedido} acciones={acciones} puedeCobrar={tienePermiso(usuario, "pagos.registrar")} />
 
-            <a href={`https://wa.me/${whatsappDe(pedido.celular)}?text=${encodeURIComponent(`¡Hola ${pedido.nombre}! Te escribimos por tu pedido ${pedido.numero}.`)}`} target="_blank" rel="noopener noreferrer"
+            {/* ROP-64: el mensaje dice el estado actual y lleva el link de seguimiento; lo manda la persona del local. */}
+            <a href={`https://wa.me/${whatsappDe(pedido.celular)}?text=${encodeURIComponent(mensajeEstadoCliente(pedido, brandConfig.nombre, urlSeguimiento(window.location.origin, pedido.clave_seguimiento)))}`} target="_blank" rel="noopener noreferrer"
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1E7A46] px-4 text-sm font-bold text-white hover:bg-[#17633A]">
-              <MessageCircle size={17} aria-hidden="true" /> Escribirle por WhatsApp
+              <MessageCircle size={17} aria-hidden="true" /> Avisarle por WhatsApp: {ETIQUETA_ESTADO[pedido.estado]}
             </a>
 
             {tienePermiso(usuario, "pedidos.gestionar") && <CambiarEstado pedido={pedido} acciones={acciones} />}

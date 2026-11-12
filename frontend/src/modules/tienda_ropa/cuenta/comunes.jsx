@@ -1,9 +1,14 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, MessageCircle } from "lucide-react";
 import { useToast } from "../../../core/controls/toast/use_toast.js";
 import { cn } from "../../../core/utils/cn.js";
+import { formatearFechaAR } from "../../../core/utils/formatear_fecha.js";
+import { clientConfig } from "../../../../../proyecto/client_config.js";
 import { ETIQUETA_ESTADO, ETIQUETA_PAGO, pasosDelPedido } from "../pedido/pago.js";
+import { queSigue } from "../pedido/mensajes_estado.js";
+import { linkWhatsapp } from "../pedido/mensaje_whatsapp.js";
+import { formatearPrecio } from "../utils/dinero.js";
 
-// Piezas de las pantallas del cliente (Mis pedidos, detalle y pedido con cuenta).
+// Piezas de las pantallas del cliente (Mis pedidos, detalle, seguimiento y pedido con cuenta).
 
 const COLOR_ESTADO = {
   recibido: "bg-sky-50 text-sky-800 border-sky-200",
@@ -40,6 +45,54 @@ export function PasosPedido({ pedido }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+/** ROP-67: qué pasa ahora y un botón para escribirle a la tienda por este pedido. */
+export function QueSigue({ pedido }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-(--kt-border) bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="font-semibold">{queSigue(pedido)}</p>
+      <a href={linkWhatsapp(clientConfig.whatsapp, `¡Hola! Te escribo por mi pedido ${pedido.numero}.`)} target="_blank" rel="noopener noreferrer"
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#1E7A46] px-4 text-sm font-bold text-[#1E7A46] hover:bg-emerald-50">
+        <MessageCircle size={17} aria-hidden="true" /> Consultar por WhatsApp
+      </a>
+    </div>
+  );
+}
+
+export function PrendasPedido({ pedido }) {
+  return (
+    <section aria-labelledby="prendas">
+      <h2 id="prendas" className="font-semibold">Prendas</h2>
+      <ul className="mt-2 divide-y divide-(--kt-border) border-y border-(--kt-border) text-sm">
+        {pedido.items.map((i) => (
+          <li key={i.id} className="flex justify-between gap-3 py-3">
+            <span><strong>{i.cantidad} ×</strong> {i.nombre_prenda} <span className="text-(--kt-ink-soft)">({i.color}, talle {i.talle})</span></span>
+            <span className="whitespace-nowrap font-semibold">{formatearPrecio(i.subtotal)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 flex justify-between text-lg font-bold"><span>Total</span><span>{formatearPrecio(pedido.total)}</span></p>
+      {pedido.envio_gratis && <p className="text-sm font-semibold text-(--kt-success)">Envío gratis</p>}
+    </section>
+  );
+}
+
+export function HistorialPedido({ pedido }) {
+  return (
+    <section aria-labelledby="historial">
+      <h2 id="historial" className="font-semibold">Historial</h2>
+      <ol className="mt-2 space-y-2 border-l-2 border-(--kt-border) pl-4 text-sm">
+        {pedido.historial.map((h) => (
+          <li key={h.id}>
+            <span className="font-semibold">{ETIQUETA_ESTADO[h.estado_nuevo]}</span>
+            <span className="text-(--kt-ink-soft)"> · {formatearFechaAR(h.creado_en)}</span>
+            {h.estado_nuevo === "cancelado" && h.motivo && <p className="text-(--kt-ink-soft)">{h.motivo}</p>}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

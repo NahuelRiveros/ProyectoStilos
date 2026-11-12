@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Op, UniqueConstraintError } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
@@ -6,7 +7,7 @@ import { Persona } from "../../../core/models/index.js";
 import {
   ColorRopa, Talle, Prenda, PrendaVariante, PedidoWhatsapp, PedidoWhatsappItem, PedidoRopaHistorial, PedidoRopaComprobante,
 } from "../models/index.js";
-import { esEnvioGratis, pideMotivo, problemaTransicion, proximoPaso, transferenciaDisponible } from "../reglas.js";
+import { avisaAlCliente, esEnvioGratis, pideMotivo, problemaTransicion, proximoPaso, transferenciaDisponible } from "../reglas.js";
 import { clientConfig } from "../../../../../proyecto/client_config.js";
 import { avisarCambioEstado, avisarCancelacionCliente, avisarPedidoNuevo } from "./avisos_service.js";
 
@@ -60,7 +61,8 @@ async function guardarPedido(datos, items, usuario_id, transaction) {
   const lineas = await armarLineas(items, transaction);
   const total = lineas.reduce((suma, l) => suma + l._centavos, 0);
   const envio_gratis = esEnvioGratis(datos.entrega, total, clientConfig.entrega.envioGratisDesde);
-  const pedido = await PedidoWhatsapp.create({ ...datos, total: pesos(total), envio_gratis, usuario_id }, { transaction });
+  const clave_seguimiento = randomBytes(16).toString("base64url");
+  const pedido = await PedidoWhatsapp.create({ ...datos, total: pesos(total), envio_gratis, usuario_id, clave_seguimiento }, { transaction });
   await PedidoWhatsappItem.bulkCreate(lineas.map(({ _centavos, ...l }) => ({ ...l, pedido_id: pedido.id })), { transaction });
   await PedidoRopaHistorial.create({ pedido_id: pedido.id, estado_anterior: null, estado_nuevo: "recibido", usuario_id }, { transaction });
   return { pedido, lineas, total };
@@ -72,7 +74,7 @@ export async function crearPedido({ nombre, celular, items, entrega, direccion =
     guardarPedido({ nombre, celular, entrega, direccion, localidad, origen: "whatsapp" }, items, null, transaction));
   avisarPedidoNuevo(pedido.id);
   return {
-    id: pedido.id, numero: numeroPedido(pedido.id), nombre, celular, total: pesos(total), entrega, direccion, localidad,
+    id: pedido.id, numero: numeroPedido(pedido.id), clave_seguimiento: pedido.clave_seguimiento, nombre, celular, total: pesos(total), entrega, direccion, localidad,
     envio_gratis: pedido.envio_gratis, items: lineas.map(({ _centavos, prenda_id, ...l }) => l),
   };
 }
@@ -126,13 +128,15 @@ export async function aplicarCambio(pedido, estado, { motivo = null, usuario_id 
 
 /** ROP-54: si otra persona cambió el pedido después de que lo abriste, se avisa en vez de pisarlo. */
 export async function cambiarEstadoPedido(id, { estado, motivo, version }, usuario_id) {
-  await sequelize.transaction(async (transaction) => {
+  const anterior = await sequelize.transaction(async (transaction) => {
     const pedido = await PedidoWhatsapp.findByPk(id, { transaction, lock: transaction.LOCK.UPDATE });
     if (!pedido) throw noExiste("El pedido no existe.");
     if (pedido.version !== version) throw new ErrorApp("CAMBIO_SIMULTANEO", "Otra persona cambió este pedido recién. Actualizá para ver cómo quedó.", 409);
+    const desde = pedido.estado;
     await aplicarCambio(pedido, estado, { motivo, usuario_id }, transaction);
+    return desde;
   });
-  avisarCambioEstado(id, estado, motivo);
+  if (avisaAlCliente(anterior, estado)) avisarCambioEstado(id, estado, motivo);
   return obtenerPedido(id);
 }
 
@@ -216,6 +220,25 @@ export async function miPedido(usuario_id, id) {
   // Un pedido ajeno responde igual que uno que no existe: nadie averigua números de otros.
   if (!pedido) throw noExiste("No encontramos ese pedido.");
   return vista(pedido);
+}
+
+/**
+ * ROP-62: lo que ve quien tiene el link de seguimiento. Sin nombre, celular ni dirección (el link se
+ * reenvía); de los motivos, solo el de la cancelación. Una clave que no existe responde igual que un
+ * pedido ajeno.
+ */
+export async function seguimientoPedido(clave) {
+  const pedido = await PedidoWhatsapp.findOne({ where: { clave_seguimiento: clave }, ...DETALLE });
+  if (!pedido) throw noExiste("No encontramos ese pedido.");
+  const datos = pedido.toJSON();
+  return {
+    numero: numeroPedido(datos.id), estado: datos.estado, entrega: datos.entrega, envio_gratis: datos.envio_gratis,
+    forma_pago: datos.forma_pago, estado_pago: datos.estado_pago, total: datos.total, creado_en: datos.creado_en,
+    items: datos.items.map(({ id, nombre_prenda, color, talle, cantidad, precio_unitario, subtotal }) => ({ id, nombre_prenda, color, talle, cantidad, precio_unitario, subtotal })),
+    historial: datos.historial.map(({ id, estado_anterior, estado_nuevo, motivo, creado_en }) => ({
+      id, estado_anterior, estado_nuevo, creado_en, motivo: estado_nuevo === "cancelado" ? motivo : null,
+    })),
+  };
 }
 
 /** ROP-53: el cliente cancela solo mientras está Recibido, con un motivo. */
