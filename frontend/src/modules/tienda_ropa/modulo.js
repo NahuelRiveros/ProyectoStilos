@@ -1,4 +1,4 @@
-import { ClipboardList, FolderTree, Layers, Package, Palette, Phone, Ruler, Shirt, ShoppingBag, Tag, UserCircle } from "lucide-react";
+import { ClipboardList, FolderTree, ListChecks, Package, Palette, Phone, Ruler, Shirt, ShoppingBag, Tag, UserCircle } from "lucide-react";
 
 // Lo que el core (menús, footer, panel, login) necesita saber de este rubro. Solo datos, sin
 // pantallas: también lo leen los tests de Node (ver modulo_pantallas.jsx).
@@ -27,7 +27,7 @@ export const moduloTiendaRopa = {
         { label: "Colores", to: "/admin/ropa/colores", ...CATALOGO, icon: Palette },
         { label: "Talles", to: "/admin/ropa/talles", ...CATALOGO, icon: Ruler },
         { label: "Marcas", to: "/admin/ropa/marcas", ...CATALOGO, icon: Tag },
-        { label: "Diseños", to: "/admin/ropa/disenos", ...CATALOGO, icon: Layers },
+        { label: "Características", to: "/admin/ropa/caracteristicas", ...CATALOGO, icon: ListChecks },
       ],
     }],
   },

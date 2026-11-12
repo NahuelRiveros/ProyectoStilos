@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { noExiste } from "../../../core/services/common/errores.js";
 import { normalizarPaginacion, armarPaginacion } from "../../../core/services/common/pagination.js";
-import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante, PrendaImagen } from "../models/index.js";
+import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, Prenda, PrendaCaracteristica, PrendaVariante, PrendaImagen } from "../models/index.js";
 import { armarArbol, conDescendientes } from "../reglas.js";
 import { otrosColores, wherePrendas } from "./prendas_service.js";
 
@@ -22,8 +22,20 @@ export async function arbolCategorias() {
   return armarArbol((await categoriasVisibles()).map(({ id, nombre, slug, padre_id }) => ({ id, nombre, slug, padre_id })));
 }
 
+/** Las características de esas prendas, agrupadas y en el orden del panel (ROP-39 y ROP-58). */
+async function caracteristicasDe(prendaIds) {
+  if (!prendaIds.length) return [];
+  const usadas = await PrendaCaracteristica.findAll({ where: { prenda_id: prendaIds }, attributes: ["caracteristica_id"], raw: true });
+  if (!usadas.length) return [];
+  return GrupoCaracteristica.findAll({
+    attributes: ["id", "nombre"],
+    include: [{ model: Caracteristica, as: "caracteristicas", attributes: ["id", "nombre"], where: { id: [...new Set(usadas.map((u) => u.caracteristica_id))] } }],
+    order: [["orden", "ASC"], ["nombre", "ASC"], [{ model: Caracteristica, as: "caracteristicas" }, "orden", "ASC"]],
+  });
+}
+
 /**
- * Marcas, colores, talles y diseños que de verdad se pueden comprar hoy: el filtro nunca da vacío por
+ * Marcas, colores, talles y características que de verdad se pueden comprar hoy: el filtro nunca da vacío por
  * un valor sin prendas. ROP-28: con `categoria`, solo lo de esa categoría (en Calzado, solo números de
  * calzado); los talles vienen agrupados por su grupo (Ropa, Jeans, Calzado, Niños).
  */
@@ -33,12 +45,12 @@ export async function opcionesDeFiltro({ categoria } = {}) {
   const categorias = visibles.map((c) => c.id).filter((id) => !dentro || dentro.has(id));
   const variantes = await PrendaVariante.findAll({
     where: { disponible: true },
-    include: [{ model: Prenda, as: "prenda", attributes: ["marca_id", "diseno_id"], where: { activo: true, categoria_id: categorias } }],
+    include: [{ model: Prenda, as: "prenda", attributes: ["id", "marca_id"], where: { activo: true, categoria_id: categorias } }],
     attributes: ["color_id", "talle_id"],
   });
   const ids = (campo) => [...new Set(variantes.map((v) => v[campo]))];
   const dePrenda = (campo) => [...new Set(variantes.map((v) => v.prenda[campo]).filter(Boolean))];
-  const [marcas, colores, grupos, disenos] = await Promise.all([
+  const [marcas, colores, grupos, caracteristicas] = await Promise.all([
     MarcaRopa.findAll({ where: { id: dePrenda("marca_id"), activo: true }, attributes: ["id", "nombre"], order: [["nombre", "ASC"]] }),
     ColorRopa.findAll({ where: { id: ids("color_id") }, attributes: ["id", "nombre", "hex"], order: [["orden", "ASC"], ["nombre", "ASC"]] }),
     GrupoTalle.findAll({
@@ -46,9 +58,9 @@ export async function opcionesDeFiltro({ categoria } = {}) {
       include: [{ model: Talle, as: "talles", attributes: ["id", "nombre", "orden"], where: { id: ids("talle_id") } }],
       order: [["orden", "ASC"], ["nombre", "ASC"], [{ model: Talle, as: "talles" }, "orden", "ASC"]],
     }),
-    DisenoRopa.findAll({ where: { id: dePrenda("diseno_id") }, attributes: ["id", "nombre"], order: [["orden", "ASC"], ["nombre", "ASC"]] }),
+    caracteristicasDe(dePrenda("id")),
   ]);
-  return { marcas, colores, grupos_talle: grupos, disenos };
+  return { marcas, colores, grupos_talle: grupos, caracteristicas };
 }
 
 /** ROP-26: marcas para el inicio, solo las activas que tienen alguna prenda a la vista. */
@@ -124,7 +136,6 @@ export async function detallePrenda(slug) {
     where: { slug, activo: true, categoria_id: visibles.map((c) => c.id) },
     include: [
       { model: MarcaRopa, as: "marca", attributes: ["id", "nombre"] },
-      { model: DisenoRopa, as: "diseno", attributes: ["id", "nombre"] },
       { model: GrupoTalle, as: "grupo_talle", attributes: ["id", "nombre"], include: [{ model: Talle, as: "talles", attributes: ["id", "nombre", "orden"] }] },
       { model: PrendaVariante, as: "variantes", attributes: ["id", "color_id", "talle_id", "disponible"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "orden"] }] },
       { model: PrendaImagen, as: "imagenes", attributes: ["id", "color_id", "url", "orden"] },
@@ -147,7 +158,8 @@ export async function detallePrenda(slug) {
   const tallesUsados = new Set(datos.variantes.map((v) => v.talle_id));
   return {
     id: datos.id, slug: datos.slug, nombre: datos.nombre, descripcion: datos.descripcion,
-    precio: Number(datos.precio), precio_anterior: aNumero(datos.precio_anterior), marca: datos.marca, diseno: datos.diseno, migas,
+    precio: Number(datos.precio), precio_anterior: aNumero(datos.precio_anterior), marca: datos.marca, migas,
+    caracteristicas: await caracteristicasDe([datos.id]),
     colores: [...colores.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre)),
     talles: (datos.grupo_talle?.talles ?? []).filter((t) => tallesUsados.has(t.id)),
     variantes: datos.variantes.map(({ id, color_id, talle_id, disponible }) => ({ id, color_id, talle_id, disponible })),

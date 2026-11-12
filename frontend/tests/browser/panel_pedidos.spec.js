@@ -80,7 +80,8 @@ test("prenda nueva: elegir la categoría propone sus talles (ROP-36)", async ({ 
   api.responder("GET", "/ropa/panel/talles", lista(grupos));
   api.responder("GET", "/ropa/panel/colores", lista([{ id: 1, nombre: "Negro", hex: "#111111", orden: 0 }]));
   api.responder("GET", "/ropa/panel/marcas", lista([]));
-  api.responder("GET", "/ropa/panel/disenos", lista([]));
+  api.responder("GET", "/ropa/panel/caracteristicas", lista([{ id: 3, nombre: "Material", orden: 0, caracteristicas: [{ id: 31, nombre: "Cuero", orden: 0 }, { id: 32, nombre: "Lona", orden: 1 }] }]));
+  api.responder("POST", "/ropa/panel/prendas", () => ({ status: 201, json: { ok: true, mensaje: "Prenda creada.", data: { id: 50 } } }));
 
   await page.goto("/admin/ropa/prendas/nueva");
   const grupo = page.getByLabel("Grupo de talles");
@@ -89,4 +90,14 @@ test("prenda nueva: elegir la categoría propone sus talles (ROP-36)", async ({ 
   await expect(grupo, "Cargo usa los talles de Pantalones").toHaveValue("2");
   await page.getByLabel("Categoría").selectOption("11");
   await expect(grupo, "Remeras usa los de Hombre").toHaveValue("1");
+
+  // ROP-38: las características se tildan y viajan como ids.
+  const cuero = page.getByRole("button", { name: "Cuero" });
+  await cuero.click();
+  await expect(cuero).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Nombre").fill("Zapatilla urbana");
+  await page.getByLabel("Precio ($)").fill("50000");
+  await page.getByRole("button", { name: "Negro" }).click();
+  await page.getByRole("button", { name: "Guardar prenda" }).click();
+  await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo.caracteristicas).toEqual([31]);
 });

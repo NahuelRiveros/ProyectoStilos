@@ -30,7 +30,7 @@ const cuenta = await import("../src/modulos/tienda_ropa/services/cuenta_service.
 const { clientConfig } = await import("../../proyecto/client_config.js");
 const { moduloTiendaRopa } = await import("../src/modulos/tienda_ropa/modulo.js");
 const { esquemaPrenda } = await import("../src/modulos/tienda_ropa/reglas.js");
-const { CATEGORIAS_SUGERIDAS } = await import("../src/modulos/tienda_ropa/sugeridos.js");
+const { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS } = await import("../src/modulos/tienda_ropa/sugeridos.js");
 const { sincronizarPermisos } = await import("../src/core/services/usuarios/permisos_service.js");
 const { sembrarRolesDelSistema } = await import("../src/core/database/seed/seed_rbac.js");
 const { seed_super_admin } = await import("../src/core/database/seed/seed_super_admin.js");
@@ -179,21 +179,52 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       await listas.actualizarCategoria(mujer.id, { nombre: "Mujer", padre_id: null, orden: 0, activo: true });
     });
 
-    await t.test("ROP-23 a ROP-28: diseños, marcas y categorías sugeridas, marcas del inicio y filtros por categoría", async () => {
-      // ROP-23: diseños sugeridos, en la prenda, en el filtro y en la ficha; no se borra uno en uso.
-      assert.equal(await listas.cargarDisenosSugeridos(), 3);
-      assert.equal(await listas.cargarDisenosSugeridos(), 0);
-      const disenos = Object.fromEntries((await listas.listarDisenos()).map((d) => [d.nombre, d.id]));
-      assert.deepEqual(Object.keys(disenos), ["Lisa", "Rayada", "Estampada"]);
+    await t.test("ROP-24 a ROP-39: características, marcas y categorías sugeridas, marcas del inicio y filtros por categoría", async () => {
+      // ROP-37: sugeridas sin duplicar; a un grupo que ya existía (en minúsculas) solo se le suma lo que falta, al final.
+      await listas.crearGrupoCaracteristica({ nombre: "material", orden: 0, valores: ["Algodón", "Bambú"] });
+      const total = CARACTERISTICAS_SUGERIDAS.reduce((n, g) => n + g.valores.length, 0);
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), total - 1, "Algodón ya estaba");
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), 0, "la segunda vez no agrega nada");
+      const gruposCar = await listas.listarCaracteristicas();
+      assert.equal(gruposCar.length, CARACTERISTICAS_SUGERIDAS.length);
+      const material = gruposCar.find((g) => g.nombre === "material");
+      assert.deepEqual(material.caracteristicas.slice(0, 3).map((c) => c.nombre), ["Algodón", "Bambú", "Lino"]);
+      const car = (grupo, valor) => gruposCar.find((g) => g.nombre.toLowerCase() === grupo).caracteristicas.find((c) => c.nombre === valor).id;
+      const [liso, rayado, algodon, lino] = [car("estampa", "Liso"), car("estampa", "Rayado"), car("material", "Algodón"), car("material", "Lino")];
+
+      // ROP-38: varias por prenda; al editar se reemplazan.
       await prendas.actualizarPrenda(remera.id, prendaValida({
-        nombre: "Remera lisa", categoria_id: remeras.id, marca_id: marca.id, grupo_talle_id: grupoRopa.id, precio: 16000, diseno_id: disenos.Lisa,
+        nombre: "Remera lisa", categoria_id: remeras.id, marca_id: marca.id, grupo_talle_id: grupoRopa.id, precio: 16000, caracteristicas: [liso, algodon, liso],
         variantes: [{ color_id: colores.Negro, talle_id: talles.S }, { color_id: colores.Negro, talle_id: talles.M }, { color_id: colores.Negro, talle_id: talles.L }],
         imagenes: [{ url: "https://x.test/general.jpg", color_id: null }, { url: "https://x.test/negro-1.jpg", color_id: colores.Negro }],
       }));
-      assert.deepEqual((await catalogo.listarCatalogo({ pagina: 1, diseno: disenos.Lisa })).items.map((p) => p.slug), ["remera-lisa-negro"]);
-      assert.equal((await catalogo.listarCatalogo({ pagina: 1, diseno: disenos.Rayada })).items.length, 0);
-      assert.deepEqual((await catalogo.detallePrenda(remera.slug)).diseno, { id: disenos.Lisa, nombre: "Lisa" });
-      await assert.rejects(listas.eliminarDiseno(disenos.Lisa), { codigo: "EN_USO" });
+      assert.deepEqual((await prendas.obtenerPrenda(remera.id)).caracteristicas.sort(), [liso, algodon].sort());
+      const rayada = await prendas.crearPrenda(prendaValida({
+        nombre: "Remera rayada", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 17000, caracteristicas: [rayado, lino],
+        variantes: [{ color_id: colores.Negro, talle_id: talles.M }],
+      }));
+      await assert.rejects(prendas.crearPrenda(prendaValida({
+        nombre: "X", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 1, caracteristicas: [999999], variantes: [{ color_id: colores.Negro, talle_id: talles.M }],
+      })), { codigo: "DATOS_INVALIDOS" });
+
+      // ROP-39: dentro de un grupo, una u otra; entre grupos, las dos.
+      const slugs = async (ids) => (await catalogo.listarCatalogo({ pagina: 1, car: ids })).items.map((p) => p.slug).sort();
+      assert.deepEqual(await slugs([liso, rayado]), ["remera-lisa-negro", "remera-rayada-negro"]);
+      assert.deepEqual(await slugs([liso, algodon]), ["remera-lisa-negro"]);
+      assert.deepEqual(await slugs([rayado, algodon]), []);
+      assert.deepEqual(await slugs([999999]), [], "una que no existe no muestra todo");
+
+      // ROP-58: la ficha las muestra agrupadas, en el orden del panel.
+      const agrupadas = (grupos) => grupos.map((g) => [g.nombre, g.caracteristicas.map((c) => c.nombre)]);
+      assert.deepEqual(agrupadas((await catalogo.detallePrenda(remera.slug)).caracteristicas), [["Estampa", ["Liso"]], ["material", ["Algodón"]]]);
+
+      // ROP-37: no se saca un valor ni se borra un grupo que usa una prenda; los que siguen conservan su id.
+      await assert.rejects(listas.actualizarGrupoCaracteristica(material.id, { nombre: "material", orden: 0, valores: ["Bambú"] }), { codigo: "EN_USO" });
+      await assert.rejects(listas.eliminarGrupoCaracteristica(material.id), { codigo: "EN_USO" });
+      await prendas.eliminarPrenda(rayada.id);
+      await listas.actualizarGrupoCaracteristica(material.id, { nombre: "Material", orden: 0, valores: ["Algodón", "Lino", "Lona"] });
+      assert.deepEqual((await listas.listarCaracteristicas()).find((g) => g.id === material.id).caracteristicas.map((c) => [c.nombre, c.id === algodon]),
+        [["Algodón", true], ["Lino", false], ["Lona", false]]);
 
       // ROP-24 y ROP-25: las 12 marcas sin duplicar (sin importar mayúsculas) y logo opcional.
       await listas.crearMarca({ nombre: "taverniti", activo: true, logo_url: "https://x.test/taverniti.png" });
@@ -233,9 +264,9 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const deMujer = await catalogo.opcionesDeFiltro({ categoria: mujer.id });
       assert.deepEqual(deMujer.grupos_talle.map((g) => [g.nombre, g.talles.map((x) => x.nombre)]), [["Ropa", ["S", "M", "L"]]]);
       assert.deepEqual(deMujer.colores.map((c) => c.nombre), ["Negro", "Rojo"]);
-      assert.deepEqual(deMujer.disenos.map((d) => d.nombre), ["Lisa"]);
+      assert.deepEqual(agrupadas(deMujer.caracteristicas), [["Estampa", ["Liso"]], ["Material", ["Algodón"]]], "ROP-39: solo las que se usan");
       const deHombre = await catalogo.opcionesDeFiltro({ categoria: hombre.id });
-      assert.deepEqual([deHombre.colores, deHombre.grupos_talle, deHombre.marcas, deHombre.disenos], [[], [], [], []]);
+      assert.deepEqual([deHombre.colores, deHombre.grupos_talle, deHombre.marcas, deHombre.caracteristicas], [[], [], [], []]);
     });
 
     await t.test("ROP-17: el precio anterior se guarda y se muestra, pero el pedido cobra el precio", async () => {

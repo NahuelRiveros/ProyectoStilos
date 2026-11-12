@@ -1,12 +1,13 @@
-import { Layers, Palette, Ruler, Tag } from "lucide-react";
+import { ListChecks, Palette, Ruler, Tag } from "lucide-react";
 import InputField from "../../../core/controls/ui/input_field.jsx";
+import TextareaField from "../../../core/controls/ui/textarea_field.jsx";
 import ImageUploadField from "../../../core/controls/ui/image_upload_field.jsx";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { LOGOS_MARCAS } from "../../../proyecto/config/marcas_config.js";
 import { logoDeMarca } from "../utils/logo_marca.js";
 import ListaSimplePage from "./lista_simple_page.jsx";
 
-// Marcas (ROP-02, ROP-24, ROP-25), diseños (ROP-23), colores (ROP-03) y grupos de talles (ROP-04) sobre el mismo molde.
+// Marcas (ROP-02, ROP-24, ROP-25), características (ROP-37), colores (ROP-03) y grupos de talles (ROP-04) sobre el mismo molde.
 
 const MARCAS = {
   lista: "marcas", titulo: "Marcas", nuevo: "Nueva marca", icono: Tag, sugeridos: "Cargar marcas sugeridas",
@@ -36,19 +37,25 @@ const MARCAS = {
   },
 };
 
-const DISENOS = {
-  lista: "disenos", titulo: "Diseños", nuevo: "Nuevo diseño", icono: Layers, sugeridos: "Cargar diseños sugeridos",
-  descripcion: "El tipo de la prenda (ej. lisa, rayada, estampada). Es opcional y se puede filtrar en la tienda.",
-  vacio: "Todavía no hay diseños.", vacioDetalle: "Cargá los sugeridos: Lisa, Rayada y Estampada.",
-  valores: (item) => ({ nombre: item?.nombre ?? "", orden: item?.orden ?? 0 }),
-  armar: (v) => ({ nombre: v.nombre, orden: Number(v.orden) || 0 }),
+const CARACTERISTICAS = {
+  lista: "caracteristicas", titulo: "Características", nuevo: "Nuevo grupo", icono: ListChecks, sugeridos: "Cargar características sugeridas",
+  descripcion: "Cómo es cada prenda, por grupo (ej. Material: Cuero, Lona; Calce: Slim, Mom). Al cargar una prenda se tildan las que tiene, y en la tienda se puede filtrar por ellas.",
+  vacio: "Todavía no hay características.", vacioDetalle: "Cargá las sugeridas (Estampa, Material, Calce, Tiro, Manga, Cuello, Detalles y Calzado) y ajustalas.",
+  valores: (item) => ({ nombre: item?.nombre ?? "", orden: item?.orden ?? 0, valores: (item?.caracteristicas ?? []).map((c) => c.nombre).join(", ") }),
+  armar: (v) => ({ nombre: v.nombre, orden: Number(v.orden) || 0, valores: v.valores.split(",").map((c) => c.trim()).filter(Boolean) }),
   campos: ({ register, errors }) => (
     <>
-      <InputField name="nombre" label="Nombre" register={register} required requiredMessage="Escribí el nombre." maxLength={40} error={errors.nombre?.message} />
+      <InputField name="nombre" label="Nombre del grupo" placeholder="Material" register={register} required requiredMessage="Escribí el nombre." maxLength={40} error={errors.nombre?.message} />
+      <TextareaField name="valores" label="Valores, en orden y separados por coma" rows={4} placeholder="Algodón, Lino, Cuero" register={register} required requiredMessage="Agregá al menos un valor." error={errors.valores?.message} />
       <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
     </>
   ),
-  fila: (d) => <p className="font-semibold text-slate-900">{d.nombre}</p>,
+  fila: (g) => (
+    <div>
+      <p className="font-semibold text-slate-900">{g.nombre}</p>
+      <p className="mt-1 flex flex-wrap gap-1">{g.caracteristicas.map((c) => <span key={c.id} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{c.nombre}</span>)}</p>
+    </div>
+  ),
 };
 
 const COLORES = {
@@ -100,6 +107,6 @@ const TALLES = {
 };
 
 export const MarcasPage = () => <ListaSimplePage config={MARCAS} />;
-export const DisenosPage = () => <ListaSimplePage config={DISENOS} />;
+export const CaracteristicasPage = () => <ListaSimplePage config={CARACTERISTICAS} />;
 export const ColoresPage = () => <ListaSimplePage config={COLORES} />;
 export const TallesPage = () => <ListaSimplePage config={TALLES} />;

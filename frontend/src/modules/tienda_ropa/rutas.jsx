@@ -13,7 +13,7 @@ const CategoriasPage = lazy(() => import("./admin/categorias_page.jsx"));
 const PedidosPage = lazy(() => import("./admin/pedidos_page.jsx"));
 const listas = () => import("./admin/listas_pages.jsx");
 const MarcasPage = lazy(() => listas().then((m) => ({ default: m.MarcasPage })));
-const DisenosPage = lazy(() => listas().then((m) => ({ default: m.DisenosPage })));
+const CaracteristicasPage = lazy(() => listas().then((m) => ({ default: m.CaracteristicasPage })));
 const ColoresPage = lazy(() => listas().then((m) => ({ default: m.ColoresPage })));
 const TallesPage = lazy(() => listas().then((m) => ({ default: m.TallesPage })));
 
@@ -37,7 +37,7 @@ export const rutasPanel = [
   { path: "/admin/ropa/prendas/:id", element: protegida(<PrendaFormPage />, CATALOGO) },
   { path: "/admin/ropa/categorias", element: protegida(<CategoriasPage />, CATALOGO) },
   { path: "/admin/ropa/marcas", element: protegida(<MarcasPage />, CATALOGO) },
-  { path: "/admin/ropa/disenos", element: protegida(<DisenosPage />, CATALOGO) },
+  { path: "/admin/ropa/caracteristicas", element: protegida(<CaracteristicasPage />, CATALOGO) },
   { path: "/admin/ropa/colores", element: protegida(<ColoresPage />, CATALOGO) },
   { path: "/admin/ropa/talles", element: protegida(<TallesPage />, CATALOGO) },
   { path: "/admin/ropa/pedidos", element: protegida(<PedidosPage />, PEDIDOS) },

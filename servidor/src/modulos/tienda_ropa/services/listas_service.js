@@ -1,9 +1,9 @@
 import { Op, UniqueConstraintError, col, fn, where as condicionSql } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
-import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante } from "../models/index.js";
+import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, Prenda, PrendaCaracteristica, PrendaVariante } from "../models/index.js";
 import { armarArbol, creaCiclo, slug } from "../reglas.js";
-import { CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, DISENOS_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS } from "../sugeridos.js";
+import { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS } from "../sugeridos.js";
 
 // Listas del panel (ROP-01 a ROP-04). Reciben datos validados por reglas.js y lanzan ErrorApp.
 
@@ -142,27 +142,71 @@ export async function cargarMarcasSugeridas() {
   return nuevas.length;
 }
 
-// ── Diseños (ROP-23) ────────────────────────────────────────────────────────────
-export const listarDisenos = () => DisenoRopa.findAll({ order: [["orden", "ASC"], ["nombre", "ASC"]] });
+// ── Características (ROP-37) ────────────────────────────────────────────────────
+export const listarCaracteristicas = () => GrupoCaracteristica.findAll({
+  include: [{ model: Caracteristica, as: "caracteristicas", attributes: ["id", "nombre", "orden"] }],
+  order: [["orden", "ASC"], ["nombre", "ASC"], [{ model: Caracteristica, as: "caracteristicas" }, "orden", "ASC"]],
+});
 
-export const crearDiseno = (datos) => nombreUnico(() => DisenoRopa.create(datos), `Ya existe el diseño "${datos.nombre}".`);
+const grupoRepetido = (nombre) => `Ya existe el grupo "${nombre}".`;
 
-export async function actualizarDiseno(id, datos) {
-  const diseno = await buscar(DisenoRopa, id, "El diseño no existe.");
-  return nombreUnico(() => diseno.update({ ...datos, actualizado_en: new Date() }), `Ya existe el diseño "${datos.nombre}".`);
+export async function crearGrupoCaracteristica({ valores, ...grupo }) {
+  return nombreUnico(() => sequelize.transaction(async (transaction) => {
+    const creado = await GrupoCaracteristica.create(grupo, { transaction });
+    await Caracteristica.bulkCreate(valores.map((nombre, orden) => ({ grupo_caracteristica_id: creado.id, nombre, orden })), { transaction });
+    return creado;
+  }), grupoRepetido(grupo.nombre));
 }
 
-export async function eliminarDiseno(id) {
-  const diseno = await buscar(DisenoRopa, id, "El diseño no existe.");
-  const prendas = await Prenda.count({ where: { diseno_id: id } });
-  if (prendas) throw enUso(prendas, "prendas");
-  await diseno.destroy();
+/** Como los talles: los valores que siguen conservan su id; los que se sacan, solo si ninguna prenda los usa. */
+export async function actualizarGrupoCaracteristica(id, { valores, ...grupo }) {
+  const actual = await buscar(GrupoCaracteristica, id, "El grupo de características no existe.");
+  return nombreUnico(() => sequelize.transaction(async (transaction) => {
+    await actual.update({ ...grupo, actualizado_en: new Date() }, { transaction });
+    const existentes = await Caracteristica.findAll({ where: { grupo_caracteristica_id: id }, transaction });
+    const quitar = existentes.filter((c) => !valores.includes(c.nombre));
+    if (quitar.length) {
+      const usados = await PrendaCaracteristica.count({ where: { caracteristica_id: quitar.map((c) => c.id) }, transaction });
+      if (usados) throw new ErrorApp("EN_USO", `No se pueden sacar ${quitar.map((c) => c.nombre).join(", ")}: hay prendas cargadas con eso.`, 409);
+      await Caracteristica.destroy({ where: { id: quitar.map((c) => c.id) }, transaction });
+    }
+    const porNombre = new Map(existentes.map((c) => [c.nombre, c]));
+    for (const [orden, nombre] of valores.entries()) {
+      const valor = porNombre.get(nombre);
+      if (valor) await valor.update({ orden }, { transaction });
+      else await Caracteristica.create({ grupo_caracteristica_id: id, nombre, orden }, { transaction });
+    }
+    return actual;
+  }), grupoRepetido(grupo.nombre));
 }
 
-export async function cargarDisenosSugeridos() {
-  const nuevos = await faltantes(DisenoRopa, DISENOS_SUGERIDOS);
-  if (nuevos.length) await DisenoRopa.bulkCreate(nuevos.map((nombre) => ({ nombre, orden: DISENOS_SUGERIDOS.indexOf(nombre) })));
-  return nuevos.length;
+export async function eliminarGrupoCaracteristica(id) {
+  const grupo = await buscar(GrupoCaracteristica, id, "El grupo de características no existe.");
+  const prendas = await PrendaCaracteristica.count({
+    include: [{ model: Caracteristica, as: "caracteristica", attributes: [], where: { grupo_caracteristica_id: id } }],
+    distinct: true, col: "prenda_id",
+  });
+  if (prendas) throw enUso(prendas, "prendas", "Sacáselo a esas prendas primero.");
+  await grupo.destroy();
+}
+
+/** Suma los grupos y los valores que faltan, sin duplicar (sin importar mayúsculas). Devuelve cuántos valores agregó. */
+export async function cargarCaracteristicasSugeridas() {
+  let agregados = 0;
+  for (const [orden, sugerido] of CARACTERISTICAS_SUGERIDAS.entries()) {
+    const grupo = await GrupoCaracteristica.findOne({ where: condicionSql(fn("lower", col("nombre")), sugerido.nombre.toLowerCase()) });
+    if (!grupo) {
+      await crearGrupoCaracteristica({ nombre: sugerido.nombre, orden, valores: sugerido.valores });
+      agregados += sugerido.valores.length;
+      continue;
+    }
+    const nuevos = await faltantes(Caracteristica, sugerido.valores, { grupo_caracteristica_id: grupo.id });
+    // Los nuevos van al final: no se desordena lo que el negocio ya acomodó.
+    const desde = await Caracteristica.count({ where: { grupo_caracteristica_id: grupo.id } });
+    if (nuevos.length) await Caracteristica.bulkCreate(nuevos.map((nombre, i) => ({ grupo_caracteristica_id: grupo.id, nombre, orden: desde + i })));
+    agregados += nuevos.length;
+  }
+  return agregados;
 }
 
 // ── Colores (ROP-03) ────────────────────────────────────────────────────────────

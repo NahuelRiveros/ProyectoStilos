@@ -30,12 +30,18 @@ export const MarcaRopa = defineModel("MarcaRopa", {
   ...fechas,
 }, { tableName: "marca_ropa" });
 
-/** ROP-23: lisa, rayada, estampada… (opcional en cada prenda). */
-export const DisenoRopa = defineModel("DisenoRopa", {
+/** ROP-37: "Material", "Calce", "Estampa"… cada uno con sus valores. */
+export const GrupoCaracteristica = defineModel("GrupoCaracteristica", {
   nombre: { type: DataTypes.STRING(40), allowNull: false, unique: true },
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   ...fechas,
-}, { tableName: "diseno_ropa" });
+}, { tableName: "grupo_caracteristica" });
+
+export const Caracteristica = defineModel("Caracteristica", {
+  grupo_caracteristica_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_caracteristica", key: "id" }, onDelete: "CASCADE" },
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
+  orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
+}, { tableName: "caracteristica", indexes: [{ unique: true, fields: ["grupo_caracteristica_id", "nombre"] }] });
 
 /** ROP-03 */
 export const ColorRopa = defineModel("ColorRopa", {
@@ -66,7 +72,6 @@ export const Prenda = defineModel("Prenda", {
   categoria_id:    { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" } },
   marca_id:        { type: DataTypes.INTEGER, allowNull: true, references: { model: "marca_ropa", key: "id" } },
   grupo_talle_id:  { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_talle", key: "id" } },
-  diseno_id:       { type: DataTypes.INTEGER, allowNull: true, references: { model: "diseno_ropa", key: "id" } },
   precio:          { type: DataTypes.DECIMAL(12, 2), allowNull: false },
   precio_anterior: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
   activo:         { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
@@ -80,6 +85,12 @@ export const PrendaVariante = defineModel("PrendaVariante", {
   talle_id:   { type: DataTypes.INTEGER, allowNull: false, references: { model: "talle", key: "id" } },
   disponible: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
 }, { tableName: "prenda_variante", indexes: [{ unique: true, fields: ["prenda_id", "color_id", "talle_id"] }] });
+
+/** ROP-38: varias características por prenda. */
+export const PrendaCaracteristica = defineModel("PrendaCaracteristica", {
+  prenda_id:         { type: DataTypes.INTEGER, allowNull: false, references: { model: "prenda", key: "id" }, onDelete: "CASCADE" },
+  caracteristica_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "caracteristica", key: "id" } },
+}, { tableName: "prenda_caracteristica", indexes: [{ unique: true, fields: ["prenda_id", "caracteristica_id"] }, { fields: ["caracteristica_id"] }] });
 
 /** ROP-06: color_id null = foto general (se ve con todos los colores). */
 export const PrendaImagen = defineModel("PrendaImagen", {
@@ -161,7 +172,10 @@ aplicarRelaciones([
   { tipo: "hasMany",   from: GrupoTalle, to: Talle, foreignKey: "grupo_talle_id", as: "talles" },
   { tipo: "belongsTo", from: Prenda, to: CategoriaRopa, foreignKey: "categoria_id", as: "categoria" },
   { tipo: "belongsTo", from: Prenda, to: MarcaRopa, foreignKey: "marca_id", as: "marca" },
-  { tipo: "belongsTo", from: Prenda, to: DisenoRopa, foreignKey: "diseno_id", as: "diseno" },
+  { tipo: "hasMany",   from: GrupoCaracteristica, to: Caracteristica, foreignKey: "grupo_caracteristica_id", as: "caracteristicas" },
+  { tipo: "belongsTo", from: Caracteristica, to: GrupoCaracteristica, foreignKey: "grupo_caracteristica_id", as: "grupo" },
+  { tipo: "hasMany",   from: Prenda, to: PrendaCaracteristica, foreignKey: "prenda_id", as: "caracteristicas" },
+  { tipo: "belongsTo", from: PrendaCaracteristica, to: Caracteristica, foreignKey: "caracteristica_id", as: "caracteristica" },
   { tipo: "belongsTo", from: Prenda, to: GrupoTalle, foreignKey: "grupo_talle_id", as: "grupo_talle" },
   { tipo: "hasMany",   from: Prenda, to: PrendaVariante, foreignKey: "prenda_id", as: "variantes" },
   { tipo: "hasMany",   from: Prenda, to: PrendaImagen, foreignKey: "prenda_id", as: "imagenes" },

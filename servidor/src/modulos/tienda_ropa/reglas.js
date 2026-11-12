@@ -140,7 +140,6 @@ const urlOpcional = (mensaje) => z.preprocess(
   urlImagen(mensaje).nullable(),
 ).default(null);
 export const esquemaMarca = z.object({ nombre: nombre(), activo: z.boolean().default(true), logo_url: urlOpcional("El logo tiene que ser una URL https o una imagen local del catálogo inicial.") });
-export const esquemaDiseno = z.object({ nombre: nombre(40), orden }); // ROP-23
 export const esquemaColor = z.object({
   nombre: nombre(40),
   hex: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "El color tiene que ser como #1E2D3D.").transform((v) => v.toUpperCase()),
@@ -151,6 +150,13 @@ export const esquemaGrupoTalle = z.object({
   orden,
   talles: z.array(z.string().trim().min(1).max(10)).min(1, "Agregá al menos un talle.").max(40)
     .refine((t) => new Set(t.map((x) => x.toUpperCase())).size === t.length, "Hay talles repetidos."),
+});
+/** ROP-37: un grupo ("Material") con sus valores en orden. */
+export const esquemaGrupoCaracteristica = z.object({
+  nombre: nombre(40),
+  orden,
+  valores: z.array(z.string().trim().min(1).max(40, "Cada valor, hasta 40 caracteres.")).min(1, "Agregá al menos un valor.").max(60)
+    .refine((v) => new Set(v.map((x) => x.toLowerCase())).size === v.length, "Hay valores repetidos."),
 });
 
 const variante = z.object({ color_id: z.coerce.number().int().positive(), talle_id: z.coerce.number().int().positive(), disponible: z.boolean().default(true) });
@@ -164,7 +170,8 @@ export const esquemaPrenda = z.object({
   descripcion: z.string().trim().max(2000).default(""),
   categoria_id: z.coerce.number({ error: "Elegí una categoría." }).int().positive("Elegí una categoría."),
   marca_id: idOpcional,
-  diseno_id: idOpcional, // ROP-23
+  // ROP-38: ids de sus características, de cualquier grupo (repetidos se ignoran).
+  caracteristicas: z.array(z.coerce.number().int().positive()).max(60).default([]).transform((ids) => [...new Set(ids)]),
   grupo_talle_id: z.coerce.number({ error: "Elegí el grupo de talles." }).int().positive("Elegí el grupo de talles."),
   // ROP-07: un precio por prenda.
   precio: z.coerce.number({ error: "Escribí el precio." }).positive("El precio tiene que ser mayor a 0.").max(99999999),
@@ -193,9 +200,14 @@ export const esquemaPrenda = z.object({
 export const esquemaEstado = z.object({ activo: z.boolean({ error: "Indicá si queda activa o no." }) });
 
 const filtroId = z.preprocess((v) => (v === "" || v === undefined ? undefined : v), z.coerce.number().int().positive().optional());
+const filtroIds = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : String(v).split(",").filter(Boolean)),
+  z.array(z.coerce.number().int().positive()).max(30).optional(),
+);
 const filtrosPrendas = z.object({
   q: z.string().trim().max(80).optional(),
-  categoria: filtroId, marca: filtroId, color: filtroId, talle: filtroId, diseno: filtroId,
+  categoria: filtroId, marca: filtroId, color: filtroId, talle: filtroId,
+  car: filtroIds, // ROP-39: "1,7"
   pagina: z.coerce.number().int().min(1).max(10000).default(1),
 });
 export const ORDENES_CATALOGO = ["novedades", "menor_precio", "mayor_precio"]; // ROP-11

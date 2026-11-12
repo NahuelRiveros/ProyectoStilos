@@ -20,7 +20,8 @@ export const PRENDAS = [
 
 export const FICHA = {
   id: 1, slug: "remera-taverniti-negro", nombre: "Remera Taverniti", descripcion: "Algodón peinado.",
-  precio: 18500, precio_anterior: 26000, marca: { id: 1, nombre: "Taverniti" }, diseno: { id: 1, nombre: "Lisa" },
+  precio: 18500, precio_anterior: 26000, marca: { id: 1, nombre: "Taverniti" },
+  caracteristicas: [{ id: 1, nombre: "Estampa", caracteristicas: [{ id: 1, nombre: "Liso" }] }, { id: 2, nombre: "Material", caracteristicas: [{ id: 5, nombre: "Algodón" }] }],
   migas: [{ id: 1, nombre: "Mujer" }], colores: [negro], talles: ROPA.talles,
   variantes: [{ id: 11, color_id: 1, talle_id: 1, disponible: true }, { id: 12, color_id: 1, talle_id: 2, disponible: true }, { id: 13, color_id: 1, talle_id: 3, disponible: false }],
   imagenes: [], otros_colores: [{ slug: "remera-taverniti-rojo", color: rojo }], relacionadas: [PRENDAS[2]],
@@ -52,7 +53,8 @@ export async function simularApi(page, { rol = null, datosCompletos = true } = {
   const base = {
     "GET /banners": () => ({ carrusel: [], cinta: [] }),
     "GET /ropa/catalogo/categorias": () => [{ id: 1, nombre: "Mujer", slug: "mujer", padre_id: null, hijas: [] }, { id: 4, nombre: "Niños", slug: "ninos", padre_id: null, hijas: [] }],
-    "GET /ropa/catalogo/filtros": () => ({ marcas: [{ id: 1, nombre: "Taverniti" }], colores: [negro, rojo, azul], grupos_talle: [ROPA, NINOS], disenos: [{ id: 1, nombre: "Lisa" }] }),
+    "GET /ropa/catalogo/filtros": () => ({ marcas: [{ id: 1, nombre: "Taverniti" }], colores: [negro, rojo, azul], grupos_talle: [ROPA, NINOS],
+      caracteristicas: [{ id: 1, nombre: "Estampa", caracteristicas: [{ id: 1, nombre: "Liso" }, { id: 2, nombre: "Rayado" }] }, { id: 2, nombre: "Material", caracteristicas: [{ id: 5, nombre: "Algodón" }] }] }),
     "GET /ropa/catalogo/prendas": () => ({ items: PRENDAS, paginacion: { page: 1, limit: 24, total: PRENDAS.length, totalPages: 1 } }),
     "GET /ropa/catalogo/marcas": () => [],
     [`GET /ropa/catalogo/prendas/${FICHA.slug}`]: () => FICHA,

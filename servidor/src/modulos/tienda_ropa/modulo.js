@@ -1,6 +1,6 @@
 import {
-  CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle,
-  Prenda, PrendaVariante, PrendaImagen, PedidoWhatsapp, PedidoWhatsappItem,
+  CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica,
+  Prenda, PrendaCaracteristica, PrendaVariante, PrendaImagen, PedidoWhatsapp, PedidoWhatsappItem,
   PedidoRopaHistorial, PedidoRopaComprobante, ClienteRopa,
 } from "./models/index.js";
 import { catalogoRopaRouter } from "./routes/catalogo_router.js";
@@ -19,8 +19,11 @@ export const moduloTiendaRopa = {
     GrupoTalle,
     Talle,              // talle → grupo_talle
     CategoriaRopa,      // categoria_ropa → grupo_talle (talles sugeridos)
-    MarcaRopa, DisenoRopa, ColorRopa,
-    Prenda,             // prenda → categoria_ropa, marca_ropa, diseno_ropa, grupo_talle
+    MarcaRopa, ColorRopa,
+    GrupoCaracteristica,
+    Caracteristica,     // caracteristica → grupo_caracteristica
+    Prenda,             // prenda → categoria_ropa, marca_ropa, grupo_talle
+    PrendaCaracteristica, // → prenda, caracteristica
     PrendaVariante,     // prenda_variante → prenda, color_ropa, talle
     PrendaImagen,       // prenda_imagen → prenda, color_ropa
     PedidoWhatsapp,     // pedido_whatsapp → usuario (core)

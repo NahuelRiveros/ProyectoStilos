@@ -9,7 +9,7 @@ import { useGestionLista, useLista, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PELIGRO, BOTON_PRIMARIO, BOTON_SECUNDARIO, Encabezado, Pantalla, SegunConsulta } from "./comunes.jsx";
 
 /**
- * Pantalla de una lista simple del panel (marcas, diseños, colores, grupos de talles): listado, alta y edición
+ * Pantalla de una lista simple del panel (marcas, características, colores, grupos de talles): listado, alta y edición
  * en un modal, borrado con confirmación y, si la lista lo ofrece, "Cargar sugeridos".
  * `config` describe la lista: textos, campos del formulario y cómo se ve cada fila.
  */

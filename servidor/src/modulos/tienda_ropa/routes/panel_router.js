@@ -3,7 +3,7 @@ import { requireAuth, requirePermiso } from "../../../core/middleware/auth_middl
 import { validar } from "../../../core/middleware/validar.js";
 import * as panel from "../controllers/panel_controller.js";
 import {
-  esquemaCategoria, esquemaColor, esquemaDiseno, esquemaEstado, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaId, esquemaMarca, esquemaPrenda,
+  esquemaCategoria, esquemaColor, esquemaEstado, esquemaFiltrosPanel, esquemaGrupoCaracteristica, esquemaGrupoTalle, esquemaId, esquemaMarca, esquemaPrenda,
 } from "../reglas.js";
 
 // Panel del catálogo: todo pide "Editar productos" (ROP-20).
@@ -24,12 +24,12 @@ function lista(ruta, controlador, esquema) {
 panelRopaRouter.post("/colores/sugeridos", panel.coloresSugeridosController);
 panelRopaRouter.post("/talles/sugeridos", panel.gruposSugeridosController);
 panelRopaRouter.post("/marcas/sugeridos", panel.marcasSugeridasController);
-panelRopaRouter.post("/disenos/sugeridos", panel.disenosSugeridosController);
+panelRopaRouter.post("/caracteristicas/sugeridos", panel.caracteristicasSugeridasController);
 panelRopaRouter.post("/categorias/sugeridos", panel.categoriasSugeridasController);
 lista("/categorias", panel.categorias, esquemaCategoria);
 lista("/marcas", panel.marcas, esquemaMarca);
 lista("/colores", panel.colores, esquemaColor);
-lista("/disenos", panel.disenos, esquemaDiseno);
+lista("/caracteristicas", panel.caracteristicas, esquemaGrupoCaracteristica);
 lista("/talles", panel.grupos, esquemaGrupoTalle);
 
 panelRopaRouter.get("/prendas", validar({ query: esquemaFiltrosPanel }), panel.listarPrendasController);

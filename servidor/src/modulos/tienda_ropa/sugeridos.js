@@ -13,7 +13,17 @@ export const COLORES_SUGERIDOS = [
 
 // ROP-24: marcas que vende Stilos (decididas por el dueño, 2026-11-11).
 export const MARCAS_SUGERIDAS = ["Taverniti", "Bando", "Raiders", "Bravo", "BBN", "Panther", "AFF", "MAYCLA", "Isostasia", "Cataleia", "Mistral", "US Amerika"];
-export const DISENOS_SUGERIDOS = ["Lisa", "Rayada", "Estampada"]; // ROP-23
+// ROP-37: características por grupo (lista aprobada por el dueño, 2026-11-12).
+export const CARACTERISTICAS_SUGERIDAS = [
+  { nombre: "Estampa", valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
+  { nombre: "Material", valores: ["Algodón", "Lino", "Denim", "Gabardina", "Satén", "Seda", "Lana", "Tejido de punto", "Frisa", "Polar", "Modal", "Viscosa", "Cuero", "Eco cuero", "Gamuza", "Lona", "Sintético", "Deportivo (dry fit)"] },
+  { nombre: "Calce", valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },
+  { nombre: "Tiro", valores: ["Alto", "Medio", "Bajo"] },
+  { nombre: "Manga", valores: ["Sin mangas", "Corta", "3/4", "Larga"] },
+  { nombre: "Cuello", valores: ["Redondo", "En V", "Polo", "Camisero", "Mao", "Polera", "Con capucha"] },
+  { nombre: "Detalles", valores: ["Elastizado", "Con roturas", "Con bolsillos", "Con cierre", "Con botones", "Con brillos"] },
+  { nombre: "Calzado", valores: ["Con cordones", "Con abrojo", "Sin cordones", "Caña baja", "Caña media", "Caña alta", "Plataforma"] },
+];
 // ROP-27 y ROP-36: árbol de una tienda de ropa. `grupo`: grupo de talles sugerido (las subcategorías
 // sin grupo propio usan el de arriba). Se puede editar todo después desde el panel.
 const hojas = (...nombres) => nombres.map((nombre) => ({ nombre }));

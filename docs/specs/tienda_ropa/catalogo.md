@@ -33,12 +33,14 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-08 | Cada talle está "hay" o "agotado"; lo agotado no se puede pedir. Al editar, las variantes que siguen conservan su id. | ✅ `ropa.integration.mjs` › "ROP-05 a ROP-08…" y "ROP-14 y ROP-15…" |
 | ROP-09 | Listado del panel con búsqueda, categoría, estado, foto y agotadas. | ⚠️ sin test (revisado en capturas) |
 | ROP-17 | Precio anterior opcional, mayor que el precio: la tarjeta y la ficha lo muestran tachado con "Oferta". El pedido cobra el precio. | ✅ `ropa_reglas.test.mjs` › "ROP-17…"; `ropa.integration.mjs` › "ROP-17…" |
-| ROP-23 | Diseños (Lisa, Rayada, Estampada sugeridos), opcionales en la prenda, filtrables; no se borra uno en uso. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
-| ROP-24 | "Cargar marcas sugeridas": Taverniti, Bando, Raiders, Bravo, BBN, Panther, AFF, MAYCLA, Isostasia, Cataleia, Mistral y US Amerika, sin duplicar. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
-| ROP-25 | Logo opcional por marca (https, Cloudinary). | ✅ `ropa_reglas.test.mjs` › "ROP-23 y ROP-25…" |
-| ROP-27 | "Cargar categorías sugeridas" arma el árbol de una tienda de ropa: Mujer, Hombre, Niños, Calzado y Accesorios con sus tipos de prenda (remeras, chombas, camisas, jeans, pantalones › gabardina / cargo / satén…, polleras, vestidos, zapatillas, gorras…), sin duplicar (mismo nombre bajo la misma categoría). Lista en `servidor/src/modulos/tienda_ropa/sugeridos.js`. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
+| ROP-23 | ~~Diseños~~: reemplazada por ROP-37 a ROP-58 ([cambio](../cambios/2026-11-caracteristicas.md)). | — |
+| ROP-37 | Características por grupo (Estampa, Material, Calce, Tiro, Manga, Cuello, Detalles, Calzado), editables como los grupos de talles: no se saca un valor ni se borra un grupo que usa una prenda. "Cargar características sugeridas" suma grupos y valores sin duplicar. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
+| ROP-38 | Varias características por prenda, de cualquier grupo; al editar se reemplazan. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `panel_pedidos.spec.js` › "prenda nueva…" |
+| ROP-24 | "Cargar marcas sugeridas": Taverniti, Bando, Raiders, Bravo, BBN, Panther, AFF, MAYCLA, Isostasia, Cataleia, Mistral y US Amerika, sin duplicar. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
+| ROP-25 | Logo opcional por marca (https, Cloudinary). | ✅ `ropa_reglas.test.mjs` › "ROP-25…" |
+| ROP-27 | "Cargar categorías sugeridas" arma el árbol de una tienda de ropa: Mujer, Hombre, Niños, Calzado y Accesorios con sus tipos de prenda (remeras, chombas, camisas, jeans, pantalones › gabardina / cargo / satén…, polleras, vestidos, zapatillas, gorras…), sin duplicar (mismo nombre bajo la misma categoría). Lista en `servidor/src/modulos/tienda_ropa/sugeridos.js`. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
 | ROP-29 | Un color por prenda (los otros colores, prendas aparte) y hasta 3 fotos. La URL lleva el color. | ✅ `ropa_reglas.test.mjs` › "ROP-29…"; `ropa.integration.mjs` › "ROP-05 a ROP-08…" |
-| ROP-36 | Cada categoría puede tener "talles sugeridos" (un grupo de talles); si no tiene, usa los de la categoría de arriba. Al cargar una prenda **nueva**, elegir la categoría preselecciona ese grupo (al editar no cambia solo). Los sugeridos traen: Jeans y Pantalones → Jeans, Calzado → Calzado, Niños → Niños, Accesorios → Talle único, el resto → Ropa. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…"; `ropa_web.test.mjs` › "ROP-36…"; `panel_pedidos.spec.js` › "prenda nueva…" |
+| ROP-36 | Cada categoría puede tener "talles sugeridos" (un grupo de talles); si no tiene, usa los de la categoría de arriba. Al cargar una prenda **nueva**, elegir la categoría preselecciona ese grupo (al editar no cambia solo). Los sugeridos traen: Jeans y Pantalones → Jeans, Calzado → Calzado, Niños → Niños, Accesorios → Talle único, el resto → Ropa. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `ropa_web.test.mjs` › "ROP-36…"; `panel_pedidos.spec.js` › "prenda nueva…" |
 
 ### Tienda
 
@@ -50,8 +52,10 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-19 | "También te puede gustar": hasta 4 de la misma categoría, sin la prenda ni sus otros colores. | ✅ `ropa.integration.mjs` › "ROP-17…" |
 | ROP-22 | "Compartir": menú del teléfono o copiar el link. | ✅ `ropa_web.test.mjs` › "ROP-22…"; `tienda.spec.js` › "ficha…" |
 | ROP-31 | Al compartir el link de una prenda, WhatsApp y las redes muestran su nombre, marca, precio y foto (`frontend/middleware.js`, solo para esos bots). Si la API no responde, la vista previa de la tienda. | ✅ `ropa_web.test.mjs` › "ROP-31…" (2) |
-| ROP-26 | Inicio con "Ofertas" (hasta 8, si hay) y "Nuestras marcas" (con prendas a la vista, logo o nombre). | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" (marcas); pantalla: capturas |
-| ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
+| ROP-26 | Inicio con "Ofertas" (hasta 8, si hay) y "Nuestras marcas" (con prendas a la vista, logo o nombre). | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" (marcas); pantalla: capturas |
+| ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
+| ROP-39 | Filtro por características (`car=1,7` en la URL), un bloque por grupo con solo las que se usan en la categoría; dentro de un grupo, una u otra; entre grupos, todas. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "catálogo…" |
+| ROP-58 | La ficha muestra las características agrupadas (Material: Cuero). | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "ficha…" |
 | ROP-35 | Logos de marcas: el subido en el panel; si no, el de `frontend/src/proyecto/config/marcas_config.js` (imágenes en `proyecto/assets/marcas/`, con color de fondo para logos claros); si no, el nombre. En el inicio, "Nuestras marcas" es una cinta que se desplaza sola (con 5 o más), se frena al pasar el mouse y respeta "reducir movimiento". | ✅ `ropa_web.test.mjs` › "ROP-35…"; `tienda.spec.js` › "inicio: la cinta de marcas…" |
 | ROP-30 | "También en:": otras prendas visibles del mismo modelo (mismo nombre sin importar mayúsculas ni espacios, y misma marca). El panel muestra con cuáles quedó agrupada. | ✅ `ropa.integration.mjs` › "ROP-10 a ROP-12…" y "ROP-05 a ROP-08…" |
 
@@ -88,7 +92,7 @@ por WhatsApp), `cuenta.spec.js` (checkout con cuenta, Mis datos, comprobante, ca
 | Envío gratis y dirección del local | `proyecto/client_config.js` › `entrega` | Desde $150.000 · dirección `[COMPLETAR]` |
 | Datos bancarios | `proyecto/client_config.js` › `datosBancarios` | `[COMPLETAR]` (sin ellos no se ofrece transferencia) |
 | Registro de clientes | `proyecto/client_config.js` › `auth.publicRegistration` | Prendido |
-| Colores, talles, marcas, diseños y categorías sugeridos | `servidor/src/modulos/tienda_ropa/sugeridos.js` | Ver ROP-03, ROP-04, ROP-23, ROP-24, ROP-27 |
+| Colores, talles, marcas, características y categorías sugeridos | `servidor/src/modulos/tienda_ropa/sugeridos.js` | Ver ROP-03, ROP-04, ROP-24, ROP-27, ROP-37 |
 | Marca, paleta y tipografías | `frontend/src/proyecto/config/` | Stilos · navy, crema, siena · Cormorant + DM Sans |
 
 ## Decisiones

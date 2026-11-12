@@ -3,7 +3,7 @@ import { abrirFiltros, simularApi, sinDesborde } from "./api_simulada.js";
 
 // Tienda sin cuenta (ROP-11 a ROP-30): catálogo, ficha y pedido por WhatsApp.
 
-test("catálogo: filtros de la categoría, talles agrupados, ofertas y orden quedan en la URL", async ({ page }, info) => {
+test("catálogo: filtros de la categoría, talles agrupados, características, ofertas y orden quedan en la URL", async ({ page }, info) => {
   const api = await simularApi(page);
   await page.goto("/catalogo?categoria=1");
   await expect(page.getByRole("heading", { name: "Mujer", level: 1 })).toBeVisible();
@@ -12,6 +12,15 @@ test("catálogo: filtros de la categoría, talles agrupados, ofertas y orden que
   await abrirFiltros(page, info);
   await expect(page.getByText("Niños", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Talle 8 (Niños)" })).toBeVisible();
+
+  // ROP-39: varias características a la vez, juntas en la URL; tocar una elegida la saca.
+  await page.getByRole("button", { name: "Liso" }).click();
+  await page.getByRole("button", { name: "Algodón" }).click();
+  await expect(page).toHaveURL(/car=1%2C5/);
+  await expect(page.getByRole("button", { name: "Algodón" })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => api.ultimo("GET", "/ropa/catalogo/prendas")?.query.car).toBe("1,5");
+  await page.getByRole("button", { name: "Liso" }).click();
+  await expect(page).toHaveURL(/car=5(&|$)/);
 
   // El tilde sigue a la URL (se marca cuando termina la navegación): se toca y se espera.
   await page.getByLabel("Solo ofertas").click();
@@ -29,7 +38,7 @@ test("catálogo: filtros de la categoría, talles agrupados, ofertas y orden que
   await sinDesborde(page);
 });
 
-test("ficha: oferta, diseño, talle agotado, \"También en\" y compartir copia el link", async ({ page, context }) => {
+test("ficha: oferta, características, talle agotado, \"También en\" y compartir copia el link", async ({ page, context }) => {
   await simularApi(page);
   // Sin menú de compartir (como en la computadora): se copia el link.
   await page.addInitScript(() => {
@@ -40,7 +49,11 @@ test("ficha: oferta, diseño, talle agotado, \"También en\" y compartir copia e
   await context.grantPermissions(["clipboard-write"]).catch(() => {});
   await page.goto("/catalogo/remera-taverniti-negro");
   await expect(page.getByRole("heading", { name: "Remera Taverniti", level: 1 })).toBeVisible();
-  await expect(page.getByText("Taverniti · Lisa")).toBeVisible();
+  await expect(page.getByText("Taverniti", { exact: true })).toBeVisible();
+  // ROP-58: agrupadas.
+  const caracteristicas = page.getByRole("definition");
+  await expect(caracteristicas).toHaveText(["Liso", "Algodón"]);
+  await expect(page.getByRole("term")).toHaveText(["Estampa", "Material"]);
   await expect(page.getByText("Antes:", { exact: false })).toBeAttached();
   await expect(page.getByRole("button", { name: "Talle L, agotado" })).toBeDisabled();
 

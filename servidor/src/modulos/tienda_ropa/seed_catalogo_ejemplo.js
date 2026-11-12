@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { Op, fn, col, where as donde } from "sequelize";
 import { env } from "../../core/configuracion_servidor/env.js";
 import { conectarDB, sequelize, DB_SCHEMA } from "../../core/database/sequelize.js";
-import { CategoriaRopa, ColorRopa, DisenoRopa, GrupoTalle, MarcaRopa, Prenda, Talle } from "./models/index.js";
+import { Caracteristica, CategoriaRopa, ColorRopa, GrupoCaracteristica, GrupoTalle, MarcaRopa, Prenda, Talle } from "./models/index.js";
 import { esquemaPrenda, slug } from "./reglas.js";
 import * as listas from "./services/listas_service.js";
 import { crearPrenda } from "./services/prendas_service.js";
@@ -16,19 +16,22 @@ import { crearPrenda } from "./services/prendas_service.js";
 
 const EJEMPLOS = [
   {
-    marca: "Taverniti", categoria: "Calzado", subcategoria: "Zapatillas", grupo: "Calzado", diseno: null,
+    marca: "Taverniti", categoria: "Calzado", subcategoria: "Zapatillas", grupo: "Calzado",
+    caracteristicas: { Material: "Cuero", Calzado: "Con cordones" },
     nombre: "Zapatilla Jagger Taverniti", color: "Negro", talles: ["40", "41", "42", "43"], precio: 117399,
     fuente: "https://www.triax.com.ar/collections/hombre/products/29750602-zapatilla-jagger",
     foto: { json: "https://www.triax.com.ar/products/29750602-zapatilla-jagger.js" },
   },
   {
-    marca: "Taverniti", categoria: "Hombre", subcategoria: "Remeras", grupo: "Ropa", diseno: "Lisa",
+    marca: "Taverniti", categoria: "Hombre", subcategoria: "Remeras", grupo: "Ropa",
+    caracteristicas: { Estampa: "Liso", Material: "Algodón", Manga: "Corta", Cuello: "Redondo" },
     nombre: "Remera Lisa Taverniti Fortaleza", color: "Blanco", talles: ["S", "M", "L", "XL", "XXL", "XXXL"], precio: 30399,
     fuente: "https://www.wokerbysporting.com.ar/remera-taverniti-fortaleza-de-hombre-tv09234-601/p",
     foto: { url: "https://woker.vtexassets.com/arquivos/ids/604418-800-800?aspect=true&height=800&width=800" },
   },
   {
-    marca: "Taverniti", categoria: "Hombre", subcategoria: "Jeans", grupo: "Jeans", diseno: null,
+    marca: "Taverniti", categoria: "Hombre", subcategoria: "Jeans", grupo: "Jeans",
+    caracteristicas: { Material: "Denim", Calce: "Regular" },
     nombre: "Jean Howie Taverniti", color: "Azul", talles: ["36", "38", "40", "42"], precio: 76830, precio_anterior: 118200,
     fuente: "https://taverniti.com.ar/productos/jean-howie-de-denim-regular-fit-azul-15tpb/",
     foto: { url: "https://acdn-us.mitiendanube.com/stores/007/090/253/products/13878_245x1-327d69a091870ba5e617851825845935-100-0.jpg" },
@@ -74,6 +77,17 @@ async function categoria(nombre, padre) {
   return existente ?? listas.crearCategoria({ nombre, padre_id: padre?.id ?? null, orden: 0, activo: true });
 }
 
+/** { Material: "Cuero" } → ids; lo que no esté en el panel se saltea. */
+async function idsDeCaracteristicas(porGrupo) {
+  const ids = [];
+  for (const [grupo, valor] of Object.entries(porGrupo)) {
+    const delGrupo = await porNombre(GrupoCaracteristica, grupo);
+    const caracteristica = delGrupo && await porNombre(Caracteristica, valor, { grupo_caracteristica_id: delGrupo.id });
+    if (caracteristica) ids.push(caracteristica.id);
+  }
+  return ids;
+}
+
 async function cargarEjemplo(ejemplo) {
   const marca = await porNombre(MarcaRopa, ejemplo.marca);
   const color = await porNombre(ColorRopa, ejemplo.color);
@@ -87,12 +101,12 @@ async function cargarEjemplo(ejemplo) {
   const destino = ejemplo.subcategoria ? await categoria(ejemplo.subcategoria, raiz) : raiz;
   // Solo los talles que existen en el grupo: no se tocan los grupos sugeridos (ni su orden).
   const talles = grupo.talles.filter((t) => ejemplo.talles.includes(t.nombre));
-  const diseno = ejemplo.diseno ? await porNombre(DisenoRopa, ejemplo.diseno) : null;
+  const caracteristicas = await idsDeCaracteristicas(ejemplo.caracteristicas);
   const archivo = slug(`ejemplo ${ejemplo.nombre} ${ejemplo.color}`);
   const foto = await bajarFoto(ejemplo.foto, archivo);
 
   await crearPrenda(esquemaPrenda.parse({
-    nombre: ejemplo.nombre, categoria_id: destino.id, marca_id: marca.id, diseno_id: diseno?.id ?? null, grupo_talle_id: grupo.id,
+    nombre: ejemplo.nombre, categoria_id: destino.id, marca_id: marca.id, caracteristicas, grupo_talle_id: grupo.id,
     precio: ejemplo.precio, precio_anterior: ejemplo.precio_anterior ?? null, activo: false,
     descripcion: `Prenda de ejemplo (referencia: ${ejemplo.fuente}). Confirmá precio, talles y stock del local antes de mostrarla.`,
     variantes: talles.map((t) => ({ color_id: color.id, talle_id: t.id, disponible: true })),
@@ -110,7 +124,7 @@ async function cargarCatalogoEjemplo() {
   await listas.cargarCategoriasSugeridas();
   await listas.cargarColoresSugeridos();
   await listas.cargarGruposSugeridos();
-  await listas.cargarDisenosSugeridos();
+  await listas.cargarCaracteristicasSugeridas();
   for (const ejemplo of EJEMPLOS) {
     try { await cargarEjemplo(ejemplo); } catch (error) { console.warn(`Omitido "${ejemplo.nombre}": ${error.message}`); }
   }

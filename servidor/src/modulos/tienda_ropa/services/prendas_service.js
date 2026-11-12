@@ -2,7 +2,7 @@ import { Op, col, fn } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
 import { normalizarPaginacion, armarPaginacion } from "../../../core/services/common/pagination.js";
-import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante, PrendaImagen } from "../models/index.js";
+import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, Caracteristica, Prenda, PrendaCaracteristica, PrendaVariante, PrendaImagen } from "../models/index.js";
 import { claveModelo, conDescendientes } from "../reglas.js";
 import { slugLibre } from "./listas_service.js";
 
@@ -11,8 +11,8 @@ import { slugLibre } from "./listas_service.js";
 const POR_PAGINA = 20;
 const ORDEN_FOTOS = [["orden", "ASC"], ["id", "ASC"]];
 
-/** Filtro de texto, categoría (con subcategorías), marca, color y talle: compartido con la tienda. */
-export async function wherePrendas({ q, categoria, marca, color, talle, diseno }) {
+/** Filtro de texto, categoría (con subcategorías), marca, color, talle y características: compartido con la tienda. */
+export async function wherePrendas({ q, categoria, marca, color, talle, car }) {
   const condiciones = [];
   if (q) condiciones.push({ nombre: { [Op.iLike]: `%${q}%` } });
   if (categoria) {
@@ -20,7 +20,17 @@ export async function wherePrendas({ q, categoria, marca, color, talle, diseno }
     condiciones.push({ categoria_id: conDescendientes(todas, categoria) });
   }
   if (marca) condiciones.push({ marca_id: marca });
-  if (diseno) condiciones.push({ diseno_id: diseno });
+  if (car?.length) {
+    // ROP-39: dentro de un grupo alcanza con una (Rayado o Floreado); entre grupos, todas (y Algodón).
+    const elegidas = await Caracteristica.findAll({ where: { id: car }, attributes: ["id", "grupo_caracteristica_id"], raw: true });
+    const porGrupo = new Map();
+    for (const c of elegidas) porGrupo.set(c.grupo_caracteristica_id, [...(porGrupo.get(c.grupo_caracteristica_id) ?? []), c.id]);
+    if (!porGrupo.size) condiciones.push({ id: [] });
+    for (const ids of porGrupo.values()) {
+      const filas = await PrendaCaracteristica.findAll({ where: { caracteristica_id: ids }, attributes: ["prenda_id"], raw: true });
+      condiciones.push({ id: [...new Set(filas.map((f) => f.prenda_id))] });
+    }
+  }
   if (color || talle) {
     // Color y talle se cumplen en la MISMA variante y disponible: "remera roja talle M que haya".
     const variantes = await PrendaVariante.findAll({
@@ -67,12 +77,14 @@ export async function obtenerPrenda(id) {
     include: [
       { model: PrendaVariante, as: "variantes", attributes: ["id", "color_id", "talle_id", "disponible"] },
       { model: PrendaImagen, as: "imagenes", attributes: ["id", "color_id", "url", "orden"] },
+      { model: PrendaCaracteristica, as: "caracteristicas", attributes: ["caracteristica_id"] },
     ],
     order: [[{ model: PrendaImagen, as: "imagenes" }, "orden", "ASC"]],
   });
   if (!prenda) throw noExiste("La prenda no existe.");
+  const datos = prenda.toJSON();
   // En el panel se ven todos los del modelo, también los ocultos, para detectar nombres mal escritos.
-  return { ...prenda.toJSON(), otros_colores: await otrosColores(prenda) };
+  return { ...datos, caracteristicas: datos.caracteristicas.map((c) => c.caracteristica_id), otros_colores: await otrosColores(prenda) };
 }
 
 /**
@@ -97,7 +109,7 @@ async function verificarReferencias(datos, transaction) {
   const falta = (mensaje) => new ErrorApp("DATOS_INVALIDOS", mensaje, 400);
   if (!await CategoriaRopa.findByPk(datos.categoria_id, { transaction })) throw falta("La categoría elegida no existe.");
   if (datos.marca_id && !await MarcaRopa.findByPk(datos.marca_id, { transaction })) throw falta("La marca elegida no existe.");
-  if (datos.diseno_id && !await DisenoRopa.findByPk(datos.diseno_id, { transaction })) throw falta("El diseño elegido no existe.");
+  if (await Caracteristica.count({ where: { id: datos.caracteristicas }, transaction }) !== datos.caracteristicas.length) throw falta("Hay características que no existen.");
   if (!await GrupoTalle.findByPk(datos.grupo_talle_id, { transaction })) throw falta("El grupo de talles no existe.");
   const tallesDelGrupo = new Set((await Talle.findAll({ where: { grupo_talle_id: datos.grupo_talle_id }, attributes: ["id"], raw: true, transaction })).map((t) => t.id));
   if (datos.variantes.some((v) => !tallesDelGrupo.has(v.talle_id))) throw falta("Hay talles que no son del grupo elegido.");
@@ -120,6 +132,11 @@ async function guardarVariantes(prendaId, variantes, transaction) {
   if (nuevas.size) await PrendaVariante.bulkCreate([...nuevas.values()].map((v) => ({ ...v, prenda_id: prendaId })), { transaction });
 }
 
+async function guardarCaracteristicas(prendaId, caracteristicas, transaction) {
+  await PrendaCaracteristica.destroy({ where: { prenda_id: prendaId }, transaction });
+  if (caracteristicas.length) await PrendaCaracteristica.bulkCreate(caracteristicas.map((caracteristica_id) => ({ prenda_id: prendaId, caracteristica_id })), { transaction });
+}
+
 async function guardarImagenes(prendaId, imagenes, transaction) {
   await PrendaImagen.destroy({ where: { prenda_id: prendaId }, transaction });
   if (imagenes.length) await PrendaImagen.bulkCreate(imagenes.map((img, orden) => ({ ...img, prenda_id: prendaId, orden })), { transaction });
@@ -131,29 +148,31 @@ async function textoSlug(nombre, colorId, transaction) {
   return `${nombre} ${color?.nombre ?? ""}`;
 }
 
-export async function crearPrenda({ variantes, imagenes, ...datos }) {
+export async function crearPrenda({ variantes, imagenes, caracteristicas, ...datos }) {
   const id = await sequelize.transaction(async (transaction) => {
-    await verificarReferencias({ ...datos, variantes }, transaction);
+    await verificarReferencias({ ...datos, variantes, caracteristicas }, transaction);
     const slugNuevo = await slugLibre(Prenda, await textoSlug(datos.nombre, variantes[0].color_id, transaction));
     const prenda = await Prenda.create({ ...datos, slug: slugNuevo }, { transaction });
     await guardarVariantes(prenda.id, variantes, transaction);
     await guardarImagenes(prenda.id, imagenes, transaction);
+    await guardarCaracteristicas(prenda.id, caracteristicas, transaction);
     return prenda.id;
   });
   return obtenerPrenda(id);
 }
 
-export async function actualizarPrenda(id, { variantes, imagenes, ...datos }) {
+export async function actualizarPrenda(id, { variantes, imagenes, caracteristicas, ...datos }) {
   const prenda = await Prenda.findByPk(id);
   if (!prenda) throw noExiste("La prenda no existe.");
   await sequelize.transaction(async (transaction) => {
-    await verificarReferencias({ ...datos, variantes }, transaction);
+    await verificarReferencias({ ...datos, variantes, caracteristicas }, transaction);
     const colorAntes = (await PrendaVariante.findOne({ where: { prenda_id: prenda.id }, attributes: ["color_id"], transaction }))?.color_id;
     const cambio = datos.nombre !== prenda.nombre || colorAntes !== variantes[0].color_id;
     const slugNuevo = cambio ? await slugLibre(Prenda, await textoSlug(datos.nombre, variantes[0].color_id, transaction), prenda.id) : prenda.slug;
     await prenda.update({ ...datos, slug: slugNuevo, actualizado_en: new Date() }, { transaction });
     await guardarVariantes(prenda.id, variantes, transaction);
     await guardarImagenes(prenda.id, imagenes, transaction);
+    await guardarCaracteristicas(prenda.id, caracteristicas, transaction);
   });
   return obtenerPrenda(id);
 }

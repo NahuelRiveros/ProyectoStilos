@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  armarArbol, conDescendientes, creaCiclo, claveModelo, esEnvioGratis, esquemaColor, esquemaDiseno, esquemaEstadoPedido, esquemaMarca, esquemaMisDatos, esquemaPedidoCuenta, formatoComprobante, pideMotivo, problemaComprobante, problemaTransicion, proximoPaso, transferenciaDisponible, esquemaFiltrosCatalogo, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
+  armarArbol, conDescendientes, creaCiclo, claveModelo, esEnvioGratis, esquemaColor, esquemaEstadoPedido, esquemaGrupoCaracteristica, esquemaMarca, esquemaMisDatos, esquemaPedidoCuenta, formatoComprobante, pideMotivo, problemaComprobante, problemaTransicion, proximoPaso, transferenciaDisponible, esquemaFiltrosCatalogo, esquemaFiltrosPanel, esquemaGrupoTalle, esquemaPedido, esquemaPrenda, problemaFotos, slug,
 } from "../src/modulos/tienda_ropa/reglas.js";
 
 const CATEGORIAS = [
@@ -121,13 +121,22 @@ test("ROP-18: envío gratis desde el mínimo, solo para envíos", () => {
   assert.equal(esEnvioGratis("envio", 99999999, null), false, "sin mínimo configurado");
 });
 
-test("ROP-23 y ROP-25: diseño opcional en la prenda y logo https opcional en la marca", () => {
-  assert.equal(esquemaPrenda.parse(prenda()).diseno_id, null);
-  assert.equal(esquemaPrenda.parse(prenda({ diseno_id: "3" })).diseno_id, 3);
+test("ROP-37 a ROP-39: características por grupo, varias por prenda y filtro desde la URL", () => {
+  assert.deepEqual(esquemaPrenda.parse(prenda()).caracteristicas, []);
+  assert.deepEqual(esquemaPrenda.parse(prenda({ caracteristicas: ["3", 7, 3] })).caracteristicas, [3, 7], "repetidas se ignoran");
+  assert.equal(esquemaPrenda.safeParse(prenda({ caracteristicas: ["x"] })).success, false);
+  assert.deepEqual(esquemaGrupoCaracteristica.parse({ nombre: " Material ", valores: [" Cuero ", "Lona"] }), { nombre: "Material", orden: 0, valores: ["Cuero", "Lona"] });
+  assert.equal(esquemaGrupoCaracteristica.safeParse({ nombre: "Material", valores: ["Cuero", "cuero"] }).error.issues[0].message, "Hay valores repetidos.");
+  assert.equal(esquemaGrupoCaracteristica.safeParse({ nombre: "Material", valores: [] }).error.issues[0].message, "Agregá al menos un valor.");
+  assert.deepEqual(esquemaFiltrosCatalogo.parse({ car: "1,7" }).car, [1, 7]);
+  assert.equal(esquemaFiltrosCatalogo.parse({ car: "" }).car, undefined);
+  assert.equal(esquemaFiltrosCatalogo.safeParse({ car: "1,x" }).success, false);
+});
+
+test("ROP-25: logo https opcional en la marca", () => {
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: "" }).logo_url, null);
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: " https://x.test/bando.png " }).logo_url, "https://x.test/bando.png");
   assert.equal(esquemaMarca.safeParse({ nombre: "Bando", logo_url: "http://x.test/bando.png" }).error.issues[0].message, "El logo tiene que ser una URL https o una imagen local del catálogo inicial.");
-  assert.equal(esquemaDiseno.safeParse({ nombre: "" }).success, false);
 });
 
 test("Estados del pedido: pasos válidos, motivo al volver o cancelar y próximo paso", () => {

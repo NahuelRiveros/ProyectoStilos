@@ -21,7 +21,7 @@ export const marcas = crud({ listar: listas.listarMarcas, crear: listas.crearMar
 export const colores = crud({ listar: listas.listarColores, crear: listas.crearColor, actualizar: listas.actualizarColor, eliminar: listas.eliminarColor }, "Color", "o");
 export const grupos = crud({ listar: listas.listarGruposTalle, crear: listas.crearGrupoTalle, actualizar: listas.actualizarGrupoTalle, eliminar: listas.eliminarGrupoTalle }, "Grupo de talles", "o");
 
-export const disenos = crud({ listar: listas.listarDisenos, crear: listas.crearDiseno, actualizar: listas.actualizarDiseno, eliminar: listas.eliminarDiseno }, "Diseño", "o");
+export const caracteristicas = crud({ listar: listas.listarCaracteristicas, crear: listas.crearGrupoCaracteristica, actualizar: listas.actualizarGrupoCaracteristica, eliminar: listas.eliminarGrupoCaracteristica }, "Grupo de características", "o");
 
 /** "Cargar sugeridos": responde cuántos agregó o que ya estaban todos. */
 const sugeridos = (cargar, plural, yaEstaban) => async (_req, res) => {
@@ -29,7 +29,7 @@ const sugeridos = (cargar, plural, yaEstaban) => async (_req, res) => {
   return ok(res, { agregados: n }, n ? `Se agregaron ${n} ${plural}.` : yaEstaban);
 };
 export const marcasSugeridasController = sugeridos(listas.cargarMarcasSugeridas, "marcas", "Ya tenías todas las marcas sugeridas.");
-export const disenosSugeridosController = sugeridos(listas.cargarDisenosSugeridos, "diseños", "Ya tenías todos los diseños sugeridos.");
+export const caracteristicasSugeridasController = sugeridos(listas.cargarCaracteristicasSugeridas, "características", "Ya tenías todas las características sugeridas.");
 export const categoriasSugeridasController = sugeridos(listas.cargarCategoriasSugeridas, "categorías", "Ya tenías todas las categorías sugeridas.");
 
 export async function coloresSugeridosController(_req, res) {

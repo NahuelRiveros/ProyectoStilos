@@ -18,11 +18,11 @@ const MAX_FOTOS = 3;
 const aplanar = (nodos, nivel = 0) => nodos.flatMap((n) => [{ ...n, nivel }, ...aplanar(n.hijas, nivel + 1)]);
 const clave = (colorId, talleId) => `${colorId}-${talleId}`;
 
-/** Alta y edición de una prenda (ROP-05 a ROP-08, ROP-29: un color por prenda). */
+/** Alta y edición de una prenda (ROP-05 a ROP-08, ROP-29: un color por prenda, ROP-38: características). */
 export default function PrendaFormPage() {
   const { id } = useParams();
   const prenda = usePrendaPanel(id);
-  const listas = { categorias: useLista("categorias"), marcas: useLista("marcas"), disenos: useLista("disenos"), colores: useLista("colores"), talles: useLista("talles") };
+  const listas = { categorias: useLista("categorias"), marcas: useLista("marcas"), caracteristicas: useLista("caracteristicas"), colores: useLista("colores"), talles: useLista("talles") };
   const consultas = [...Object.values(listas), ...(id ? [prenda] : [])];
   const cargando = consultas.find((c) => c.isPending || c.isError) ?? consultas[0];
   const faltaBase = !listas.categorias.data?.length || !listas.colores.data?.length || !listas.talles.data?.length;
@@ -50,7 +50,7 @@ function Formulario({ prenda, listas }) {
   const { register, handleSubmit, setError, formState: { errors } } = useForm({
     defaultValues: {
       nombre: prenda?.nombre ?? "", descripcion: prenda?.descripcion ?? "",
-      categoria_id: String(prenda?.categoria_id ?? ""), marca_id: String(prenda?.marca_id ?? ""), diseno_id: String(prenda?.diseno_id ?? ""),
+      categoria_id: String(prenda?.categoria_id ?? ""), marca_id: String(prenda?.marca_id ?? ""),
       precio: prenda ? Number(prenda.precio) : "", activo: prenda?.activo ?? true,
       precio_anterior: prenda?.precio_anterior ? Number(prenda.precio_anterior) : "",
     },
@@ -66,6 +66,16 @@ function Formulario({ prenda, listas }) {
     .filter((i) => i.color_id === null || i.color_id === coloresAntes[0])
     .map(({ url }) => ({ url, color_id: coloresAntes[0] ?? null })));
   const [errorVariantes, setErrorVariantes] = useState("");
+  const [caracteristicas, setCaracteristicas] = useState(() => new Set(prenda?.caracteristicas ?? []));
+  const [errorCaracteristicas, setErrorCaracteristicas] = useState("");
+
+  function alternarCaracteristica(id) {
+    setCaracteristicas((actual) => {
+      const nuevo = new Set(actual);
+      if (nuevo.has(id)) nuevo.delete(id); else nuevo.add(id);
+      return nuevo;
+    });
+  }
 
   const talles = grupos.find((g) => g.id === grupoId)?.talles ?? [];
   const todasHay = (colorId) => Object.fromEntries(talles.map((t) => [clave(colorId, t.id), "hay"]));
@@ -110,10 +120,9 @@ function Formulario({ prenda, listas }) {
       const r = await guardar.mutateAsync({
         id: prenda?.id, nombre: valores.nombre, descripcion: valores.descripcion,
         categoria_id: Number(valores.categoria_id), marca_id: valores.marca_id ? Number(valores.marca_id) : null,
-        diseno_id: valores.diseno_id ? Number(valores.diseno_id) : null,
         grupo_talle_id: grupoId, precio: Number(valores.precio), activo: valores.activo,
         precio_anterior: valores.precio_anterior === "" ? null : Number(valores.precio_anterior),
-        variantes, imagenes: fotos,
+        variantes, imagenes: fotos, caracteristicas: [...caracteristicas],
       });
       toast.success(r.mensaje);
       navigate("/admin/ropa/prendas");
@@ -121,9 +130,13 @@ function Formulario({ prenda, listas }) {
       const porCampo = error?.response?.data?.errores ?? [];
       for (const e of porCampo) {
         if (["variantes", "imagenes"].includes(e.campo.split(".")[0])) setErrorVariantes(e.mensaje);
+        else if (e.campo.startsWith("caracteristicas")) setErrorCaracteristicas(e.mensaje);
         else setError(e.campo, { message: e.mensaje });
       }
-      if (!porCampo.length) setError("root", { message: mensajeError(error, "No se pudo guardar la prenda.") });
+      if (!porCampo.length) {
+        const mensaje = mensajeError(error, "No se pudo guardar la prenda.");
+        if (mensaje.includes("características")) setErrorCaracteristicas(mensaje); else setError("root", { message: mensaje });
+      }
     }
   }
 
@@ -145,17 +158,37 @@ function Formulario({ prenda, listas }) {
               {listas.marcas.data.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
             </select>
           </label>
-          <label className="block text-sm font-semibold text-gray-700">Diseño (opcional)
-            <select {...register("diseno_id")} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
-              <option value="">Sin diseño</option>
-              {listas.disenos.data.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
-            </select>
-          </label>
           <InputField name="precio" type="number" min={1} step="0.01" inputMode="decimal" label="Precio ($)" helperText="El mismo para todos los talles." register={register} required requiredMessage="Escribí el precio." error={errors.precio?.message} />
           <InputField name="precio_anterior" type="number" min={1} step="0.01" inputMode="decimal" label="Precio anterior ($, opcional)" helperText="Para marcarla en oferta: se ve tachado. Vacío = sin oferta." register={register} error={errors.precio_anterior?.message} />
           <label className="flex min-h-11 items-center gap-2 self-end text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
           <div className="sm:col-span-2"><TextareaField name="descripcion" label="Descripción (opcional)" rows={4} placeholder="Tela, calce, cuidados…" register={register} error={errors.descripcion?.message} /></div>
         </div>
+      </Seccion>
+
+      <Seccion titulo="Características (opcional)" descripcion="Tildá las que tiene la prenda: se muestran en la ficha y se puede filtrar por ellas en la tienda.">
+        {listas.caracteristicas.data.length === 0
+          ? <p className="text-sm text-slate-500">Todavía no hay características. <Link to="/admin/ropa/caracteristicas" className="font-semibold text-slate-900 underline">Cargalas acá</Link>.</p>
+          : (
+            <div className="space-y-4">
+              {listas.caracteristicas.data.map((g) => (
+                <fieldset key={g.id}>
+                  <legend className="mb-2 text-sm font-semibold text-gray-700">{g.nombre}</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {g.caracteristicas.map((c) => {
+                      const tildada = caracteristicas.has(c.id);
+                      return (
+                        <button key={c.id} type="button" onClick={() => alternarCaracteristica(c.id)} aria-pressed={tildada}
+                          className={cn("min-h-11 rounded-full border px-3 text-sm font-semibold", tildada ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700")}>
+                          {c.nombre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+          )}
+        {errorCaracteristicas && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorCaracteristicas}</p>}
       </Seccion>
 
       <Seccion titulo="Color y talles" descripcion="Una prenda es de un solo color: los otros colores del mismo modelo se cargan como prendas aparte, con el mismo nombre y marca.">

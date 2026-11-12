@@ -13,7 +13,7 @@ import { compartir } from "./compartir.js";
 import { brandConfig } from "../../../proyecto/config/brand_config.js";
 import { enOferta } from "../utils/dinero.js";
 
-/** Ficha (ROP-12, ROP-19, ROP-22): fotos, color, talle (agotados tachados), "Agregar al pedido", compartir y relacionadas. */
+/** Ficha (ROP-12, ROP-19, ROP-22, ROP-58): fotos, color, talle (agotados tachados), "Agregar al pedido", compartir y relacionadas. */
 export default function PrendaPage() {
   const { slug } = useParams();
   const consulta = usePrendaTienda(slug);
@@ -104,9 +104,7 @@ function Ficha({ prenda }) {
         </div>
 
         <div>
-          {(prenda.marca || prenda.diseno) && (
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--kt-ink-soft)">{[prenda.marca?.nombre, prenda.diseno?.nombre].filter(Boolean).join(" · ")}</p>
-          )}
+          {prenda.marca && <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--kt-ink-soft)">{prenda.marca.nombre}</p>}
           <h1 className="kt-display mt-1 text-4xl font-semibold leading-tight sm:text-5xl">{prenda.nombre}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Precio prenda={prenda} grande />
@@ -175,7 +173,17 @@ function Ficha({ prenda }) {
             <Share2 size={16} aria-hidden="true" /> Compartir
           </button>
 
-          {prenda.descripcion && <p className="mt-8 whitespace-pre-line border-t border-(--kt-border) pt-6 text-sm leading-relaxed text-(--kt-ink-soft)">{prenda.descripcion}</p>}
+          {prenda.caracteristicas.length > 0 && (
+            <dl aria-label="Características" className="mt-8 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-(--kt-border) pt-6 text-sm">
+              {prenda.caracteristicas.map((g) => (
+                <div key={g.id} className="contents">
+                  <dt className="font-semibold">{g.nombre}</dt>
+                  <dd className="text-(--kt-ink-soft)">{g.caracteristicas.map((c) => c.nombre).join(" · ")}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {prenda.descripcion && <p className="mt-8 whitespace-pre-line [overflow-wrap:anywhere] border-t border-(--kt-border) pt-6 text-sm leading-relaxed text-(--kt-ink-soft)">{prenda.descripcion}</p>}
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import { cn } from "../../../core/utils/cn.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
 
-const CAMPOS = ["q", "categoria", "marca", "color", "talle", "diseno", "ofertas", "orden", "pagina"];
+const CAMPOS = ["q", "categoria", "marca", "color", "talle", "car", "ofertas", "orden", "pagina"];
 const ORDENES = [["novedades", "Novedades"], ["menor_precio", "Menor precio"], ["mayor_precio", "Mayor precio"]];
 
 /** Camino de la raíz a la categoría `id` dentro del árbol, o []. */
@@ -21,7 +21,7 @@ function caminoA(arbol, id) {
   return [];
 }
 
-/** Catálogo (ROP-11, ROP-23, ROP-28): búsqueda, categorías con migas, marca, color, talle, diseño, ofertas y orden. Todo en la URL. */
+/** Catálogo (ROP-11, ROP-28, ROP-39): búsqueda, categorías con migas, marca, color, talle, características, ofertas y orden. Todo en la URL. */
 export default function CatalogoPage() {
   const [params, setParams] = useSearchParams();
   const filtros = useMemo(() => Object.fromEntries(CAMPOS.map((c) => [c, params.get(c) ?? ""]).filter(([, v]) => v)), [params]);
@@ -45,6 +45,13 @@ export default function CatalogoPage() {
   }, [setParams]);
   // alternar: tocar el color o talle ya elegido lo saca.
   const alternar = (campo, valor) => poner(campo, numero(campo) === valor ? "" : valor);
+  // ROP-39: se pueden elegir varias características; van juntas en la URL ("car=1,7").
+  const caracteristicas = new Set((filtros.car ?? "").split(",").filter(Boolean).map(Number));
+  const alternarCaracteristica = (id) => {
+    const nuevas = new Set(caracteristicas);
+    if (nuevas.has(id)) nuevas.delete(id); else nuevas.add(id);
+    poner("car", [...nuevas].join(","));
+  };
   // El orden no es un filtro: se mantiene al quitar filtros.
   const limpiar = () => setParams({ ...(actual && { categoria: String(actual.id) }), ...(filtros.orden && { orden: filtros.orden }) });
 
@@ -52,7 +59,7 @@ export default function CatalogoPage() {
   const camino = caminoA(arbol, numero("categoria"));
   const actual = camino.at(-1);
   const hijas = actual ? actual.hijas : arbol;
-  const hayFiltros = ["marca", "color", "talle", "diseno", "q", "ofertas"].some((c) => filtros[c]);
+  const hayFiltros = ["marca", "color", "talle", "car", "q", "ofertas"].some((c) => filtros[c]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -124,19 +131,19 @@ export default function CatalogoPage() {
                 </div>
               </fieldset>
             )}
-            {(opciones.data?.disenos.length ?? 0) > 0 && (
-              <fieldset>
-                <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">Diseño</legend>
+            {(opciones.data?.caracteristicas ?? []).map((g) => (
+              <fieldset key={g.id}>
+                <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">{g.nombre}</legend>
                 <div className="flex flex-wrap gap-2">
-                  {opciones.data.disenos.map((d) => (
-                    <button key={d.id} type="button" aria-pressed={numero("diseno") === d.id} onClick={() => alternar("diseno", d.id)}
-                      className={cn("min-h-11 rounded-full border px-4 text-sm font-semibold", numero("diseno") === d.id ? "border-(--kt-petrol) bg-(--kt-petrol) text-(--kt-accent-on-dark)" : "border-(--kt-border) hover:border-(--kt-petrol)")}>
-                      {d.nombre}
+                  {g.caracteristicas.map((c) => (
+                    <button key={c.id} type="button" aria-pressed={caracteristicas.has(c.id)} onClick={() => alternarCaracteristica(c.id)}
+                      className={cn("min-h-11 rounded-full border px-4 text-sm font-semibold", caracteristicas.has(c.id) ? "border-(--kt-petrol) bg-(--kt-petrol) text-(--kt-accent-on-dark)" : "border-(--kt-border) hover:border-(--kt-petrol)")}>
+                      {c.nombre}
                     </button>
                   ))}
                 </div>
               </fieldset>
-            )}
+            ))}
             {(opciones.data?.marcas.length ?? 0) > 0 && (
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-(--kt-ink-soft)">Marca</span>
