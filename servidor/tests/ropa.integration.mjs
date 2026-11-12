@@ -30,6 +30,7 @@ const cuenta = await import("../src/modulos/tienda_ropa/services/cuenta_service.
 const { clientConfig } = await import("../../proyecto/client_config.js");
 const { moduloTiendaRopa } = await import("../src/modulos/tienda_ropa/modulo.js");
 const { esquemaPrenda } = await import("../src/modulos/tienda_ropa/reglas.js");
+const { CATEGORIAS_SUGERIDAS } = await import("../src/modulos/tienda_ropa/sugeridos.js");
 const { sincronizarPermisos } = await import("../src/core/services/usuarios/permisos_service.js");
 const { sembrarRolesDelSistema } = await import("../src/core/database/seed/seed_rbac.js");
 const { seed_super_admin } = await import("../src/core/database/seed/seed_super_admin.js");
@@ -95,7 +96,7 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
     await t.test("ROP-03 y ROP-04: sugeridos sin duplicar y nombres únicos", async () => {
       assert.equal(await listas.cargarColoresSugeridos(), 30);
       assert.equal(await listas.cargarColoresSugeridos(), 0, "la segunda vez no agrega nada");
-      assert.equal(await listas.cargarGruposSugeridos(), 4, "Ropa, Jeans, Calzado y Niños");
+      assert.equal(await listas.cargarGruposSugeridos(), 5, "Ropa, Jeans, Calzado, Niños y Talle único");
       const ninos = (await listas.listarGruposTalle()).find((g) => g.nombre === "Niños");
       assert.deepEqual(ninos.talles.map((x) => x.nombre), ["8", "10", "12", "14", "16"]);
       assert.equal(await listas.cargarGruposSugeridos(), 0);
@@ -210,10 +211,23 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       await prendas.eliminarPrenda(conLogo.id);
 
       // ROP-27: suma Niños y Calzado (Mujer y Hombre ya estaban).
-      assert.equal(await listas.cargarCategoriasSugeridas(), 2);
-      assert.equal(await listas.cargarCategoriasSugeridas(), 0);
-      const raices = (await listas.listarCategorias()).map((c) => c.nombre);
-      assert.deepEqual(raices.filter((n) => ["Niños", "Calzado"].includes(n)), ["Niños", "Calzado"]);
+      // ROP-27 y ROP-36: el árbol completo; Mujer, Hombre y Mujer › Remeras ya estaban y no se duplican.
+      const contar = (nodos) => nodos.reduce((n, c) => n + 1 + contar(c.hijas ?? []), 0);
+      assert.equal(await listas.cargarCategoriasSugeridas(), contar(CATEGORIAS_SUGERIDAS) - 3);
+      assert.equal(await listas.cargarCategoriasSugeridas(), 0, "la segunda vez no agrega nada");
+      const arbol = await listas.listarCategorias();
+      const buscar = (nodos, ...camino) => camino.reduce((nivel, nombre) => (nivel?.hijas ?? nivel).find((c) => c.nombre === nombre), nodos);
+      assert.deepEqual(arbol.map((c) => c.nombre).slice(-3), ["Niños", "Calzado", "Accesorios"]);
+      assert.equal(buscar(arbol, "Mujer").hijas.filter((c) => c.nombre === "Remeras").length, 1);
+      const grupos = Object.fromEntries((await listas.listarGruposTalle()).map((g) => [g.nombre, g.id]));
+      const cargo = buscar(arbol, "Hombre", "Pantalones", "Cargo");
+      assert.ok(cargo, "Hombre › Pantalones › Cargo");
+      assert.equal(cargo.grupo_talle_id, null, "hereda los talles de Pantalones");
+      assert.equal(buscar(arbol, "Hombre", "Pantalones").grupo_talle_id, grupos.Jeans);
+      assert.equal(buscar(arbol, "Mujer").grupo_talle_id, grupos.Ropa, "a la que ya existía se le completan los talles");
+      assert.equal(buscar(arbol, "Accesorios").grupo_talle_id, grupos["Talle único"]);
+      assert.ok(buscar(arbol, "Mujer", "Polleras"));
+      await assert.rejects(listas.crearCategoria({ nombre: "X", padre_id: null, grupo_talle_id: 999999, orden: 0, activo: true }), { codigo: "DATOS_INVALIDOS" });
 
       // ROP-28: las opciones salen de la categoría y los talles vienen agrupados.
       const deMujer = await catalogo.opcionesDeFiltro({ categoria: mujer.id });

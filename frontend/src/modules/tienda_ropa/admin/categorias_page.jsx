@@ -13,9 +13,10 @@ import { BOTON_PELIGRO, BOTON_PRIMARIO, BOTON_SECUNDARIO, Encabezado, Pantalla, 
 const aplanar = (nodos, nivel = 0) => nodos.flatMap((n) => [{ ...n, nivel }, ...aplanar(n.hijas, nivel + 1)]);
 const ids = (nodo) => [nodo.id, ...nodo.hijas.flatMap(ids)];
 
-/** Categorías (ROP-01, ROP-27): árbol, alta de subcategorías, mover, ocultar, borrar y cargar las principales sugeridas. */
+/** Categorías (ROP-01, ROP-27, ROP-36): árbol, subcategorías, mover, ocultar, borrar, talles sugeridos y cargar el árbol sugerido. */
 export default function CategoriasPage() {
   const consulta = useLista("categorias");
+  const grupos = useLista("talles").data ?? [];
   const { guardar, eliminar, sugeridos } = useGestionLista("categorias");
   const toast = useToast();
   const [editando, setEditando] = useState(null); // null · { padre_id } nueva · categoría
@@ -41,7 +42,7 @@ export default function CategoriasPage() {
 
   async function alternarVisible(c) {
     try {
-      await guardar.mutateAsync({ id: c.id, nombre: c.nombre, padre_id: c.padre_id, orden: c.orden, activo: !c.activo });
+      await guardar.mutateAsync({ id: c.id, nombre: c.nombre, padre_id: c.padre_id, grupo_talle_id: c.grupo_talle_id ?? null, orden: c.orden, activo: !c.activo });
       toast.success(c.activo ? `"${c.nombre}" quedó oculta en la tienda.` : `"${c.nombre}" se ve en la tienda.`);
     } catch (error) { toast.error(mensajeError(error, "No se pudo cambiar.")); }
   }
@@ -53,24 +54,27 @@ export default function CategoriasPage() {
         <button type="button" onClick={() => setEditando({ padre_id: null })} className={BOTON_PRIMARIO}><Plus size={16} aria-hidden="true" /> Nueva categoría</button>
       </Encabezado>
 
-      <SegunConsulta consulta={consulta} vacia={arbol.length === 0} icono={FolderTree} tituloVacio="Todavía no hay categorías." descripcionVacio="Cargá las principales (Mujer, Hombre, Niños y Calzado) y adentro sus subcategorías." accionVacio={sugerir}>
+      <SegunConsulta consulta={consulta} vacia={arbol.length === 0} icono={FolderTree} tituloVacio="Todavía no hay categorías." descripcionVacio="Cargá el árbol sugerido (Mujer, Hombre, Niños, Calzado y Accesorios, con sus tipos de prenda) y ajustalo." accionVacio={sugerir}>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {planas.map((c) => (
             <li key={c.id} className="flex flex-wrap items-center gap-2 px-4 py-3" style={{ paddingLeft: `${1 + c.nivel * 1.5}rem` }}>
-              <div className="min-w-0 flex-1">
+              {/* En celular el nombre va entero y los botones debajo: con 3 niveles no entran en una fila. */}
+              <div className="min-w-0 basis-full sm:basis-0 sm:flex-1">
                 <p className="font-semibold text-slate-900">{c.nivel > 0 && <span className="mr-1 text-slate-300" aria-hidden="true">└</span>}{c.nombre}</p>
                 <p className="text-xs text-slate-500">{c.prendas} {c.prendas === 1 ? "prenda" : "prendas"}{!c.activo && " · oculta en la tienda"}</p>
               </div>
-              <button type="button" onClick={() => alternarVisible(c)} disabled={guardar.isPending} className={BOTON_SECUNDARIO}>{c.activo ? "Ocultar" : "Mostrar"}</button>
-              <button type="button" onClick={() => setEditando({ padre_id: c.id })} aria-label={`Nueva subcategoría en ${c.nombre}`} className={BOTON_SECUNDARIO}><Plus size={15} aria-hidden="true" /></button>
-              <button type="button" onClick={() => setEditando(c)} aria-label={`Editar ${c.nombre}`} className={BOTON_SECUNDARIO}><Pencil size={15} aria-hidden="true" /></button>
-              <button type="button" onClick={() => setABorrar(c)} aria-label={`Borrar ${c.nombre}`} className={BOTON_PELIGRO}><Trash2 size={15} aria-hidden="true" /></button>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => alternarVisible(c)} disabled={guardar.isPending} className={BOTON_SECUNDARIO}>{c.activo ? "Ocultar" : "Mostrar"}</button>
+                <button type="button" onClick={() => setEditando({ padre_id: c.id })} aria-label={`Nueva subcategoría en ${c.nombre}`} className={BOTON_SECUNDARIO}><Plus size={15} aria-hidden="true" /></button>
+                <button type="button" onClick={() => setEditando(c)} aria-label={`Editar ${c.nombre}`} className={BOTON_SECUNDARIO}><Pencil size={15} aria-hidden="true" /></button>
+                <button type="button" onClick={() => setABorrar(c)} aria-label={`Borrar ${c.nombre}`} className={BOTON_PELIGRO}><Trash2 size={15} aria-hidden="true" /></button>
+              </div>
             </li>
           ))}
         </ul>
       </SegunConsulta>
 
-      {editando && <FormCategoria categoria={editando.id ? editando : null} padreInicial={editando.padre_id} planas={planas} guardar={guardar} onClose={() => setEditando(null)} />}
+      {editando && <FormCategoria categoria={editando.id ? editando : null} padreInicial={editando.padre_id} planas={planas} grupos={grupos} guardar={guardar} onClose={() => setEditando(null)} />}
       <ConfirmDialog
         open={Boolean(aBorrar)}
         title={`¿Borrar "${aBorrar?.nombre ?? ""}"?`}
@@ -84,17 +88,17 @@ export default function CategoriasPage() {
   );
 }
 
-function FormCategoria({ categoria, padreInicial, planas, guardar, onClose }) {
+function FormCategoria({ categoria, padreInicial, planas, grupos, guardar, onClose }) {
   const toast = useToast();
   // Ni la misma categoría ni sus subcategorías pueden quedar arriba de ella.
   const prohibidas = new Set(categoria ? ids(planas.find((c) => c.id === categoria.id)) : []);
   const { register, handleSubmit, setError, formState: { errors } } = useForm({
-    defaultValues: { nombre: categoria?.nombre ?? "", padre_id: String(categoria?.padre_id ?? padreInicial ?? ""), orden: categoria?.orden ?? 0, activo: categoria?.activo ?? true },
+    defaultValues: { nombre: categoria?.nombre ?? "", padre_id: String(categoria?.padre_id ?? padreInicial ?? ""), grupo_talle_id: String(categoria?.grupo_talle_id ?? ""), orden: categoria?.orden ?? 0, activo: categoria?.activo ?? true },
   });
 
   async function enviar(v) {
     try {
-      const r = await guardar.mutateAsync({ id: categoria?.id, nombre: v.nombre, padre_id: v.padre_id ? Number(v.padre_id) : null, orden: Number(v.orden) || 0, activo: v.activo });
+      const r = await guardar.mutateAsync({ id: categoria?.id, nombre: v.nombre, padre_id: v.padre_id ? Number(v.padre_id) : null, grupo_talle_id: v.grupo_talle_id ? Number(v.grupo_talle_id) : null, orden: Number(v.orden) || 0, activo: v.activo });
       toast.success(r.mensaje);
       onClose();
     } catch (error) {
@@ -115,6 +119,14 @@ function FormCategoria({ categoria, padreInicial, planas, guardar, onClose }) {
           </select>
         </label>
         {errors.padre_id && <p className="text-sm text-red-600">{errors.padre_id.message}</p>}
+        <label className="block text-sm font-semibold text-gray-700">Talles sugeridos (opcional)
+          <select {...register("grupo_talle_id")} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
+            <option value="">— Los de la categoría de arriba —</option>
+            {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre} ({g.talles.map((t) => t.nombre).join(", ")})</option>)}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-gray-500">Al cargar una prenda nueva de esta categoría, se proponen estos talles.</span>
+        </label>
+        {errors.grupo_talle_id && <p className="text-sm text-red-600">{errors.grupo_talle_id.message}</p>}
         <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
         <label className="flex min-h-11 items-center gap-2 text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
         <FormError message={errors.root?.message} />

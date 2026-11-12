@@ -16,6 +16,8 @@ export const CategoriaRopa = defineModel("CategoriaRopa", {
   nombre:   { type: DataTypes.STRING(80), allowNull: false },
   slug:     { type: DataTypes.STRING(90), allowNull: false, unique: true },
   padre_id: { type: DataTypes.INTEGER, allowNull: true, references: { model: "categoria_ropa", key: "id" } },
+  // ROP-36: talles que se proponen al cargar una prenda de esta categoría (sin valor: los de la de arriba).
+  grupo_talle_id: { type: DataTypes.INTEGER, allowNull: true, references: { model: "grupo_talle", key: "id" }, onDelete: "SET NULL" },
   orden:    { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   activo:   { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   ...fechas,

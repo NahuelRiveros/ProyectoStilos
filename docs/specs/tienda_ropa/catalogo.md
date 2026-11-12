@@ -26,7 +26,7 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-01 | Categorías en árbol; la URL no se repite; no se puede mover una adentro de sí misma; no se borra con subcategorías o prendas. Ocultar una oculta las de adentro. | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` › "ROP-01…" |
 | ROP-02 | Marcas: opcionales en cada prenda; nombre único; no se borra si la usa una prenda. | ✅ `ropa.integration.mjs` › "ROP-20 por HTTP…" (nombre único) |
 | ROP-03 | Colores con muestra #RRGGBB; "Cargar sugeridos" agrega la paleta de Stilos sin duplicar. | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` › "ROP-03 y ROP-04…" |
-| ROP-04 | Grupos de talles (Ropa, Jeans, Calzado y Niños 8 a 16 sugeridos); no se saca un talle que usa una prenda. | ✅ `ropa.integration.mjs` › "ROP-03 y ROP-04…" y "ROP-04…" |
+| ROP-04 | Grupos de talles (Ropa, Jeans, Calzado, Niños 8 a 16 y Talle único sugeridos); no se saca un talle que usa una prenda. | ✅ `ropa.integration.mjs` › "ROP-03 y ROP-04…" y "ROP-04…" |
 | ROP-05 | Prenda: nombre, descripción, categoría, marca, diseño, grupo de talles, precio y si se ve; al menos un talle. | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` |
 | ROP-06 | Reemplazada por ROP-29. | — |
 | ROP-07 | Un solo precio por prenda. | ✅ `ropa_reglas.test.mjs` |
@@ -36,8 +36,9 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-23 | Diseños (Lisa, Rayada, Estampada sugeridos), opcionales en la prenda, filtrables; no se borra uno en uso. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
 | ROP-24 | "Cargar marcas sugeridas": Taverniti, Bando, Raiders, Bravo, BBN, Panther, AFF, MAYCLA, Isostasia, Cataleia, Mistral y US Amerika, sin duplicar. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
 | ROP-25 | Logo opcional por marca (https, Cloudinary). | ✅ `ropa_reglas.test.mjs` › "ROP-23 y ROP-25…" |
-| ROP-27 | "Cargar categorías sugeridas": Mujer, Hombre, Niños y Calzado. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
+| ROP-27 | "Cargar categorías sugeridas" arma el árbol de una tienda de ropa: Mujer, Hombre, Niños, Calzado y Accesorios con sus tipos de prenda (remeras, chombas, camisas, jeans, pantalones › gabardina / cargo / satén…, polleras, vestidos, zapatillas, gorras…), sin duplicar (mismo nombre bajo la misma categoría). Lista en `servidor/src/modulos/tienda_ropa/sugeridos.js`. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…" |
 | ROP-29 | Un color por prenda (los otros colores, prendas aparte) y hasta 3 fotos. La URL lleva el color. | ✅ `ropa_reglas.test.mjs` › "ROP-29…"; `ropa.integration.mjs` › "ROP-05 a ROP-08…" |
+| ROP-36 | Cada categoría puede tener "talles sugeridos" (un grupo de talles); si no tiene, usa los de la categoría de arriba. Al cargar una prenda **nueva**, elegir la categoría preselecciona ese grupo (al editar no cambia solo). Los sugeridos traen: Jeans y Pantalones → Jeans, Calzado → Calzado, Niños → Niños, Accesorios → Talle único, el resto → Ropa. | ✅ `ropa.integration.mjs` › "ROP-23 a ROP-28…"; `ropa_web.test.mjs` › "ROP-36…"; `panel_pedidos.spec.js` › "prenda nueva…" |
 
 ### Tienda
 

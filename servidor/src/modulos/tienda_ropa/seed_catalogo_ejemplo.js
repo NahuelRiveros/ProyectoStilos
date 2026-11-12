@@ -16,7 +16,7 @@ import { crearPrenda } from "./services/prendas_service.js";
 
 const EJEMPLOS = [
   {
-    marca: "Taverniti", categoria: "Calzado", subcategoria: null, grupo: "Calzado", diseno: null,
+    marca: "Taverniti", categoria: "Calzado", subcategoria: "Zapatillas", grupo: "Calzado", diseno: null,
     nombre: "Zapatilla Jagger Taverniti", color: "Negro", talles: ["40", "41", "42", "43"], precio: 117399,
     fuente: "https://www.triax.com.ar/collections/hombre/products/29750602-zapatilla-jagger",
     foto: { json: "https://www.triax.com.ar/products/29750602-zapatilla-jagger.js" },

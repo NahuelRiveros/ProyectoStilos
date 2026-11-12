@@ -11,6 +11,7 @@ import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { cn } from "../../../core/utils/cn.js";
 import { useGestionPrendas, useLista, usePrendaPanel, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PRIMARIO, BOTON_SECUNDARIO, Pantalla, SegunConsulta } from "./comunes.jsx";
+import { grupoSugerido } from "../utils/grupo_sugerido.js";
 
 // Mismo límite que el servidor (servidor/src/modulos/tienda_ropa/reglas.js, ROP-29).
 const MAX_FOTOS = 3;
@@ -76,6 +77,13 @@ function Formulario({ prenda, listas }) {
     setCeldas(Object.fromEntries(elegidos.flatMap((c) => tallesNuevos.map((t) => [clave(c, t.id), "hay"]))));
   }
 
+  // ROP-36: en una prenda nueva, elegir la categoría propone sus talles (al editar no se cambian solos).
+  function sugerirTalles(categoriaId) {
+    if (prenda) return;
+    const sugerido = grupoSugerido(listas.categorias.data, categoriaId);
+    if (sugerido && sugerido !== grupoId && grupos.some((g) => g.id === sugerido)) cambiarGrupo(sugerido);
+  }
+
   // Cambiar el color conserva qué hay en cada talle y las fotos (pasan al color nuevo).
   function elegirColor(colorId) {
     const anterior = elegidos[0];
@@ -125,7 +133,7 @@ function Formulario({ prenda, listas }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><InputField name="nombre" label="Nombre" placeholder="Remera lisa de algodón" register={register} required requiredMessage="Escribí el nombre." maxLength={120} error={errors.nombre?.message} /></div>
           <label className="block text-sm font-semibold text-gray-700">Categoría
-            <select {...register("categoria_id", { required: "Elegí una categoría." })} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
+            <select {...register("categoria_id", { required: "Elegí una categoría.", onChange: (e) => sugerirTalles(e.target.value) })} className="mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3">
               <option value="">Elegí…</option>
               {aplanar(listas.categorias.data).map((c) => <option key={c.id} value={c.id}>{"  ".repeat(c.nivel)}{c.nombre}</option>)}
             </select>

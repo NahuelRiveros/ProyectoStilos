@@ -1,4 +1,4 @@
-import { Op, UniqueConstraintError } from "sequelize";
+import { Op, UniqueConstraintError, col, fn, where as condicionSql } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
 import { CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle, Talle, Prenda, PrendaVariante } from "../models/index.js";
@@ -36,11 +36,37 @@ export async function slugLibre(Modelo, texto, excluirId = null) {
   return candidato;
 }
 
-/** ROP-27: Mujer, Hombre, Niños y Calzado como categorías principales, sin duplicar. */
+/**
+ * ROP-27 y ROP-36: el árbol sugerido de una tienda de ropa, sin duplicar (mismo nombre bajo la misma
+ * categoría, sin importar mayúsculas). Antes carga los grupos de talles, para dejarlos sugeridos; a una
+ * categoría que ya existía solo le completa los talles si no tenía. Devuelve cuántas categorías creó.
+ */
 export async function cargarCategoriasSugeridas() {
-  const nuevas = await faltantes(CategoriaRopa, CATEGORIAS_SUGERIDAS, { padre_id: null });
-  for (const nombre of nuevas) await crearCategoria({ nombre, padre_id: null, orden: CATEGORIAS_SUGERIDAS.indexOf(nombre), activo: true });
-  return nuevas.length;
+  await cargarGruposSugeridos();
+  const grupos = new Map((await GrupoTalle.findAll({ attributes: ["id", "nombre"], raw: true })).map((g) => [g.nombre.toLowerCase(), g.id]));
+  let creadas = 0;
+  async function cargar(nodos, padre) {
+    for (const [orden, nodo] of nodos.entries()) {
+      const grupo_talle_id = nodo.grupo ? grupos.get(nodo.grupo.toLowerCase()) ?? null : null;
+      let categoria = await CategoriaRopa.findOne({
+        where: { [Op.and]: [condicionSql(fn("lower", col("nombre")), nodo.nombre.toLowerCase()), { padre_id: padre?.id ?? null }] },
+      });
+      if (!categoria) {
+        categoria = await crearCategoria({ nombre: nodo.nombre, padre_id: padre?.id ?? null, grupo_talle_id, orden, activo: true });
+        creadas++;
+      } else if (grupo_talle_id && !categoria.grupo_talle_id) {
+        await categoria.update({ grupo_talle_id, actualizado_en: new Date() });
+      }
+      if (nodo.hijas) await cargar(nodo.hijas, categoria);
+    }
+  }
+  await cargar(CATEGORIAS_SUGERIDAS, null);
+  return creadas;
+}
+
+/** ROP-36: el grupo de talles sugerido tiene que existir. */
+async function verificarGrupo(grupoTalleId) {
+  if (grupoTalleId && !await GrupoTalle.findByPk(grupoTalleId)) throw new ErrorApp("DATOS_INVALIDOS", "El grupo de talles elegido no existe.", 400);
 }
 
 // ── Categorías (ROP-01) ─────────────────────────────────────────────────────────
@@ -61,12 +87,14 @@ async function verificarPadre(id, padre_id) {
 
 export async function crearCategoria(datos) {
   await verificarPadre(null, datos.padre_id);
+  await verificarGrupo(datos.grupo_talle_id);
   return CategoriaRopa.create({ ...datos, slug: await slugLibre(CategoriaRopa, datos.nombre) });
 }
 
 export async function actualizarCategoria(id, datos) {
   const categoria = await buscar(CategoriaRopa, id, "La categoría no existe.");
   await verificarPadre(categoria.id, datos.padre_id);
+  await verificarGrupo(datos.grupo_talle_id);
   const cambioNombre = datos.nombre !== categoria.nombre;
   return categoria.update({
     ...datos,

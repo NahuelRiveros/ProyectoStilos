@@ -7,6 +7,7 @@ import { linkWhatsapp, mensajePedido } from "../../frontend/src/modules/tienda_r
 import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
 import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
+import { grupoSugerido } from "../../frontend/src/modules/tienda_ropa/utils/grupo_sugerido.js";
 import { cambiosPosibles, formasDePago, pasosDelPedido, pideMotivo as pideMotivoWeb, puedeSubirComprobante } from "../../frontend/src/modules/tienda_ropa/pedido/pago.js";
 import { ESTADOS_PEDIDO, pideMotivo, problemaTransicion } from "../src/modulos/tienda_ropa/reglas.js";
 import { formatearPrecio } from "../../frontend/src/modules/tienda_ropa/utils/dinero.js";
@@ -151,4 +152,19 @@ test("ROP-35: logo de la marca: el del panel, si no el de la configuración, si 
     { url: "https://res.cloudinary.com/x/maycla.png", fondo: "#1E2D3D" }, "el subido en el panel gana, con el fondo de la configuración");
   assert.equal(logoDeMarca({ nombre: "Raiders", logo_url: null }, logos), null, "sin logo: se muestra el nombre");
   assert.equal(logoDeMarca({ nombre: "Raiders" }), null);
+});
+
+test("ROP-36: el grupo de talles sugerido es el de la categoría o, si no tiene, el de la de arriba", () => {
+  const arbol = [
+    { id: 1, padre_id: null, grupo_talle_id: 10, hijas: [
+      { id: 2, padre_id: 1, grupo_talle_id: null, hijas: [] },
+      { id: 3, padre_id: 1, grupo_talle_id: 20, hijas: [{ id: 4, padre_id: 3, grupo_talle_id: null, hijas: [] }] },
+    ] },
+    { id: 5, padre_id: null, grupo_talle_id: null, hijas: [] },
+  ];
+  assert.equal(grupoSugerido(arbol, 2), 10, "Hombre › Remeras usa el de Hombre");
+  assert.equal(grupoSugerido(arbol, "4"), 20, "Hombre › Pantalones › Cargo usa el de Pantalones (aunque llegue como texto del select)");
+  assert.equal(grupoSugerido(arbol, 5), null, "sin sugerencia");
+  assert.equal(grupoSugerido(arbol, 99), null);
+  assert.equal(grupoSugerido(undefined, 1), null);
 });

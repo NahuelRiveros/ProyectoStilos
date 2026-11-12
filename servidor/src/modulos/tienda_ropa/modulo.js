@@ -16,8 +16,10 @@ export const moduloTiendaRopa = {
 
   // Orden de creación: cada tabla después de las que referencia.
   modelos: [
-    CategoriaRopa, MarcaRopa, DisenoRopa, ColorRopa, GrupoTalle,
+    GrupoTalle,
     Talle,              // talle → grupo_talle
+    CategoriaRopa,      // categoria_ropa → grupo_talle (talles sugeridos)
+    MarcaRopa, DisenoRopa, ColorRopa,
     Prenda,             // prenda → categoria_ropa, marca_ropa, diseno_ropa, grupo_talle
     PrendaVariante,     // prenda_variante → prenda, color_ropa, talle
     PrendaImagen,       // prenda_imagen → prenda, color_ropa

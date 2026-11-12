@@ -35,7 +35,7 @@ export default function CintaMarcas({ marcas }) {
                 style={logo?.fondo ? { backgroundColor: logo.fondo } : undefined}>
                 {logo
                   ? <img src={imagenCloudinary(logo.url, 320)} alt={m.nombre} loading="lazy" className="max-h-full max-w-full object-contain" />
-                  : <span className="kt-display text-center text-xl font-semibold text-(--kt-petrol)">{m.nombre}</span>}
+                  : <span className="text-center text-lg font-extrabold uppercase leading-tight tracking-wide text-(--kt-ink)">{m.nombre}</span>}
               </Link>
             </li>
           );

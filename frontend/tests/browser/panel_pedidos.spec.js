@@ -61,3 +61,32 @@ test("vendedor: ve el comprobante pero no mueve dinero; cancelar pide motivo", a
   await aplicar.click();
   await expect.poll(() => api.ultimo("PATCH", "/ropa/pedidos/13/estado")?.cuerpo).toEqual({ estado: "cancelado", motivo: "Sin stock del talle", version: 2 });
 });
+
+test("prenda nueva: elegir la categoría propone sus talles (ROP-36)", async ({ page }) => {
+  const api = await simularApi(page, { rol: "encargado" });
+  const talles = (...nombres) => nombres.map((nombre, orden) => ({ id: 100 + orden + nombres.length * 10, nombre, orden }));
+  const grupos = [
+    { id: 1, nombre: "Ropa", orden: 0, talles: talles("S", "M", "L") },
+    { id: 2, nombre: "Jeans", orden: 1, talles: talles("38", "40", "42") },
+  ];
+  const categorias = [{ id: 10, nombre: "Hombre", padre_id: null, grupo_talle_id: 1, orden: 0, activo: true, hijas: [
+    { id: 11, nombre: "Remeras", padre_id: 10, grupo_talle_id: null, orden: 0, activo: true, hijas: [] },
+    { id: 12, nombre: "Pantalones", padre_id: 10, grupo_talle_id: 2, orden: 1, activo: true, hijas: [
+      { id: 13, nombre: "Cargo", padre_id: 12, grupo_talle_id: null, orden: 0, activo: true, hijas: [] },
+    ] },
+  ] }];
+  const lista = (datos) => () => ({ json: { ok: true, data: datos } });
+  api.responder("GET", "/ropa/panel/categorias", lista(categorias));
+  api.responder("GET", "/ropa/panel/talles", lista(grupos));
+  api.responder("GET", "/ropa/panel/colores", lista([{ id: 1, nombre: "Negro", hex: "#111111", orden: 0 }]));
+  api.responder("GET", "/ropa/panel/marcas", lista([]));
+  api.responder("GET", "/ropa/panel/disenos", lista([]));
+
+  await page.goto("/admin/ropa/prendas/nueva");
+  const grupo = page.getByLabel("Grupo de talles");
+  await expect(grupo).toHaveValue("1");
+  await page.getByLabel("Categoría").selectOption("13");
+  await expect(grupo, "Cargo usa los talles de Pantalones").toHaveValue("2");
+  await page.getByLabel("Categoría").selectOption("11");
+  await expect(grupo, "Remeras usa los de Hombre").toHaveValue("1");
+});

@@ -129,7 +129,7 @@ const orden = z.coerce.number().int().min(0).max(9999).default(0);
 
 export const esquemaId = z.object({ id: z.coerce.number().int().positive("Id no válido.") });
 
-export const esquemaCategoria = z.object({ nombre: nombre(), padre_id: idOpcional, orden, activo: z.boolean().default(true) });
+export const esquemaCategoria = z.object({ nombre: nombre(), padre_id: idOpcional, grupo_talle_id: idOpcional, orden, activo: z.boolean().default(true) });
 const urlImagen = (mensaje) => z.string().trim().max(500).refine(
   // ROP-34: o https, o una foto del catálogo de ejemplo (solo en tu PC; esa carpeta no va a git).
   (v) => /^https:\/\//.test(v) || /^\/catalogo-inicial\/[a-z0-9][a-z0-9_-]*\.(jpg|jpeg|png|webp)$/i.test(v),
