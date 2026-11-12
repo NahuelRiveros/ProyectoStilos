@@ -86,6 +86,12 @@ export const PrendaVariante = defineModel("PrendaVariante", {
   disponible: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
 }, { tableName: "prenda_variante", indexes: [{ unique: true, fields: ["prenda_id", "color_id", "talle_id"] }] });
 
+/** ROP-59: en qué categorías se usa un grupo (y en las de adentro). Sin filas: en todas. */
+export const GrupoCaracteristicaCategoria = defineModel("GrupoCaracteristicaCategoria", {
+  grupo_caracteristica_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_caracteristica", key: "id" }, onDelete: "CASCADE" },
+  categoria_id:            { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" }, onDelete: "CASCADE" },
+}, { tableName: "grupo_caracteristica_categoria", indexes: [{ unique: true, fields: ["grupo_caracteristica_id", "categoria_id"] }] });
+
 /** ROP-38: varias características por prenda. */
 export const PrendaCaracteristica = defineModel("PrendaCaracteristica", {
   prenda_id:         { type: DataTypes.INTEGER, allowNull: false, references: { model: "prenda", key: "id" }, onDelete: "CASCADE" },
@@ -174,6 +180,7 @@ aplicarRelaciones([
   { tipo: "belongsTo", from: Prenda, to: MarcaRopa, foreignKey: "marca_id", as: "marca" },
   { tipo: "hasMany",   from: GrupoCaracteristica, to: Caracteristica, foreignKey: "grupo_caracteristica_id", as: "caracteristicas" },
   { tipo: "belongsTo", from: Caracteristica, to: GrupoCaracteristica, foreignKey: "grupo_caracteristica_id", as: "grupo" },
+  { tipo: "hasMany",   from: GrupoCaracteristica, to: GrupoCaracteristicaCategoria, foreignKey: "grupo_caracteristica_id", as: "en_categorias" },
   { tipo: "hasMany",   from: Prenda, to: PrendaCaracteristica, foreignKey: "prenda_id", as: "caracteristicas" },
   { tipo: "belongsTo", from: PrendaCaracteristica, to: Caracteristica, foreignKey: "caracteristica_id", as: "caracteristica" },
   { tipo: "belongsTo", from: Prenda, to: GrupoTalle, foreignKey: "grupo_talle_id", as: "grupo_talle" },

@@ -6,6 +6,7 @@ import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import { LOGOS_MARCAS } from "../../../proyecto/config/marcas_config.js";
 import { logoDeMarca } from "../utils/logo_marca.js";
 import ListaSimplePage from "./lista_simple_page.jsx";
+import CategoriasDelGrupo from "./categorias_del_grupo.jsx";
 
 // Marcas (ROP-02, ROP-24, ROP-25), características (ROP-37), colores (ROP-03) y grupos de talles (ROP-04) sobre el mismo molde.
 
@@ -41,18 +42,20 @@ const CARACTERISTICAS = {
   lista: "caracteristicas", titulo: "Características", nuevo: "Nuevo grupo", icono: ListChecks, sugeridos: "Cargar características sugeridas",
   descripcion: "Cómo es cada prenda, por grupo (ej. Material: Cuero, Lona; Calce: Slim, Mom). Al cargar una prenda se tildan las que tiene, y en la tienda se puede filtrar por ellas.",
   vacio: "Todavía no hay características.", vacioDetalle: "Cargá las sugeridas (Estampa, Material, Calce, Tiro, Manga, Cuello, Detalles y Calzado) y ajustalas.",
-  valores: (item) => ({ nombre: item?.nombre ?? "", orden: item?.orden ?? 0, valores: (item?.caracteristicas ?? []).map((c) => c.nombre).join(", ") }),
-  armar: (v) => ({ nombre: v.nombre, orden: Number(v.orden) || 0, valores: v.valores.split(",").map((c) => c.trim()).filter(Boolean) }),
-  campos: ({ register, errors }) => (
+  valores: (item) => ({ nombre: item?.nombre ?? "", orden: item?.orden ?? 0, valores: (item?.caracteristicas ?? []).map((c) => c.nombre).join(", "), categorias: item?.categorias ?? [] }),
+  armar: (v) => ({ nombre: v.nombre, orden: Number(v.orden) || 0, valores: v.valores.split(",").map((c) => c.trim()).filter(Boolean), categorias: v.categorias }),
+  campos: ({ register, errors, watch, setValue }) => (
     <>
       <InputField name="nombre" label="Nombre del grupo" placeholder="Material" register={register} required requiredMessage="Escribí el nombre." maxLength={40} error={errors.nombre?.message} />
       <TextareaField name="valores" label="Valores, en orden y separados por coma" rows={4} placeholder="Algodón, Lino, Cuero" register={register} required requiredMessage="Agregá al menos un valor." error={errors.valores?.message} />
+      <CategoriasDelGrupo watch={watch} setValue={setValue} />
+      {errors.categorias && <p className="text-sm text-red-600">{errors.categorias.message}</p>}
       <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
     </>
   ),
   fila: (g) => (
     <div>
-      <p className="font-semibold text-slate-900">{g.nombre}</p>
+      <p className="font-semibold text-slate-900">{g.nombre} <span className="text-xs font-normal text-slate-500">· {g.categorias.length ? `en ${g.categorias.length} ${g.categorias.length === 1 ? "categoría" : "categorías"}` : "en todas las categorías"}</span></p>
       <p className="mt-1 flex flex-wrap gap-1">{g.caracteristicas.map((c) => <span key={c.id} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{c.nombre}</span>)}</p>
     </div>
   ),

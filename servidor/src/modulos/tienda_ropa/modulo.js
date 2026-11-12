@@ -1,5 +1,5 @@
 import {
-  CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica,
+  CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, GrupoCaracteristicaCategoria,
   Prenda, PrendaCaracteristica, PrendaVariante, PrendaImagen, PedidoWhatsapp, PedidoWhatsappItem,
   PedidoRopaHistorial, PedidoRopaComprobante, ClienteRopa,
 } from "./models/index.js";
@@ -22,6 +22,7 @@ export const moduloTiendaRopa = {
     MarcaRopa, ColorRopa,
     GrupoCaracteristica,
     Caracteristica,     // caracteristica → grupo_caracteristica
+    GrupoCaracteristicaCategoria, // → grupo_caracteristica, categoria_ropa
     Prenda,             // prenda → categoria_ropa, marca_ropa, grupo_talle
     PrendaCaracteristica, // → prenda, caracteristica
     PrendaVariante,     // prenda_variante → prenda, color_ropa, talle

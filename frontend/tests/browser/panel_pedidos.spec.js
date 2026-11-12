@@ -62,7 +62,7 @@ test("vendedor: ve el comprobante pero no mueve dinero; cancelar pide motivo", a
   await expect.poll(() => api.ultimo("PATCH", "/ropa/pedidos/13/estado")?.cuerpo).toEqual({ estado: "cancelado", motivo: "Sin stock del talle", version: 2 });
 });
 
-test("prenda nueva: elegir la categoría propone sus talles (ROP-36)", async ({ page }) => {
+test("prenda nueva: primero la categoría, que propone talles y características (ROP-36, ROP-60)", async ({ page }) => {
   const api = await simularApi(page, { rol: "encargado" });
   const talles = (...nombres) => nombres.map((nombre, orden) => ({ id: 100 + orden + nombres.length * 10, nombre, orden }));
   const grupos = [
@@ -80,24 +80,49 @@ test("prenda nueva: elegir la categoría propone sus talles (ROP-36)", async ({ 
   api.responder("GET", "/ropa/panel/talles", lista(grupos));
   api.responder("GET", "/ropa/panel/colores", lista([{ id: 1, nombre: "Negro", hex: "#111111", orden: 0 }]));
   api.responder("GET", "/ropa/panel/marcas", lista([]));
-  api.responder("GET", "/ropa/panel/caracteristicas", lista([{ id: 3, nombre: "Material", orden: 0, caracteristicas: [{ id: 31, nombre: "Cuero", orden: 0 }, { id: 32, nombre: "Lona", orden: 1 }] }]));
+  api.responder("GET", "/ropa/panel/caracteristicas", lista([
+    { id: 3, nombre: "Material", orden: 0, categorias: [], caracteristicas: [{ id: 31, nombre: "Cuero", orden: 0 }, { id: 32, nombre: "Lona", orden: 1 }] },
+    { id: 4, nombre: "Manga", orden: 1, categorias: [11], caracteristicas: [{ id: 41, nombre: "Corta", orden: 0 }] },
+    { id: 5, nombre: "Tiro", orden: 2, categorias: [12], caracteristicas: [{ id: 51, nombre: "Alto", orden: 0 }] },
+  ]));
   api.responder("POST", "/ropa/panel/prendas", () => ({ status: 201, json: { ok: true, mensaje: "Prenda creada.", data: { id: 50 } } }));
 
   await page.goto("/admin/ropa/prendas/nueva");
+  const boton = (name) => page.getByRole("button", { name, exact: true });
+  // Primero la categoría: hasta elegirla, el resto no aparece.
+  await expect(page.getByText("Elegí la categoría para seguir", { exact: false })).toBeVisible();
+  await expect(page.getByLabel("Nombre")).toHaveCount(0);
+  await boton("Hombre").click();
+  await boton("Pantalones").click();
+  await boton("Cargo").click();
+  await expect(page.getByRole("status").filter({ hasText: "Vas a cargar en" })).toContainText("Hombre");
   const grupo = page.getByLabel("Grupo de talles");
-  await expect(grupo).toHaveValue("1");
-  await page.getByLabel("Categoría").selectOption("13");
-  await expect(grupo, "Cargo usa los talles de Pantalones").toHaveValue("2");
-  await page.getByLabel("Categoría").selectOption("11");
+  await expect(grupo, "ROP-36: Cargo usa los talles de Pantalones").toHaveValue("2");
+  // ROP-60: solo los grupos de la categoría; Cargo hereda los de Pantalones.
+  await expect(boton("Alto")).toBeVisible();
+  await expect(boton("Corta")).toHaveCount(0);
+
+  await boton("Remeras").click();
   await expect(grupo, "Remeras usa los de Hombre").toHaveValue("1");
+  await expect(boton("Corta")).toBeVisible();
+  await expect(boton("Alto")).toHaveCount(0);
+  await page.getByRole("button", { name: /Ver todas las características/ }).click();
+  await expect(boton("Alto")).toBeVisible();
 
   // ROP-38: las características se tildan y viajan como ids.
-  const cuero = page.getByRole("button", { name: "Cuero" });
-  await cuero.click();
-  await expect(cuero).toHaveAttribute("aria-pressed", "true");
-  await page.getByLabel("Nombre").fill("Zapatilla urbana");
+  await boton("Cuero").click();
+  await expect(boton("Cuero")).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Nombre").fill("Remera urbana");
   await page.getByLabel("Precio ($)").fill("50000");
-  await page.getByRole("button", { name: "Negro" }).click();
+  await boton("Negro").click();
+  // Cada talle se toca para pasar de Hay a Agotado y a No se vende.
+  await page.getByRole("button", { name: "Talle M: hay" }).click();
+  await page.getByRole("button", { name: "Talle L: hay" }).click();
+  await page.getByRole("button", { name: "Talle L: agotado" }).click();
+  await expect(page.getByRole("button", { name: "Talle L: no se vende" })).toBeVisible();
   await page.getByRole("button", { name: "Guardar prenda" }).click();
-  await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo.caracteristicas).toEqual([31]);
+  await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo).toMatchObject({
+    categoria_id: 11, grupo_talle_id: 1, caracteristicas: [31],
+    variantes: [{ color_id: 1, talle_id: 130, disponible: true }, { color_id: 1, talle_id: 131, disponible: false }],
+  });
 });

@@ -14,15 +14,18 @@ export const COLORES_SUGERIDOS = [
 // ROP-24: marcas que vende Stilos (decididas por el dueño, 2026-11-11).
 export const MARCAS_SUGERIDAS = ["Taverniti", "Bando", "Raiders", "Bravo", "BBN", "Panther", "AFF", "MAYCLA", "Isostasia", "Cataleia", "Mistral", "US Amerika"];
 // ROP-37: características por grupo (lista aprobada por el dueño, 2026-11-12).
+// ROP-61: `categorias`, nombres de las categorías donde se usa cada grupo (sin la clave: en todas).
+const PARTES_DE_ARRIBA = ["Remeras", "Musculosas", "Chombas", "Camisas", "Tops", "Blusas", "Bodys", "Buzos", "Sweaters", "Vestidos", "Vestidos y polleras", "Conjuntos"];
+const PARTES_DE_ABAJO = ["Jeans", "Pantalones", "Bermudas", "Shorts", "Bermudas y shorts"];
 export const CARACTERISTICAS_SUGERIDAS = [
-  { nombre: "Estampa", valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
+  { nombre: "Estampa", categorias: PARTES_DE_ARRIBA, valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
   { nombre: "Material", valores: ["Algodón", "Lino", "Denim", "Gabardina", "Satén", "Seda", "Lana", "Tejido de punto", "Frisa", "Polar", "Modal", "Viscosa", "Cuero", "Eco cuero", "Gamuza", "Lona", "Sintético", "Deportivo (dry fit)"] },
-  { nombre: "Calce", valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },
-  { nombre: "Tiro", valores: ["Alto", "Medio", "Bajo"] },
-  { nombre: "Manga", valores: ["Sin mangas", "Corta", "3/4", "Larga"] },
-  { nombre: "Cuello", valores: ["Redondo", "En V", "Polo", "Camisero", "Mao", "Polera", "Con capucha"] },
-  { nombre: "Detalles", valores: ["Elastizado", "Con roturas", "Con bolsillos", "Con cierre", "Con botones", "Con brillos"] },
-  { nombre: "Calzado", valores: ["Con cordones", "Con abrojo", "Sin cordones", "Caña baja", "Caña media", "Caña alta", "Plataforma"] },
+  { nombre: "Calce", categorias: PARTES_DE_ABAJO, valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },
+  { nombre: "Tiro", categorias: PARTES_DE_ABAJO, valores: ["Alto", "Medio", "Bajo"] },
+  { nombre: "Manga", categorias: PARTES_DE_ARRIBA, valores: ["Sin mangas", "Corta", "3/4", "Larga"] },
+  { nombre: "Cuello", categorias: PARTES_DE_ARRIBA, valores: ["Redondo", "En V", "Polo", "Camisero", "Mao", "Polera", "Con capucha"] },
+  { nombre: "Detalles", categorias: ["Mujer", "Hombre", "Niños"], valores: ["Elastizado", "Con roturas", "Con bolsillos", "Con cierre", "Con botones", "Con brillos"] },
+  { nombre: "Calzado", categorias: ["Calzado"], valores: ["Con cordones", "Con abrojo", "Sin cordones", "Caña baja", "Caña media", "Caña alta", "Plataforma"] },
 ];
 // ROP-27 y ROP-36: árbol de una tienda de ropa. `grupo`: grupo de talles sugerido (las subcategorías
 // sin grupo propio usan el de arriba). Se puede editar todo después desde el panel.

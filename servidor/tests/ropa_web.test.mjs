@@ -8,6 +8,7 @@ import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
 import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
 import { grupoSugerido } from "../../frontend/src/modules/tienda_ropa/utils/grupo_sugerido.js";
+import { gruposDeCategoria } from "../../frontend/src/modules/tienda_ropa/utils/grupos_de_categoria.js";
 import { cambiosPosibles, formasDePago, pasosDelPedido, pideMotivo as pideMotivoWeb, puedeSubirComprobante } from "../../frontend/src/modules/tienda_ropa/pedido/pago.js";
 import { ESTADOS_PEDIDO, pideMotivo, problemaTransicion } from "../src/modulos/tienda_ropa/reglas.js";
 import { formatearPrecio } from "../../frontend/src/modules/tienda_ropa/utils/dinero.js";
@@ -152,6 +153,24 @@ test("ROP-35: logo de la marca: el del panel, si no el de la configuración, si 
     { url: "https://res.cloudinary.com/x/maycla.png", fondo: "#1E2D3D" }, "el subido en el panel gana, con el fondo de la configuración");
   assert.equal(logoDeMarca({ nombre: "Raiders", logo_url: null }, logos), null, "sin logo: se muestra el nombre");
   assert.equal(logoDeMarca({ nombre: "Raiders" }), null);
+});
+
+test("ROP-59 y ROP-60: al cargar una prenda se ofrecen los grupos de su categoría (o de las de arriba) y los ya tildados", () => {
+  const arbol = [
+    { id: 1, nombre: "Hombre", padre_id: null, hijas: [
+      { id: 2, nombre: "Remeras", padre_id: 1, hijas: [{ id: 3, nombre: "Oversize", padre_id: 2, hijas: [] }] },
+      { id: 4, nombre: "Jeans", padre_id: 1, hijas: [] },
+    ] },
+    { id: 5, nombre: "Calzado", padre_id: null, hijas: [] },
+  ];
+  const g = (id, categorias, ...valores) => ({ id, nombre: `g${id}`, categorias, caracteristicas: valores.map((v) => ({ id: v })) });
+  const grupos = [g(10, [], 100), g(20, [2], 200), g(30, [4], 300), g(40, [5], 400), g(50, [1], 500)];
+  const nombres = ({ visibles, otros }) => [visibles.map((x) => x.id), otros.map((x) => x.id)];
+  assert.deepEqual(nombres(gruposDeCategoria(grupos, arbol, "3")), [[10, 20, 50], [30, 40]], "Oversize: los de todas, los de Remeras y los de Hombre");
+  assert.deepEqual(nombres(gruposDeCategoria(grupos, arbol, 5)), [[10, 40], [20, 30, 50]]);
+  assert.deepEqual(nombres(gruposDeCategoria(grupos, arbol, 5, new Set([300]))), [[10, 30, 40], [20, 50]], "lo ya tildado no se esconde");
+  assert.deepEqual(nombres(gruposDeCategoria(grupos, arbol, "")), [[], [10, 20, 30, 40, 50]], "sin categoría, nada hasta elegirla");
+  assert.deepEqual(nombres(gruposDeCategoria(undefined, arbol, 1)), [[], []]);
 });
 
 test("ROP-36: el grupo de talles sugerido es el de la categoría o, si no tiene, el de la de arriba", () => {

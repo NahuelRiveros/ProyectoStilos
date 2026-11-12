@@ -125,9 +125,11 @@ test("ROP-37 a ROP-39: características por grupo, varias por prenda y filtro de
   assert.deepEqual(esquemaPrenda.parse(prenda()).caracteristicas, []);
   assert.deepEqual(esquemaPrenda.parse(prenda({ caracteristicas: ["3", 7, 3] })).caracteristicas, [3, 7], "repetidas se ignoran");
   assert.equal(esquemaPrenda.safeParse(prenda({ caracteristicas: ["x"] })).success, false);
-  assert.deepEqual(esquemaGrupoCaracteristica.parse({ nombre: " Material ", valores: [" Cuero ", "Lona"] }), { nombre: "Material", orden: 0, valores: ["Cuero", "Lona"] });
+  assert.deepEqual(esquemaGrupoCaracteristica.parse({ nombre: " Material ", valores: [" Cuero ", "Lona"] }), { nombre: "Material", orden: 0, valores: ["Cuero", "Lona"], categorias: [] });
   assert.equal(esquemaGrupoCaracteristica.safeParse({ nombre: "Material", valores: ["Cuero", "cuero"] }).error.issues[0].message, "Hay valores repetidos.");
   assert.equal(esquemaGrupoCaracteristica.safeParse({ nombre: "Material", valores: [] }).error.issues[0].message, "Agregá al menos un valor.");
+  assert.deepEqual(esquemaGrupoCaracteristica.parse({ nombre: "Tiro", valores: ["Alto"], categorias: ["4", 4, 9] }).categorias, [4, 9], "ROP-59: repetidas se ignoran");
+  assert.deepEqual(esquemaGrupoCaracteristica.parse({ nombre: "Tiro", valores: ["Alto"] }).categorias, [], "ROP-59: sin categorías = en todas");
   assert.deepEqual(esquemaFiltrosCatalogo.parse({ car: "1,7" }).car, [1, 7]);
   assert.equal(esquemaFiltrosCatalogo.parse({ car: "" }).car, undefined);
   assert.equal(esquemaFiltrosCatalogo.safeParse({ car: "1,x" }).success, false);

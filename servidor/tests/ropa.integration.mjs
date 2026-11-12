@@ -188,6 +188,17 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const gruposCar = await listas.listarCaracteristicas();
       assert.equal(gruposCar.length, CARACTERISTICAS_SUGERIDAS.length);
       const material = gruposCar.find((g) => g.nombre === "material");
+      // ROP-61: relación sugerida con las categorías que ya hay (Mujer, Mujer › Remeras y Hombre).
+      const deGrupo = (nombre) => gruposCar.find((g) => g.nombre === nombre).categorias;
+      assert.deepEqual(deGrupo("Estampa"), [remeras.id]);
+      assert.deepEqual(deGrupo("Detalles"), [mujer.id, hombre.id].sort((a, b) => a - b));
+      assert.deepEqual([deGrupo("Calzado"), deGrupo("material")], [[], []], "todavía no hay Calzado; Material, en todas");
+      // ROP-59: se eligen, se reemplazan y tienen que existir.
+      const tiro = gruposCar.find((g) => g.nombre === "Tiro");
+      const valoresTiro = tiro.caracteristicas.map((c) => c.nombre);
+      await listas.actualizarGrupoCaracteristica(tiro.id, { nombre: "Tiro", orden: 3, valores: valoresTiro, categorias: [hombre.id] });
+      assert.deepEqual((await listas.listarCaracteristicas()).find((g) => g.id === tiro.id).categorias, [hombre.id]);
+      await assert.rejects(listas.actualizarGrupoCaracteristica(tiro.id, { nombre: "Tiro", orden: 3, valores: valoresTiro, categorias: [999999] }), { codigo: "DATOS_INVALIDOS" });
       assert.deepEqual(material.caracteristicas.slice(0, 3).map((c) => c.nombre), ["Algodón", "Bambú", "Lino"]);
       const car = (grupo, valor) => gruposCar.find((g) => g.nombre.toLowerCase() === grupo).caracteristicas.find((c) => c.nombre === valor).id;
       const [liso, rayado, algodon, lino] = [car("estampa", "Liso"), car("estampa", "Rayado"), car("material", "Algodón"), car("material", "Lino")];
@@ -246,6 +257,17 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const contar = (nodos) => nodos.reduce((n, c) => n + 1 + contar(c.hijas ?? []), 0);
       assert.equal(await listas.cargarCategoriasSugeridas(), contar(CATEGORIAS_SUGERIDAS) - 3);
       assert.equal(await listas.cargarCategoriasSugeridas(), 0, "la segunda vez no agrega nada");
+      // ROP-61: con el árbol cargado, las sugeridas relacionan a los que no tenían; lo ya elegido no se toca.
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), 15, "vuelven los 15 materiales que se sacaron más arriba");
+      const gruposAhora = await listas.listarCaracteristicas();
+      const nombresDe = async (grupo) => [...new Set((await ropa.CategoriaRopa.findAll({
+        where: { id: gruposAhora.find((g) => g.nombre === grupo).categorias }, raw: true,
+      })).map((c) => c.nombre))].sort();
+      assert.deepEqual(await nombresDe("Calzado"), ["Calzado"]);
+      assert.deepEqual(await nombresDe("Calce"), ["Bermudas", "Bermudas y shorts", "Jeans", "Pantalones", "Shorts"]);
+      assert.deepEqual(await nombresDe("Estampa"), ["Remeras"]);
+      assert.deepEqual(gruposAhora.find((g) => g.nombre === "Estampa").categorias, [remeras.id], "ya tenía: no se le suman las Remeras nuevas");
+      assert.deepEqual(gruposAhora.find((g) => g.nombre === "Tiro").categorias, [hombre.id], "elegida por el negocio");
       const arbol = await listas.listarCategorias();
       const buscar = (nodos, ...camino) => camino.reduce((nivel, nombre) => (nivel?.hijas ?? nivel).find((c) => c.nombre === nombre), nodos);
       assert.deepEqual(arbol.map((c) => c.nombre).slice(-3), ["Niños", "Calzado", "Accesorios"]);

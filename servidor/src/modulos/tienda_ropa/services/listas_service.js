@@ -1,7 +1,7 @@
 import { Op, UniqueConstraintError, col, fn, where as condicionSql } from "sequelize";
 import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
-import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, Prenda, PrendaCaracteristica, PrendaVariante } from "../models/index.js";
+import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, GrupoCaracteristicaCategoria, Prenda, PrendaCaracteristica, PrendaVariante } from "../models/index.js";
 import { armarArbol, creaCiclo, slug } from "../reglas.js";
 import { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS } from "../sugeridos.js";
 
@@ -143,23 +143,42 @@ export async function cargarMarcasSugeridas() {
 }
 
 // ── Características (ROP-37) ────────────────────────────────────────────────────
-export const listarCaracteristicas = () => GrupoCaracteristica.findAll({
-  include: [{ model: Caracteristica, as: "caracteristicas", attributes: ["id", "nombre", "orden"] }],
-  order: [["orden", "ASC"], ["nombre", "ASC"], [{ model: Caracteristica, as: "caracteristicas" }, "orden", "ASC"]],
-});
+export async function listarCaracteristicas() {
+  const grupos = await GrupoCaracteristica.findAll({
+    include: [
+      { model: Caracteristica, as: "caracteristicas", attributes: ["id", "nombre", "orden"] },
+      { model: GrupoCaracteristicaCategoria, as: "en_categorias", attributes: ["categoria_id"] },
+    ],
+    order: [["orden", "ASC"], ["nombre", "ASC"], [{ model: Caracteristica, as: "caracteristicas" }, "orden", "ASC"]],
+  });
+  return grupos.map((g) => {
+    const { en_categorias, ...datos } = g.toJSON();
+    return { ...datos, categorias: en_categorias.map((c) => c.categoria_id).sort((a, b) => a - b) };
+  });
+}
+
+/** ROP-59: reemplaza las categorías del grupo (todas tienen que existir). */
+async function guardarCategoriasDelGrupo(grupoId, categorias, transaction) {
+  if (await CategoriaRopa.count({ where: { id: categorias }, transaction }) !== categorias.length) {
+    throw new ErrorApp("DATOS_INVALIDOS", "Hay categorías que no existen.", 400);
+  }
+  await GrupoCaracteristicaCategoria.destroy({ where: { grupo_caracteristica_id: grupoId }, transaction });
+  if (categorias.length) await GrupoCaracteristicaCategoria.bulkCreate(categorias.map((categoria_id) => ({ grupo_caracteristica_id: grupoId, categoria_id })), { transaction });
+}
 
 const grupoRepetido = (nombre) => `Ya existe el grupo "${nombre}".`;
 
-export async function crearGrupoCaracteristica({ valores, ...grupo }) {
+export async function crearGrupoCaracteristica({ valores, categorias = [], ...grupo }) {
   return nombreUnico(() => sequelize.transaction(async (transaction) => {
     const creado = await GrupoCaracteristica.create(grupo, { transaction });
     await Caracteristica.bulkCreate(valores.map((nombre, orden) => ({ grupo_caracteristica_id: creado.id, nombre, orden })), { transaction });
+    await guardarCategoriasDelGrupo(creado.id, categorias, transaction);
     return creado;
   }), grupoRepetido(grupo.nombre));
 }
 
 /** Como los talles: los valores que siguen conservan su id; los que se sacan, solo si ninguna prenda los usa. */
-export async function actualizarGrupoCaracteristica(id, { valores, ...grupo }) {
+export async function actualizarGrupoCaracteristica(id, { valores, categorias = [], ...grupo }) {
   const actual = await buscar(GrupoCaracteristica, id, "El grupo de características no existe.");
   return nombreUnico(() => sequelize.transaction(async (transaction) => {
     await actual.update({ ...grupo, actualizado_en: new Date() }, { transaction });
@@ -176,6 +195,7 @@ export async function actualizarGrupoCaracteristica(id, { valores, ...grupo }) {
       if (valor) await valor.update({ orden }, { transaction });
       else await Caracteristica.create({ grupo_caracteristica_id: id, nombre, orden }, { transaction });
     }
+    await guardarCategoriasDelGrupo(id, categorias, transaction);
     return actual;
   }), grupoRepetido(grupo.nombre));
 }
@@ -190,15 +210,28 @@ export async function eliminarGrupoCaracteristica(id) {
   await grupo.destroy();
 }
 
-/** Suma los grupos y los valores que faltan, sin duplicar (sin importar mayúsculas). Devuelve cuántos valores agregó. */
+/**
+ * Suma los grupos y los valores que faltan, sin duplicar (sin importar mayúsculas). Devuelve cuántos valores agregó.
+ * ROP-61: a los grupos sin categorías les pone las sugeridas que existan en el panel (no toca lo ya elegido).
+ */
 export async function cargarCaracteristicasSugeridas() {
+  const categorias = await CategoriaRopa.findAll({ attributes: ["id", "nombre"], raw: true });
+  const idsLlamadas = (nombres = []) => {
+    const buscados = new Set(nombres.map((n) => n.toLowerCase()));
+    return categorias.filter((c) => buscados.has(c.nombre.toLowerCase())).map((c) => c.id);
+  };
   let agregados = 0;
   for (const [orden, sugerido] of CARACTERISTICAS_SUGERIDAS.entries()) {
     const grupo = await GrupoCaracteristica.findOne({ where: condicionSql(fn("lower", col("nombre")), sugerido.nombre.toLowerCase()) });
     if (!grupo) {
-      await crearGrupoCaracteristica({ nombre: sugerido.nombre, orden, valores: sugerido.valores });
+      await crearGrupoCaracteristica({ nombre: sugerido.nombre, orden, valores: sugerido.valores, categorias: idsLlamadas(sugerido.categorias) });
       agregados += sugerido.valores.length;
       continue;
+    }
+    const sinCategorias = !await GrupoCaracteristicaCategoria.count({ where: { grupo_caracteristica_id: grupo.id } });
+    const sugeridas = idsLlamadas(sugerido.categorias);
+    if (sinCategorias && sugeridas.length) {
+      await GrupoCaracteristicaCategoria.bulkCreate(sugeridas.map((categoria_id) => ({ grupo_caracteristica_id: grupo.id, categoria_id })));
     }
     const nuevos = await faltantes(Caracteristica, sugerido.valores, { grupo_caracteristica_id: grupo.id });
     // Los nuevos van al final: no se desordena lo que el negocio ya acomodó.

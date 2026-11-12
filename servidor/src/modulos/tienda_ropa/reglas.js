@@ -157,6 +157,8 @@ export const esquemaGrupoCaracteristica = z.object({
   orden,
   valores: z.array(z.string().trim().min(1).max(40, "Cada valor, hasta 40 caracteres.")).min(1, "Agregá al menos un valor.").max(60)
     .refine((v) => new Set(v.map((x) => x.toLowerCase())).size === v.length, "Hay valores repetidos."),
+  // ROP-59: vacío = se usa en todas las categorías.
+  categorias: z.array(z.coerce.number().int().positive()).max(200).default([]).transform((ids) => [...new Set(ids)]),
 });
 
 const variante = z.object({ color_id: z.coerce.number().int().positive(), talle_id: z.coerce.number().int().positive(), disponible: z.boolean().default(true) });
