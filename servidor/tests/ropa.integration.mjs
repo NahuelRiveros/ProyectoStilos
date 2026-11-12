@@ -37,6 +37,8 @@ const { seed_super_admin } = await import("../src/core/database/seed/seed_super_
 const { diagnosticarSuperAdmin } = await import("../src/core/services/common/diagnostico_super_admin.js");
 const { SUPERADMIN_EMAIL_FIJO } = await import("../src/core/configuracion_servidor/env.js");
 const { createApp } = await import("../src/core/app.js");
+const staff = await import("../src/core/services/usuarios/admin_staff_service.js");
+const auth = await import("../src/core/services/usuarios/auth_service.js");
 const bcrypt = (await import("bcrypt")).default;
 
 // Como la ruta: la prenda llega validada por el esquema.
@@ -84,6 +86,39 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       assert.equal(mal.codigo, "CONTRASENA_DIFERENTE");
       const falta = await diagnosticarSuperAdmin({ config: { SUPERADMIN_USUARIO: "", SUPERADMIN_CONTRASENA: "" }, Usuario: core.Usuario });
       assert.equal(falta.codigo, "CONFIGURACION_INCOMPLETA");
+    });
+
+    await t.test("PER-34 a PER-36 (core): el personal se crea con usuario y contraseña; email y documento opcionales", async () => {
+      // Sin email ni documento: entra con su usuario (sin importar mayúsculas).
+      const sinEmail = await staff.crearStaff({ nombre_usuario: " Caja.Uno ", password: "Clave-1234", nombre: "Lía", apellido: "Caja", rol_codigo: "supervisor" });
+      assert.equal(sinEmail.ok, true, sinEmail.mensaje);
+      assert.equal(sinEmail.nombre_usuario, "caja.uno");
+      assert.equal(sinEmail.email, null);
+      assert.equal((await auth.login({ identificador: "CAJA.uno", password: "Clave-1234" })).usuario.nombre_usuario, "caja.uno");
+      // Dos personas sin email ni documento no se confunden.
+      const otra = await staff.crearStaff({ nombre_usuario: "caja.dos", password: "Clave-1234", nombre: "Leo", apellido: "Caja" });
+      assert.equal(otra.ok, true);
+      assert.notEqual(otra.persona_id, sinEmail.persona_id);
+      // Faltantes, inválidos y repetidos.
+      assert.equal((await staff.crearStaff({ password: "Clave-1234", nombre: "X", apellido: "Y" })).codigo, "FALTAN_DATOS");
+      assert.equal((await staff.crearStaff({ nombre_usuario: "con@arroba", password: "Clave-1234", nombre: "X", apellido: "Y" })).codigo, "USUARIO_INVALIDO");
+      assert.equal((await staff.crearStaff({ nombre_usuario: "CAJA.UNO", password: "Clave-1234", nombre: "X", apellido: "Y" })).codigo, "USUARIO_DUPLICADO");
+      assert.equal((await staff.crearStaff({ nombre_usuario: "caja.tres", password: "Clave-1234", nombre: "X", apellido: "Y", email: "no-es-mail" })).codigo, "EMAIL_INVALIDO");
+      assert.equal((await staff.crearStaff({ nombre_usuario: "caja.tres", password: "Clave-1234", nombre: "X", apellido: "Y", documento: "12a" })).codigo, "DOCUMENTO_INVALIDO");
+      assert.equal((await staff.crearStaff({ nombre_usuario: "caja.tres", password: "corta", nombre: "X", apellido: "Y" })).codigo, "PASSWORD_INVALIDA");
+      // Con email: también puede entrar con él (y recuperar la contraseña).
+      const conEmail = await staff.crearStaff({ nombre_usuario: "vera", password: "Clave-1234", nombre: "Vera", apellido: "Ventas", email: "Vera@Ejemplo.test", documento: "30.111.222" });
+      assert.equal(conEmail.ok, true);
+      assert.equal((await auth.login({ identificador: "vera@ejemplo.test", password: "Clave-1234" })).usuario.nombre_usuario, "vera");
+      // PER-35: editar usuario, quitar el email; repetidos se avisan. La lista muestra el usuario.
+      assert.equal((await staff.actualizarStaff(conEmail.usuario_id, { nombre_usuario: "caja.uno", nombre: "Vera", apellido: "Ventas" })).codigo, "USUARIO_DUPLICADO");
+      assert.equal((await staff.actualizarStaff(otra.usuario_id, { nombre_usuario: "caja.dos", nombre: "Leo", apellido: "Caja", email: "vera@ejemplo.test" })).codigo, "EMAIL_DUPLICADO");
+      const editado = await staff.actualizarStaff(conEmail.usuario_id, { nombre_usuario: "Vera.V", nombre: "Vera", apellido: "Ventas", email: "", documento: "30111222" });
+      assert.equal(editado.ok, true, editado.mensaje);
+      const enLista = (await staff.listarStaff()).find((p) => p.gym_usuario_id === conEmail.usuario_id);
+      assert.deepEqual([enLista.gym_usuario_nombre_usuario, enLista.gym_persona_email, enLista.gym_persona_documento], ["vera.v", null, "30111222"]);
+      await assert.rejects(auth.login({ identificador: "vera@ejemplo.test", password: "Clave-1234" }), "sin email ya no entra con él");
+      assert.equal((await auth.login({ identificador: "vera.v", password: "Clave-1234" })).usuario.nombre_usuario, "vera.v");
     });
 
     const mujer = await listas.crearCategoria({ nombre: "Mujer", padre_id: null, orden: 0, activo: true });
