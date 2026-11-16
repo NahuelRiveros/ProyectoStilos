@@ -622,6 +622,16 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
         assert.equal((await fetch(base + "/ropa/pedidos", { headers: vendedor })).status, 200);
         const repetida = await fetch(base + "/ropa/panel/marcas", { method: "POST", headers: encargado, body: JSON.stringify({ nombre: "Otra" }) });
         assert.deepEqual([repetida.status, (await repetida.json()).codigo], [409, "NOMBRE_DUPLICADO"]);
+        // ROP-86: el bitono se guarda con sus dos tonos, al crearlo y al editarlo.
+        const tonos = async (r) => { const c = (await r.json()).data; return [c.hex, c.hex2, c.patron]; };
+        const bitono = await fetch(base + "/ropa/panel/colores", { method: "POST", headers: encargado, body: JSON.stringify({ nombre: "Verde y blanco", hex: "#0b4f3c", hex2: "#ffffff", patron: null, orden: 0 }) });
+        assert.equal(bitono.status, 201);
+        const idBitono = (await bitono.clone().json()).data.id;
+        assert.deepEqual(await tonos(bitono), ["#0B4F3C", "#FFFFFF", null]);
+        const editado = await fetch(base + `/ropa/panel/colores/${idBitono}`, { method: "PUT", headers: encargado, body: JSON.stringify({ nombre: "Verde y blanco", hex: "#0B4F3C", hex2: "#C62828", patron: null, orden: 0 }) });
+        assert.deepEqual(await tonos(editado), ["#0B4F3C", "#C62828", null]);
+        const guardado = (await (await fetch(base + "/ropa/panel/colores", { headers: encargado })).json()).data.find((c) => c.id === idBitono);
+        assert.equal(guardado.hex2, "#C62828", "la lista del panel lo devuelve con el segundo tono");
 
         // ROP-40 y ROP-57: el cliente ve lo suyo y no el panel; el Vendedor no mueve dinero.
         await crearPersonal("cliente@stilos.test", "cliente");
