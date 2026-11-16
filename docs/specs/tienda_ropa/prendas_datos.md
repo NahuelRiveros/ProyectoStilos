@@ -50,7 +50,7 @@ erDiagram
 | `grupo_talle` / `talle` | Grupos de talles y sus talles en orden. | Panel → Talles |
 | `grupo_caracteristica` / `caracteristica` | Grupos (Material, Calce…) y sus valores. | Panel → Características |
 | `grupo_caracteristica_categoria` | En qué categorías se ofrece cada grupo (ROP-59). | Panel → Características |
-| `pedido_whatsapp_item` | Copia de la prenda en cada pedido (nombre, color, talle, precio). | Lo escribe el pedido; no se edita |
+| `pedido_whatsapp_item` | Copia de la prenda en cada pedido (nombre, color, talle, código Lince, precio). | Lo escribe el pedido; no se edita |
 
 Todas viven en el schema del proyecto (`BD_ESQUEMA`) y tienen `id integer` autoincremental como clave.
 Tipos según PostgreSQL: `varchar(n)` = texto de hasta n caracteres, `numeric(12,2)` = importe con 2
@@ -71,12 +71,12 @@ decimales (hasta 9.999.999.999,99), `timestamptz` = fecha y hora con zona.
 | `grupo_talle_id` | integer | no | | → `grupo_talle.id` (borrar: no se permite) | De qué grupo salen sus talles. |
 | `precio` | numeric(12,2) | no | | | Precio único para todos los talles (ROP-07). |
 | `precio_anterior` | numeric(12,2) | **sí** | | | Si tiene valor, está en oferta y se muestra tachado (ROP-17). |
+| `codigo_lince` | varchar(40) | **sí** | | índice, **no** único | Código de la prenda en Lince Indumentaria (ROP-77 a ROP-81): opcional, los colores de un modelo suelen compartirlo. No sale en la tienda. |
 | `activo` | boolean | no | `true` | | Si se ve en la tienda. |
 | `creado_en` | timestamptz | no | ahora (lo pone el servidor) | | Alta; ordena "Novedades". |
 | `actualizado_en` | timestamptz | no | ahora (lo pone el servidor) | | Última edición; ordena el panel. |
 
-Índices: `slug` (único), `categoria_id`, `activo`. **Código de Lince:** ver
-[2026-11-codigo-lince.md](../cambios/2026-11-codigo-lince.md) (🚧 en aprobación).
+Índices: `slug` (único, `prenda_slug_key`), `categoria_id`, `activo`, `codigo_lince` (`prenda_codigo_lince`, no único).
 
 ### `prenda_variante` (talles)
 
@@ -146,6 +146,7 @@ slug ni las fechas.
 | `variantes` | Entre 1 y 400; cada una con `color_id`, `talle_id` y `disponible`. **Un solo color** en toda la prenda. Sin talle repetido. | "Tildá al menos un talle y un color." / "Cada prenda es de un solo color…" / "Hay talles y colores repetidos." |
 | `imagenes` | Hasta **3**; cada `url` https o `/catalogo-inicial/<archivo>.jpg/png/webp`; solo del color de la prenda. | "Hasta 3 fotos por prenda." / "Hay fotos de un color que la prenda no tiene." |
 | `caracteristicas` | Hasta 60 ids; los repetidos se ignoran. | |
+| `codigo_lince` | Opcional; sin espacios a los costados, hasta 40 caracteres; vacío = sin código. | "El código Lince tiene hasta 40 caracteres." |
 
 ### Referencias (servidor, dentro de la misma transacción)
 
@@ -181,13 +182,13 @@ slug ni las fechas.
 
 ## Riesgos detectados (2026-11-13)
 
-- ❓ **Índices únicos repetidos.** En la base local, `categoria_ropa` tiene 10 índices únicos sobre `slug`,
+- ✅ **Índices únicos repetidos (resuelto el 2026-11-16, [cambio](../cambios/2026-11-indices-unicos.md)).** En la base local, `categoria_ropa` tiene 10 índices únicos sobre `slug`,
   `marca_ropa`/`color_ropa`/`grupo_talle` 10 sobre `nombre`, `grupo_caracteristica` 7 y `prenda` 7 sobre `slug`.
   Sequelize agrega uno nuevo cada vez que sincroniza un modelo con `unique: true` en la columna. No rompe datos,
   pero crece en cada deploy que cambia la base y hace más lentas las escrituras. Opciones: (a) pasar esos
   `unique: true` a un índice con nombre fijo (como ya se hizo en `grupo_caracteristica_categoria`) y borrar los
   repetidos al arrancar; (b) dejarlo. Recomendación: (a), como cambio aparte (probablemente también afecta tablas
-  del core). **Respuesta:**
+  del core). **Respuesta:** (a). Los únicos de texto ahora son índices con nombre fijo y el arranque borra las copias (SIS-51 y SIS-52).
 
 ## Dónde está el código
 

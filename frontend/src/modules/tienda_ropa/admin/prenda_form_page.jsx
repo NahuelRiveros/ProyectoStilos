@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import { ArrowLeft, Shirt } from "lucide-react";
@@ -7,7 +7,7 @@ import TextareaField from "../../../core/controls/ui/textarea_field.jsx";
 import FormError from "../../../core/controls/ui/form_error.jsx";
 import { useToast } from "../../../core/controls/toast/use_toast.js";
 import { cn } from "../../../core/utils/cn.js";
-import { useGestionPrendas, useLista, usePrendaPanel, mensajeError } from "../hooks/use_ropa.js";
+import { useCodigoLinceModelo, useGestionPrendas, useLista, usePrendaPanel, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PRIMARIO, BOTON_SECUNDARIO, Pantalla, SegunConsulta } from "./comunes.jsx";
 import { chip } from "./chip.js";
 import { FotosDelColor, Paso, SelectorCategoria, TallesDelColor } from "./prenda_form_partes.jsx";
@@ -53,14 +53,29 @@ function Formulario({ prenda, listas }) {
   const colores = listas.colores.data;
   const arbol = listas.categorias.data;
 
-  const { register, handleSubmit, setError, setValue, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, setError, setValue, getValues, control, formState: { errors, dirtyFields } } = useForm({
     defaultValues: {
       categoria_id: String(prenda?.categoria_id ?? ""), nombre: prenda?.nombre ?? "", descripcion: prenda?.descripcion ?? "",
       marca_id: String(prenda?.marca_id ?? ""), precio: prenda ? Number(prenda.precio) : "", activo: prenda?.activo ?? true,
       precio_anterior: prenda?.precio_anterior ? Number(prenda.precio_anterior) : "",
+      codigo_lince: prenda?.codigo_lince ?? "",
     },
   });
-  const [categoriaTexto, nombre, precio] = useWatch({ control, name: ["categoria_id", "nombre", "precio"] });
+  const [categoriaTexto, nombre, precio, marcaTexto, codigoLince] = useWatch({ control, name: ["categoria_id", "nombre", "precio", "marca_id", "codigo_lince"] });
+
+  // ROP-81: en una prenda nueva, el código Lince de otro color del mismo modelo se propone (no se pisa lo escrito).
+  const [nombreConsulta, setNombreConsulta] = useState("");
+  useEffect(() => {
+    const espera = setTimeout(() => setNombreConsulta(String(nombre ?? "").trim()), 500);
+    return () => clearTimeout(espera);
+  }, [nombre]);
+  const codigoModelo = useCodigoLinceModelo(nombreConsulta, marcaTexto, !prenda);
+  const codigoSugerido = codigoModelo.data?.codigo_lince ?? null;
+  useEffect(() => {
+    if (!codigoSugerido || dirtyFields.codigo_lince || getValues("codigo_lince")) return;
+    setValue("codigo_lince", codigoSugerido);
+  }, [codigoSugerido, dirtyFields.codigo_lince, getValues, setValue]);
+  const codigoPropuesto = Boolean(codigoSugerido) && !dirtyFields.codigo_lince && codigoLince === codigoSugerido;
   const categoriaId = categoriaTexto ? Number(categoriaTexto) : null;
 
   const [grupoId, setGrupoId] = useState(prenda?.grupo_talle_id ?? grupos[0]?.id);
@@ -121,6 +136,7 @@ function Formulario({ prenda, listas }) {
         categoria_id: Number(valores.categoria_id), marca_id: valores.marca_id ? Number(valores.marca_id) : null,
         grupo_talle_id: grupoId, precio: Number(valores.precio), activo: valores.activo,
         precio_anterior: valores.precio_anterior === "" ? null : Number(valores.precio_anterior),
+        codigo_lince: valores.codigo_lince.trim() || null,
         variantes, imagenes: fotos.map((url) => ({ url, color_id: colorId })), caracteristicas: [...caracteristicas],
       });
       toast.success(r.mensaje);
@@ -167,6 +183,8 @@ function Formulario({ prenda, listas }) {
               </label>
               <InputField name="precio" type="number" min={1} step="0.01" inputMode="decimal" label="Precio ($)" helperText="El mismo para todos los talles." register={register} required requiredMessage="Escribí el precio." error={errors.precio?.message} />
               <InputField name="precio_anterior" type="number" min={1} step="0.01" inputMode="decimal" label="Precio anterior ($)" helperText="Solo si está en oferta: se ve tachado." register={register} error={errors.precio_anterior?.message} />
+              <InputField name="codigo_lince" label="Código Lince (opcional)" placeholder="Ej. el código del artículo en Lince" maxLength={40} register={register} error={errors.codigo_lince?.message}
+                helperText={codigoPropuesto ? "Propuesto: es el código de otro color de este modelo. Cambialo si no corresponde." : "Para encontrarla en Lince Indumentaria. No se muestra en la tienda."} />
               <label className="flex min-h-11 items-center gap-2 self-center text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
               <div className="sm:col-span-2"><TextareaField name="descripcion" label="Descripción (opcional)" rows={3} placeholder="Tela, calce, cuidados…" register={register} error={errors.descripcion?.message} /></div>
             </div>

@@ -12,9 +12,12 @@ const POR_PAGINA = 20;
 const ORDEN_FOTOS = [["orden", "ASC"], ["id", "ASC"]];
 
 /** Filtro de texto, categoría (con subcategorías), marca, color, talle y características: compartido con la tienda. */
-export async function wherePrendas({ q, categoria, marca, color, talle, car }) {
+export async function wherePrendas({ q, categoria, marca, color, talle, car }, { buscarCodigo = false } = {}) {
   const condiciones = [];
-  if (q) condiciones.push({ nombre: { [Op.iLike]: `%${q}%` } });
+  // ROP-78: el panel busca también por el código de Lince (la tienda no: es un dato interno).
+  if (q) condiciones.push(buscarCodigo
+    ? { [Op.or]: [{ nombre: { [Op.iLike]: `%${q}%` } }, { codigo_lince: { [Op.iLike]: `%${q}%` } }] }
+    : { nombre: { [Op.iLike]: `%${q}%` } });
   if (categoria) {
     const todas = await CategoriaRopa.findAll({ attributes: ["id", "padre_id"], raw: true });
     condiciones.push({ categoria_id: conDescendientes(todas, categoria) });
@@ -44,7 +47,7 @@ export async function wherePrendas({ q, categoria, marca, color, talle, car }) {
 
 export async function listarPrendas({ estado, pagina, ...filtros }) {
   const { page, limit, offset } = normalizarPaginacion({ page: pagina, limit: POR_PAGINA });
-  const where = await wherePrendas(filtros);
+  const where = await wherePrendas(filtros, { buscarCodigo: true });
   if (estado !== "todas") where.activo = estado === "activas";
   const { rows, count } = await Prenda.findAndCountAll({
     where,
@@ -102,6 +105,20 @@ export async function otrosColores({ id, nombre, marca_id }, filtro = {}) {
     .filter((p) => p.variantes.length)
     .map((p) => ({ id: p.id, slug: p.slug, activo: p.activo, color: p.variantes[0].color.toJSON() }))
     .sort((a, b) => a.color.orden - b.color.orden || a.color.nombre.localeCompare(b.color.nombre));
+}
+
+/**
+ * ROP-81: el código Lince del modelo (mismo nombre sin importar mayúsculas ni espacios, y misma marca), de la
+ * prenda más reciente que lo tenga; null si ninguna.
+ */
+export async function codigoLinceDelModelo({ nombre, marca_id }) {
+  const nombreNormalizado = fn("lower", fn("regexp_replace", fn("trim", col("nombre")), "\\s+", " ", "g"));
+  const prenda = await Prenda.findOne({
+    where: { [Op.and]: [{ marca_id: marca_id ?? null, codigo_lince: { [Op.ne]: null } }, sequelize.where(nombreNormalizado, claveModelo(nombre))] },
+    attributes: ["codigo_lince"],
+    order: [["actualizado_en", "DESC"], ["id", "DESC"]],
+  });
+  return { codigo_lince: prenda?.codigo_lince ?? null };
 }
 
 /** Que la categoría, la marca, los colores y los talles existan, y los talles sean del grupo elegido. */

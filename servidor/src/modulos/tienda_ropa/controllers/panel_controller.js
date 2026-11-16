@@ -43,6 +43,7 @@ export async function gruposSugeridosController(_req, res) {
 }
 
 export const listarPrendasController = async (req, res) => ok(res, await prendas.listarPrendas(req.datos.query));
+export const codigoModeloController = async (req, res) => ok(res, await prendas.codigoLinceDelModelo(req.datos.query)); // ROP-81
 export const obtenerPrendaController = async (req, res) => ok(res, await prendas.obtenerPrenda(id(req)));
 export const crearPrendaController = async (req, res) => ok(res, await prendas.crearPrenda(req.datos.body), "Prenda creada.", 201);
 export const actualizarPrendaController = async (req, res) => ok(res, await prendas.actualizarPrenda(id(req), req.datos.body), "Prenda actualizada.");

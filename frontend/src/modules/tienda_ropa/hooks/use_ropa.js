@@ -36,6 +36,12 @@ export function useGestionLista(lista) {
 }
 
 export const usePrendasPanel = (filtros) => useQuery({ queryKey: ["ropa", "panel", "prendas", filtros], queryFn: () => api.getPrendasPanel(filtros), placeholderData: keepPreviousData });
+// ROP-81: el código Lince de otro color del mismo modelo (nombre + marca), para proponerlo en una prenda nueva.
+export const useCodigoLinceModelo = (nombre, marcaId, activo) => useQuery({
+  queryKey: ["ropa", "panel", "codigo-lince", nombre, marcaId || null],
+  queryFn: () => api.getCodigoLinceModelo(nombre, marcaId),
+  enabled: activo && nombre.length >= 3, staleTime: 60 * 1000,
+});
 export const usePrendaPanel = (id) => useQuery({ queryKey: ["ropa", "panel", "prenda", id], queryFn: () => api.getPrendaPanel(id), enabled: Boolean(id) });
 
 export function useGestionPrendas() {

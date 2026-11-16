@@ -22,6 +22,7 @@ export const cargarSugeridos = (lista) => respuesta(http.post(`/ropa/panel/${lis
 
 // ── Panel: prendas ──────────────────────────────────────────────────────────────
 export const getPrendasPanel = (filtros) => datos(http.get("/ropa/panel/prendas", { params: filtros }));
+export const getCodigoLinceModelo = (nombre, marcaId) => datos(http.get("/ropa/panel/prendas/codigo-lince", { params: { nombre, marca_id: marcaId || "" } }));
 export const getPrendaPanel = (id) => datos(http.get(`/ropa/panel/prendas/${id}`));
 export const guardarPrenda = ({ id, ...prenda }) => respuesta(id ? http.put(`/ropa/panel/prendas/${id}`, prenda) : http.post("/ropa/panel/prendas", prenda));
 export const cambiarEstadoPrenda = (id, activo) => respuesta(http.patch(`/ropa/panel/prendas/${id}/estado`, { activo }));

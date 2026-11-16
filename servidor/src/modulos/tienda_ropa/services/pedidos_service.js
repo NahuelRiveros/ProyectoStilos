@@ -37,7 +37,7 @@ async function armarLineas(items, transaction) {
   const variantes = await PrendaVariante.findAll({
     where: { id: items.map((i) => i.variante_id) },
     include: [
-      { model: Prenda, as: "prenda", attributes: ["id", "nombre", "precio", "activo"] },
+      { model: Prenda, as: "prenda", attributes: ["id", "nombre", "precio", "activo", "codigo_lince"] },
       { model: ColorRopa, as: "color", attributes: ["nombre"] },
       { model: Talle, as: "talle", attributes: ["nombre"] },
     ],
@@ -50,7 +50,7 @@ async function armarLineas(items, transaction) {
     if (!v.disponible) throw new ErrorApp("NO_DISPONIBLE", `${v.prenda.nombre} (${v.color.nombre}, talle ${v.talle.nombre}) se agotó. Sacala del pedido y volvé a enviar.`, 409);
     const precio = centavos(v.prenda.precio);
     return {
-      prenda_id: v.prenda.id, nombre_prenda: v.prenda.nombre, color: v.color.nombre, talle: v.talle.nombre,
+      prenda_id: v.prenda.id, nombre_prenda: v.prenda.nombre, color: v.color.nombre, talle: v.talle.nombre, codigo_lince: v.prenda.codigo_lince,
       cantidad, precio_unitario: pesos(precio), subtotal: pesos(precio * cantidad), _centavos: precio * cantidad,
     };
   });

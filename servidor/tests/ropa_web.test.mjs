@@ -73,6 +73,16 @@ test("ROP-62, ROP-64 y ROP-67: link de seguimiento, mensaje del local según el 
   assert.equal(textoEntrega({ entrega: "envio" }), "Envío a domicilio", "el seguimiento no trae la dirección");
 });
 
+test("ROP-79: el mensaje de WhatsApp lleva el código Lince de cada línea que lo tiene", () => {
+  const pedido = { numero: "#00012", nombre: "Ana", entrega: "retiro", total: "48000.00", items: [
+    { cantidad: 1, nombre_prenda: "Remera", color: "Negro", talle: "M", codigo_lince: "TV09234", subtotal: "16000.00" },
+    { cantidad: 2, nombre_prenda: "Jean", color: "Azul", talle: "40", codigo_lince: null, subtotal: "32000.00" },
+  ] };
+  const texto = mensajePedido(pedido, "Stilo's");
+  assert.match(texto, /• 1 × Remera \(Negro, talle M\) · Lince TV09234: \$ 16\.000/);
+  assert.match(texto, /• 2 × Jean \(Azul, talle 40\): \$ 32\.000/);
+});
+
 test("ROP-18: aviso de cuánto falta para el envío gratis", () => {
   assert.deepEqual(avisoEnvioGratis(100000, 150000), { gratis: false, falta: 50000 });
   assert.deepEqual(avisoEnvioGratis(150000, 150000), { gratis: true, falta: 0 });

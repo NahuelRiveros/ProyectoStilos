@@ -118,7 +118,7 @@ function DetallePedido({ id, onClose }) {
             <ul className="divide-y divide-slate-100 text-sm">
               {pedido.items.map((i) => (
                 <li key={i.id} className="flex justify-between gap-3 py-2">
-                  <span><strong>{i.cantidad} ×</strong> {i.nombre_prenda} <span className="text-slate-500">({i.color}, {i.talle})</span></span>
+                  <span><strong>{i.cantidad} ×</strong> {i.nombre_prenda} <span className="text-slate-500">({i.color}, {i.talle})</span>{i.codigo_lince && <span className="ml-1 font-mono text-xs text-slate-500">· Lince {i.codigo_lince}</span>}</span>
                   <span className="whitespace-nowrap font-semibold">{formatearPrecio(i.subtotal)}</span>
                 </li>
               ))}

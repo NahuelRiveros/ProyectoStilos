@@ -42,7 +42,7 @@ export default function PrendasPage() {
       <Encabezado titulo="Prendas" descripcion="Lo que se ve en la tienda: fotos por color, talles y precio.">{nueva}</Encabezado>
 
       <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_14rem_10rem]">
-        <SearchField value={filtros.q} onSearch={(q) => filtrar("q", q)} label="Buscar prendas" placeholder="Buscar por nombre…" />
+        <SearchField value={filtros.q} onSearch={(q) => filtrar("q", q)} label="Buscar prendas" placeholder="Buscar por nombre o código Lince…" />
         <select aria-label="Categoría" value={filtros.categoria} onChange={(e) => filtrar("categoria", e.target.value)} className="min-h-11 rounded-xl border border-gray-300 bg-white px-3 text-sm">
           <option value="">Todas las categorías</option>
           {aplanar(categorias.data ?? []).map((c) => <option key={c.id} value={c.id}>{"  ".repeat(c.nivel)}{c.nombre}</option>)}
@@ -67,6 +67,7 @@ export default function PrendasPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-slate-900">{p.nombre}</p>
+                  {p.codigo_lince && <p className="truncate font-mono text-xs text-slate-500">Lince: {p.codigo_lince}</p>}
                   <p className="text-xs text-slate-500">{p.categoria?.nombre}{p.marca ? ` · ${p.marca.nombre}` : ""}</p>
                   <p className="mt-1 text-sm font-bold text-slate-800">{formatearPrecio(p.precio)}</p>
                   <p className="mt-1 flex flex-wrap gap-1.5 text-xs">

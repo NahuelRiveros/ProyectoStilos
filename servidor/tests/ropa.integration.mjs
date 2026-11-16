@@ -38,6 +38,7 @@ const { diagnosticarSuperAdmin } = await import("../src/core/services/common/dia
 const { SUPERADMIN_EMAIL_FIJO } = await import("../src/core/configuracion_servidor/env.js");
 const { createApp } = await import("../src/core/app.js");
 const staff = await import("../src/core/services/usuarios/admin_staff_service.js");
+const { borrarUnicosRepetidos } = await import("../src/core/database/indices_repetidos.js");
 const auth = await import("../src/core/services/usuarios/auth_service.js");
 const bcrypt = (await import("bcrypt")).default;
 
@@ -60,11 +61,35 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
     await sembrarRolesDelSistema();
     await sincronizarPermisos();
 
-    await t.test("Arranque: sincronizar dos veces (como dos deploys) no falla", async () => {
+    await t.test("Arranque: sincronizar dos veces (como dos deploys) no falla ni repite únicos (SIS-51)", async () => {
       // El bootstrap hace sync({ alter: true }) cuando cambian los modelos; sobre tablas que ya
-      // existen no puede intentar recrear índices (nombres de más de 63 caracteres lo rompían).
-      for (const modelo of moduloTiendaRopa.modelos) await modelo.sync({ alter: true });
-      for (const modelo of moduloTiendaRopa.modelos) await modelo.sync({ alter: true });
+      // existen no puede intentar recrear índices (nombres de más de 63 caracteres lo rompían)
+      // ni sumar otra restricción única igual (con `unique: true` en la columna lo hacía).
+      const modelos = [core.Sexo, core.TipoDocumento, core.TipoPersona, core.Rol, core.Modulo, core.Permiso, core.Persona, core.RolPermiso, core.Usuario, core.UsuarioRol, ...moduloTiendaRopa.modelos];
+      for (let vuelta = 0; vuelta < 2; vuelta++) for (const modelo of modelos) await modelo.sync({ alter: true });
+      const repetidos = await sequelize.query(`
+        SELECT t.relname AS tabla, ix.indkey::text AS columnas, count(*)::int AS cuantos
+        FROM pg_index ix JOIN pg_class t ON t.oid = ix.indrelid JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE n.nspname = :s AND ix.indisunique AND NOT ix.indisprimary
+          AND t.relname NOT IN ('rol_permiso', 'usuario_rol')
+        GROUP BY 1, 2 HAVING count(*) > 1`, { replacements: { s: DB_SCHEMA }, type: "SELECT" });
+      assert.deepEqual(repetidos, []);
+    });
+
+    await t.test("SIS-52: la limpieza borra las restricciones únicas repetidas y deja la original", async () => {
+      await sequelize.query(`CREATE TABLE "${DB_SCHEMA}".prueba_unicos (id serial PRIMARY KEY, nombre varchar(20), otro varchar(20))`);
+      await sequelize.query(`ALTER TABLE "${DB_SCHEMA}".prueba_unicos ADD CONSTRAINT prueba_unicos_nombre_key UNIQUE (nombre)`);
+      await sequelize.query(`ALTER TABLE "${DB_SCHEMA}".prueba_unicos ADD CONSTRAINT prueba_unicos_nombre_key1 UNIQUE (nombre)`);
+      await sequelize.query(`ALTER TABLE "${DB_SCHEMA}".prueba_unicos ADD CONSTRAINT prueba_unicos_nombre_key2 UNIQUE (nombre)`);
+      // Misma terminación pero otra columna: no es copia de la original y queda.
+      await sequelize.query(`ALTER TABLE "${DB_SCHEMA}".prueba_unicos ADD CONSTRAINT prueba_unicos_nombre_key3 UNIQUE (otro)`);
+      assert.equal(await borrarUnicosRepetidos(sequelize, DB_SCHEMA), 2);
+      assert.equal(await borrarUnicosRepetidos(sequelize, DB_SCHEMA), 0, "idempotente");
+      const quedan = await sequelize.query(`SELECT conname FROM pg_constraint WHERE conrelid = '"${DB_SCHEMA}".prueba_unicos'::regclass AND contype = 'u' ORDER BY 1`, { type: "SELECT" });
+      assert.deepEqual(quedan.map((c) => c.conname), ["prueba_unicos_nombre_key", "prueba_unicos_nombre_key3"]);
+      await sequelize.query(`INSERT INTO "${DB_SCHEMA}".prueba_unicos (nombre) VALUES ('a')`);
+      await assert.rejects(sequelize.query(`INSERT INTO "${DB_SCHEMA}".prueba_unicos (nombre) VALUES ('a')`), "sigue siendo único");
+      await sequelize.query(`DROP TABLE "${DB_SCHEMA}".prueba_unicos`);
     });
 
     await t.test("Super admin (core): solo usuario y contraseña, email fijo y no pisa la contraseña", async () => {
@@ -471,7 +496,7 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const pedido = await pedidos.crearPedido({ nombre: "Ana", celular: "3704123456", items: [{ variante_id: negroM, cantidad: 3 }] });
       assert.match(pedido.numero, /^#\d{5}$/);
       assert.equal(pedido.total, "48000.00");
-      assert.deepEqual(pedido.items[0], { nombre_prenda: "Remera lisa", color: "Negro", talle: "M", cantidad: 3, precio_unitario: "16000.00", subtotal: "48000.00" });
+      assert.deepEqual(pedido.items[0], { nombre_prenda: "Remera lisa", color: "Negro", talle: "M", codigo_lince: null, cantidad: 3, precio_unitario: "16000.00", subtotal: "48000.00" });
       await assert.rejects(
         pedidos.crearPedido({ nombre: "Ana", celular: "3704123456", items: [{ variante_id: variante("Rojo", "S").id, cantidad: 1 }] }),
         (error) => error.codigo === "NO_DISPONIBLE" && /Rojo, talle S/.test(error.message),
@@ -497,6 +522,33 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const guardado = await pedidos.obtenerPedido(pedido.id);
       assert.equal(guardado.items[0].nombre_prenda, "Remera lisa");
       assert.equal(guardado.items[0].prenda_id, null);
+    });
+
+    await t.test("ROP-77 a ROP-81: código Lince en la prenda, búsqueda en el panel, copia en el pedido y propuesta por modelo", async () => {
+      const base = { categoria_id: remeras.id, marca_id: marca.id, grupo_talle_id: grupoRopa.id, precio: 9000 };
+      const negra = await prendas.crearPrenda(prendaValida({ ...base, nombre: "Remera Lince", codigo_lince: " TV-777 ", variantes: [{ color_id: colores.Negro, talle_id: talles.M }] }));
+      assert.equal(negra.codigo_lince, "TV-777");
+      // ROP-81: otro color del mismo modelo (aunque cambien mayúsculas y espacios) propone el código; otra marca no.
+      assert.deepEqual(await prendas.codigoLinceDelModelo({ nombre: "  remera   LINCE ", marca_id: marca.id }), { codigo_lince: "TV-777" });
+      assert.deepEqual(await prendas.codigoLinceDelModelo({ nombre: "Remera Lince", marca_id: null }), { codigo_lince: null });
+      const roja = await prendas.crearPrenda(prendaValida({ ...base, nombre: "Remera Lince", codigo_lince: "TV-777", variantes: [{ color_id: colores.Rojo, talle_id: talles.S }] }));
+      // ROP-77: el mismo código en dos colores está permitido.
+      assert.notEqual(roja.slug, negra.slug);
+      // ROP-78: el panel busca por código (parte, sin mayúsculas); la tienda no.
+      const enPanel = (await prendas.listarPrendas({ estado: "todas", pagina: 1, q: "tv-7" })).items.map((p) => p.id).sort();
+      assert.deepEqual(enPanel, [negra.id, roja.id].sort());
+      assert.equal((await catalogo.listarCatalogo({ pagina: 1, q: "TV-777" })).items.length, 0);
+      const ficha = await catalogo.detallePrenda(negra.slug);
+      assert.equal("codigo_lince" in ficha, false, "la tienda no muestra el código");
+      // ROP-79: el pedido guarda una copia; cambiar la prenda después no la toca.
+      const varianteNegra = (await prendas.obtenerPrenda(negra.id)).variantes[0].id;
+      const pedido = await pedidos.crearPedido({ nombre: "Ana", celular: "3704123456", items: [{ variante_id: varianteNegra, cantidad: 1 }] });
+      assert.equal(pedido.items[0].codigo_lince, "TV-777");
+      await prendas.actualizarPrenda(negra.id, prendaValida({ ...base, nombre: "Remera Lince", codigo_lince: "OTRO", variantes: [{ color_id: colores.Negro, talle_id: talles.M }] }));
+      assert.equal((await pedidos.obtenerPedido(pedido.id)).items[0].codigo_lince, "TV-777");
+      assert.equal((await pedidos.seguimientoPedido(pedido.clave_seguimiento)).items[0].codigo_lince, undefined, "el seguimiento no lo muestra");
+      await prendas.eliminarPrenda(negra.id);
+      await prendas.eliminarPrenda(roja.id);
     });
 
     await t.test("ROP-20 por HTTP: el Encargado edita el catálogo; el Vendedor solo ve pedidos", async () => {

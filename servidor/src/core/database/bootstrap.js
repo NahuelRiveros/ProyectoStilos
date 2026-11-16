@@ -2,6 +2,7 @@ import { QueryTypes } from "sequelize";
 import { sequelize, DB_SCHEMA } from "./sequelize.js";
 import { calcularHashEsquema } from "./schema_hash.js";
 import { asegurarTablas } from "./seguridad_tablas.js";
+import { borrarUnicosRepetidos } from "./indices_repetidos.js";
 import { modulosActivos } from "../../proyecto/modulos.js";
 import { TABLAS_RETIRADAS } from "../../proyecto/tablas_retiradas.js";
 import {
@@ -59,6 +60,9 @@ async function sincronizar_modelos_si_hace_falta() {
   }
 
   await sincronizar_modelos();
+  // SIS-52: las copias de restricciones únicas solo aparecen al sincronizar: se limpian acá.
+  const borradas = await borrarUnicosRepetidos(sequelize, DB_SCHEMA);
+  if (borradas) console.log(`🧹 Se borraron ${borradas} restricciones únicas repetidas`);
 
   await sequelize.query(`
     CREATE TABLE IF NOT EXISTS "${DB_SCHEMA}"."_schema_meta" (

@@ -135,6 +135,13 @@ test("ROP-37 a ROP-39: características por grupo, varias por prenda y filtro de
   assert.equal(esquemaFiltrosCatalogo.safeParse({ car: "1,x" }).success, false);
 });
 
+test("ROP-77 y ROP-80: código Lince opcional, sin espacios a los costados y hasta 40 caracteres", () => {
+  assert.equal(esquemaPrenda.parse(prenda()).codigo_lince, null);
+  assert.equal(esquemaPrenda.parse(prenda({ codigo_lince: "   " })).codigo_lince, null, "vacío = sin código");
+  assert.equal(esquemaPrenda.parse(prenda({ codigo_lince: " TV09234 / 601 " })).codigo_lince, "TV09234 / 601", "acepta cualquier texto");
+  assert.equal(esquemaPrenda.safeParse(prenda({ codigo_lince: "X".repeat(41) })).error.issues[0].message, "El código Lince tiene hasta 40 caracteres.");
+});
+
 test("ROP-25: logo https opcional en la marca", () => {
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: "" }).logo_url, null);
   assert.equal(esquemaMarca.parse({ nombre: "Bando", logo_url: " https://x.test/bando.png " }).logo_url, "https://x.test/bando.png");

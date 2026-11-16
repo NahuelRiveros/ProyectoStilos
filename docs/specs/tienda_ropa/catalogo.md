@@ -65,6 +65,11 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-74 | `npm --prefix servidor run demo:tienda` carga en la base local 36 prendas visibles (3 por marca) en todas las categorías, con talles (alguno agotado), ofertas y características, sin duplicar ([cambio](../cambios/2026-11-tienda-demo.md)). | ✅ revisado contra la base local (dos corridas: 36 y 0 nuevas); capturas |
 | ROP-75 | Las fotos de la demostración son siluetas propias con la marca y "Foto de muestra", en `frontend/public/catalogo-inicial/` (no va a git). | ✅ capturas |
 | ROP-76 | La demostración no corre contra producción y `-- --borrar` la saca con sus fotos; todo dice que es ficticio. | ✅ revisado a mano |
+| ROP-77 | Cada prenda puede tener un "Código Lince" (Lince Indumentaria), opcional y repetible; se carga y se ve en el panel, no en la tienda ([cambio](../cambios/2026-11-codigo-lince.md)). | ✅ `ropa_reglas.test.mjs` › "ROP-77 y ROP-80…"; `ropa.integration.mjs` › "ROP-77 a ROP-81…" |
+| ROP-78 | Panel → Prendas busca por nombre o por código Lince (parte, sin mayúsculas); la tienda no busca por código. | ✅ `ropa.integration.mjs` › "ROP-77 a ROP-81…" |
+| ROP-79 | Cada línea del pedido guarda una copia del código; se ve en el detalle del pedido del panel y va en el mensaje de WhatsApp ("Lince …"); el seguimiento no lo muestra. | ✅ `ropa.integration.mjs` › "ROP-77 a ROP-81…"; `ropa_web.test.mjs` › "ROP-79…" |
+| ROP-80 | El código es cualquier texto de hasta 40 caracteres, sin espacios a los costados; vacío = sin código. | ✅ `ropa_reglas.test.mjs` › "ROP-77 y ROP-80…" |
+| ROP-81 | Al cargar otro color de un modelo (mismo nombre y marca) que ya tiene código, el formulario lo propone; se puede cambiar. | ✅ `ropa.integration.mjs` › "ROP-77 a ROP-81…"; `panel_pedidos.spec.js` › "prenda nueva…" |
 | ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
 | ROP-39 | Filtro por características (`car=1,7` en la URL), un bloque por grupo con solo las que se usan en la categoría; dentro de un grupo, una u otra; entre grupos, todas. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "catálogo…" |
 | ROP-58 | La ficha muestra las características agrupadas (Material: Cuero). | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "ficha…" |

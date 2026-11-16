@@ -59,6 +59,8 @@ arranca y responde de forma segura.
 | SIS-38 | Las imágenes se piden a Cloudinary al ancho en que se muestran. | ⚠️ sin test |
 | SIS-39 | Como máximo 8 banners de carrusel y 4 de cinta activos a la vez (los vencidos no cuentan); al pasarse: "Desactivá uno antes de sumar otro". | ✅ `checkout.integration.mjs` › "SIS-32, SIS-34, SIS-39 y COR-10: …" |
 | SIS-50 | Un banner de carrusel puede tener una imagen vertical para el celular. Se usa si todos los banners del carrusel la tienen, para que todas las diapositivas midan lo mismo; si no, se recorta la de computadora. | ⚠️ sin test (revisado en capturas) |
+| SIS-51 | Las columnas de texto únicas (persona, usuario, rol, permiso, módulo, catálogos) se declaran como índice con nombre fijo (`<tabla>_<columna>_key`): sincronizar los modelos varias veces no agrega restricciones repetidas ([cambio](../cambios/2026-11-indices-unicos.md)). | ✅ `ropa.integration.mjs` (Stilos) › "Arranque: sincronizar dos veces…" |
+| SIS-52 | Después de sincronizar, el arranque borra las restricciones `<nombre>_key<N>` que repiten las mismas columnas que `<nombre>_key` en la misma tabla (solo en el schema del proyecto); deja la original. | ✅ `ropa.integration.mjs` (Stilos) › "SIS-52…" |
 
 ### Seguridad y API del core
 

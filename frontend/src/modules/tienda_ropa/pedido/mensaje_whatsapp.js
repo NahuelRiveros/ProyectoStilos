@@ -6,7 +6,8 @@ import { textoEntrega } from "./entrega.js";
  * precios y total de la base), así el negocio lo encuentra en el panel por su número.
  */
 export function mensajePedido(pedido, negocio, seguimiento = null) {
-  const lineas = pedido.items.map((i) => `• ${i.cantidad} × ${i.nombre_prenda} (${i.color}, talle ${i.talle}): ${formatearPrecio(i.subtotal)}`);
+  // ROP-79: el código de Lince ayuda al local a encontrar la prenda al prepararla.
+  const lineas = pedido.items.map((i) => `• ${i.cantidad} × ${i.nombre_prenda} (${i.color}, talle ${i.talle})${i.codigo_lince ? ` · Lince ${i.codigo_lince}` : ""}: ${formatearPrecio(i.subtotal)}`);
   return [
     `¡Hola ${negocio}! Te envío mi pedido ${pedido.numero}:`,
     ...lineas,

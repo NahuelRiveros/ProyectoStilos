@@ -139,6 +139,11 @@ export const claveModelo = (nombre) => String(nombre ?? "").trim().replace(/\s+/
 const nombre = (max = 80) => z.string({ error: "Escribí el nombre." }).trim().min(1, "Escribí el nombre.").max(max, `Máximo ${max} caracteres.`);
 const idOpcional = z.preprocess((v) => (v === "" || v === undefined ? null : v), z.coerce.number().int().positive().nullable());
 const orden = z.coerce.number().int().min(0).max(9999).default(0);
+/** Texto opcional: sin espacios a los costados y vacío = null. */
+const textoOpcional = (max, mensaje) => z.preprocess(
+  (v) => (v === undefined || v === null ? null : String(v).trim() || null),
+  z.string().max(max, mensaje).nullable(),
+).default(null);
 
 export const esquemaId = z.object({ id: z.coerce.number().int().positive("Id no válido.") });
 
@@ -185,6 +190,7 @@ export const esquemaPrenda = z.object({
   descripcion: z.string().trim().max(2000).default(""),
   categoria_id: z.coerce.number({ error: "Elegí una categoría." }).int().positive("Elegí una categoría."),
   marca_id: idOpcional,
+  codigo_lince: textoOpcional(40, "El código Lince tiene hasta 40 caracteres."), // ROP-77 y ROP-80
   // ROP-38: ids de sus características, de cualquier grupo (repetidos se ignoran).
   caracteristicas: z.array(z.coerce.number().int().positive()).max(60).default([]).transform((ids) => [...new Set(ids)]),
   grupo_talle_id: z.coerce.number({ error: "Elegí el grupo de talles." }).int().positive("Elegí el grupo de talles."),
@@ -211,6 +217,9 @@ export const esquemaPrenda = z.object({
   const problema = problemaFotos(prenda.imagenes, [...new Set(prenda.variantes.map((v) => v.color_id))]);
   if (problema) ctx.addIssue({ code: "custom", path: ["imagenes"], message: problema });
 });
+
+/** ROP-81: para proponer el código Lince del modelo (mismo nombre y marca). */
+export const esquemaCodigoModelo = z.object({ nombre: z.string().trim().min(1).max(120), marca_id: idOpcional });
 
 export const esquemaEstado = z.object({ activo: z.boolean({ error: "Indicá si queda activa o no." }) });
 

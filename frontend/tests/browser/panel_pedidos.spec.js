@@ -92,6 +92,8 @@ test("prenda nueva: primero la categoría, que propone talles y características
     { id: 5, nombre: "Tiro", orden: 2, categorias: [12], caracteristicas: [{ id: 51, nombre: "Alto", orden: 0 }] },
   ]));
   api.responder("POST", "/ropa/panel/prendas", () => ({ status: 201, json: { ok: true, mensaje: "Prenda creada.", data: { id: 50 } } }));
+  // ROP-81: otro color del mismo modelo ya tiene código Lince.
+  api.responder("GET", "/ropa/panel/prendas/codigo-lince", ({ query }) => ({ json: { ok: true, data: { codigo_lince: query.get("nombre") === "Remera urbana" ? "TV-777" : null } } }));
 
   await page.goto("/admin/ropa/prendas/nueva");
   const boton = (name) => page.getByRole("button", { name, exact: true });
@@ -119,6 +121,8 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await boton("Cuero").click();
   await expect(boton("Cuero")).toHaveAttribute("aria-pressed", "true");
   await page.getByLabel("Nombre").fill("Remera urbana");
+  await expect(page.getByLabel(/Código Lince/)).toHaveValue("TV-777");
+  await expect(page.getByText("Propuesto: es el código de otro color de este modelo.", { exact: false })).toBeVisible();
   await page.getByLabel("Precio ($)").fill("50000");
   await boton("Negro").click();
   // Cada talle se toca para pasar de Hay a Agotado y a No se vende.
@@ -128,7 +132,7 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await expect(page.getByRole("button", { name: "Talle L: no se vende" })).toBeVisible();
   await page.getByRole("button", { name: "Guardar prenda" }).click();
   await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo).toMatchObject({
-    categoria_id: 11, grupo_talle_id: 1, caracteristicas: [31],
+    categoria_id: 11, grupo_talle_id: 1, caracteristicas: [31], codigo_lince: "TV-777",
     variantes: [{ color_id: 1, talle_id: 130, disponible: true }, { color_id: 1, talle_id: 131, disponible: false }],
   });
 });

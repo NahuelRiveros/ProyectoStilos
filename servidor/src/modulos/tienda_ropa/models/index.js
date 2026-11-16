@@ -14,28 +14,28 @@ const fechas = {
 /** ROP-01: árbol (ej. Mujer › Remeras). */
 export const CategoriaRopa = defineModel("CategoriaRopa", {
   nombre:   { type: DataTypes.STRING(80), allowNull: false },
-  slug:     { type: DataTypes.STRING(90), allowNull: false, unique: true },
+  slug:     { type: DataTypes.STRING(90), allowNull: false },
   padre_id: { type: DataTypes.INTEGER, allowNull: true, references: { model: "categoria_ropa", key: "id" } },
   // ROP-36: talles que se proponen al cargar una prenda de esta categoría (sin valor: los de la de arriba).
   grupo_talle_id: { type: DataTypes.INTEGER, allowNull: true, references: { model: "grupo_talle", key: "id" }, onDelete: "SET NULL" },
   orden:    { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   activo:   { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   ...fechas,
-}, { tableName: "categoria_ropa", indexes: [{ fields: ["padre_id"] }] });
+}, { tableName: "categoria_ropa", indexes: [{ fields: ["padre_id"] }, { name: "categoria_ropa_slug_key", unique: true, fields: ["slug"] }] });
 
 export const MarcaRopa = defineModel("MarcaRopa", {
-  nombre:   { type: DataTypes.STRING(80), allowNull: false, unique: true },
+  nombre:   { type: DataTypes.STRING(80), allowNull: false },
   activo:   { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   logo_url: { type: DataTypes.STRING(500), allowNull: true }, // ROP-25
   ...fechas,
-}, { tableName: "marca_ropa" });
+}, { tableName: "marca_ropa", indexes: [{ name: "marca_ropa_nombre_key", unique: true, fields: ["nombre"] }] });
 
 /** ROP-37: "Material", "Calce", "Estampa"… cada uno con sus valores. */
 export const GrupoCaracteristica = defineModel("GrupoCaracteristica", {
-  nombre: { type: DataTypes.STRING(40), allowNull: false, unique: true },
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   ...fechas,
-}, { tableName: "grupo_caracteristica" });
+}, { tableName: "grupo_caracteristica", indexes: [{ name: "grupo_caracteristica_nombre_key", unique: true, fields: ["nombre"] }] });
 
 export const Caracteristica = defineModel("Caracteristica", {
   grupo_caracteristica_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_caracteristica", key: "id" }, onDelete: "CASCADE" },
@@ -45,18 +45,18 @@ export const Caracteristica = defineModel("Caracteristica", {
 
 /** ROP-03 */
 export const ColorRopa = defineModel("ColorRopa", {
-  nombre: { type: DataTypes.STRING(40), allowNull: false, unique: true },
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
   hex:    { type: DataTypes.STRING(7), allowNull: false },
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   ...fechas,
-}, { tableName: "color_ropa" });
+}, { tableName: "color_ropa", indexes: [{ name: "color_ropa_nombre_key", unique: true, fields: ["nombre"] }] });
 
 /** ROP-04: "Ropa" (S…XXXL), "Jeans" (36…56). Una prenda usa los talles de un grupo. */
 export const GrupoTalle = defineModel("GrupoTalle", {
-  nombre: { type: DataTypes.STRING(40), allowNull: false, unique: true },
+  nombre: { type: DataTypes.STRING(40), allowNull: false },
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   ...fechas,
-}, { tableName: "grupo_talle" });
+}, { tableName: "grupo_talle", indexes: [{ name: "grupo_talle_nombre_key", unique: true, fields: ["nombre"] }] });
 
 export const Talle = defineModel("Talle", {
   grupo_talle_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_talle", key: "id" }, onDelete: "CASCADE" },
@@ -67,16 +67,19 @@ export const Talle = defineModel("Talle", {
 /** ROP-05 y ROP-07: un precio por prenda. ROP-17: precio_anterior solo se muestra (tachado). */
 export const Prenda = defineModel("Prenda", {
   nombre:          { type: DataTypes.STRING(120), allowNull: false },
-  slug:            { type: DataTypes.STRING(90), allowNull: false, unique: true },
+  slug:            { type: DataTypes.STRING(90), allowNull: false },
   descripcion:     { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
   categoria_id:    { type: DataTypes.INTEGER, allowNull: false, references: { model: "categoria_ropa", key: "id" } },
   marca_id:        { type: DataTypes.INTEGER, allowNull: true, references: { model: "marca_ropa", key: "id" } },
   grupo_talle_id:  { type: DataTypes.INTEGER, allowNull: false, references: { model: "grupo_talle", key: "id" } },
   precio:          { type: DataTypes.DECIMAL(12, 2), allowNull: false },
   precio_anterior: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
+  // ROP-77: código de la prenda en Lince Indumentaria (sistema externo del local). Opcional y repetible:
+  // los colores de un mismo modelo suelen compartirlo (ROP-81).
+  codigo_lince:    { type: DataTypes.STRING(40), allowNull: true },
   activo:         { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   ...fechas,
-}, { tableName: "prenda", indexes: [{ fields: ["categoria_id"] }, { fields: ["activo"] }] });
+}, { tableName: "prenda", indexes: [{ fields: ["categoria_id"] }, { fields: ["activo"] }, { name: "prenda_codigo_lince", fields: ["codigo_lince"] }, { name: "prenda_slug_key", unique: true, fields: ["slug"] }] });
 
 /** ROP-08: cada talle × color de la prenda, con "hay / agotado". */
 export const PrendaVariante = defineModel("PrendaVariante", {
@@ -124,16 +127,16 @@ export const PedidoWhatsapp = defineModel("PedidoWhatsapp", {
   // ROP-54: sube en cada cambio; si no coincide con la que vio quien cambia, otro lo cambió antes.
   version:     { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
   // ROP-43: la manda el navegador; un reintento con la misma clave devuelve el mismo pedido.
-  clave_envio: { type: DataTypes.STRING(64), allowNull: true, unique: true },
+  clave_envio: { type: DataTypes.STRING(64), allowNull: true },
   // ROP-18: copia de la entrega elegida; envio_gratis queda fijo aunque después cambie el mínimo.
   entrega:      { type: DataTypes.STRING(8), allowNull: false, defaultValue: "retiro", validate: { isIn: [["retiro", "envio"]] } },
   direccion:    { type: DataTypes.STRING(120), allowNull: true },
   localidad:    { type: DataTypes.STRING(80), allowNull: true },
   envio_gratis: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   // ROP-62: link secreto para seguir el pedido sin cuenta (los pedidos anteriores no tienen).
-  clave_seguimiento: { type: DataTypes.STRING(32), allowNull: true, unique: true },
+  clave_seguimiento: { type: DataTypes.STRING(32), allowNull: true },
   ...fechas,
-}, { tableName: "pedido_whatsapp", indexes: [{ fields: ["estado"] }, { fields: ["usuario_id"] }, { fields: ["estado_pago"] }] });
+}, { tableName: "pedido_whatsapp", indexes: [{ fields: ["estado"] }, { fields: ["usuario_id"] }, { fields: ["estado_pago"] }, { name: "pedido_whatsapp_clave_envio_key", unique: true, fields: ["clave_envio"] }, { name: "pedido_whatsapp_clave_seguimiento_key", unique: true, fields: ["clave_seguimiento"] }] });
 
 /** Copia nombre, color, talle y precio del momento: si la prenda cambia o se borra, el pedido no. */
 export const PedidoWhatsappItem = defineModel("PedidoWhatsappItem", {
@@ -142,6 +145,7 @@ export const PedidoWhatsappItem = defineModel("PedidoWhatsappItem", {
   nombre_prenda:   { type: DataTypes.STRING(120), allowNull: false },
   color:           { type: DataTypes.STRING(40), allowNull: false },
   talle:           { type: DataTypes.STRING(10), allowNull: false },
+  codigo_lince:    { type: DataTypes.STRING(40), allowNull: true }, // ROP-79: copia al momento del pedido
   cantidad:        { type: DataTypes.SMALLINT, allowNull: false },
   precio_unitario: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
   subtotal:        { type: DataTypes.DECIMAL(12, 2), allowNull: false },
