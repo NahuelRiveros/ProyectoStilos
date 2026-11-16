@@ -89,14 +89,12 @@ export function GrupoDeTalles({ grupos, aMano, valor, onElegir }) {
   const conOtros = verOtros || !aMano.includes(valor);
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-gray-700">Talles</p>
+      <p className="mb-2 text-sm font-semibold text-gray-700">Tipo de talle</p>
       <div role="group" aria-label="Grupo de talles" className="flex flex-wrap gap-2">
         {aMano.map((id) => {
           const g = grupos.find((x) => x.id === id);
           return (
-            <button key={id} type="button" onClick={() => onElegir(id)} aria-pressed={valor === id} className={chip(valor === id)}>
-              {g.nombre} <span className="font-normal opacity-70">{g.talles.length > 1 ? `${g.talles[0].nombre} a ${g.talles.at(-1).nombre}` : g.talles[0]?.nombre}</span>
-            </button>
+            <button key={id} type="button" onClick={() => onElegir(id)} aria-pressed={valor === id} className={chip(valor === id)}>{g.nombre}</button>
           );
         })}
         {!conOtros && (
@@ -114,26 +112,27 @@ export function GrupoDeTalles({ grupos, aMano, valor, onElegir }) {
   );
 }
 
-/** Paso 4 (ROP-84): cada talle se toca para pasar de Hay a No hay. "No hay" se ve tachado en la tienda. */
+/** Paso 4 (ROP-84): se marcan los talles que hay; los que quedan sin marcar son "No hay" (tachados en la tienda). */
 export function TallesDelColor({ talles, hay, onCambiar }) {
   return (
     <div>
-      <p className="mb-2 text-xs text-slate-500">Tocá un talle para marcar si hay o no hay. Los que no hay se ven tachados en la tienda.</p>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <p className="mb-2 text-sm font-semibold text-gray-700">¿Qué talles hay?</p>
+      <p className="mb-2 text-xs text-slate-500">Marcá los que hay. Los que no marques quedan como "No hay" y se ven tachados en la tienda.</p>
+      <div role="group" aria-label="Talles que hay" className="flex flex-wrap gap-2">
         {talles.map((t) => {
           const siHay = hay.has(t.id);
           return (
-            <button key={t.id} type="button" onClick={() => onCambiar([t.id], !siHay)} aria-pressed={siHay} aria-label={`Talle ${t.nombre}: ${siHay ? "hay" : "no hay"}`}
-              className={cn("flex min-h-16 flex-col items-center justify-center rounded-xl border-2 px-2 transition", siHay ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-dashed border-slate-300 bg-white text-slate-400")}>
-              <span className={cn("text-lg font-extrabold", !siHay && "line-through")}>{t.nombre}</span>
-              <span className="text-xs font-semibold">{siHay ? "Hay" : "No hay"}</span>
+            <button key={t.id} type="button" onClick={() => onCambiar([t.id], !siHay)} aria-pressed={siHay}
+              className={cn("inline-flex min-h-12 min-w-14 items-center justify-center gap-1.5 rounded-xl border-2 px-3 text-base font-extrabold transition",
+                siHay ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-500")}>
+              {siHay && <Check size={16} aria-hidden="true" />}{t.nombre}
             </button>
           );
         })}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), true)} className={BOTON_SECUNDARIO}>Todos: hay</button>
-        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), false)} className={BOTON_SECUNDARIO}>Todos: no hay</button>
+        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), true)} className={BOTON_SECUNDARIO}>Marcar todos</button>
+        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), false)} className={BOTON_SECUNDARIO}>Desmarcar todos</button>
       </div>
     </div>
   );

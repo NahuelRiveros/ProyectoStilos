@@ -82,7 +82,7 @@ function Formulario({ prenda, listas }) {
   // ROP-29: un solo color. Una prenda vieja con varios se queda con el primero (los otros, como prendas nuevas).
   const coloresAntes = [...new Set((prenda?.variantes ?? []).map((v) => v.color_id))];
   const [colorId, setColorId] = useState(coloresAntes[0] ?? null);
-  // ROP-84: los talles que hay; el resto del grupo se guarda como "no hay" (antes "agotado" o "no se vende").
+  // ROP-84: los talles marcados (hay); el resto del grupo se guarda como "no hay" (antes "agotado" o "no se vende").
   const [hay, setHay] = useState(() => new Set((prenda?.variantes ?? []).filter((v) => v.color_id === coloresAntes[0] && v.disponible).map((v) => v.talle_id)));
   // Las fotos son de la prenda (de su color): las generales de antes pasan a su color.
   const [fotos, setFotos] = useState(() => (prenda?.imagenes ?? []).filter((i) => i.color_id === null || i.color_id === coloresAntes[0]).map((i) => i.url));
@@ -93,9 +93,8 @@ function Formulario({ prenda, listas }) {
 
   const grupo = grupos.find((g) => g.id === grupoId);
   const talles = grupo?.talles ?? [];
-  const todosHay = (lista) => new Set(lista.map((t) => t.id));
   const variantes = colorId ? talles.map((t) => ({ color_id: colorId, talle_id: t.id, disponible: hay.has(t.id) })) : [];
-  const tallesQueHay = variantes.filter((v) => v.disponible).length;
+  const tallesQueHay = talles.filter((t) => hay.has(t.id)).length;
   const camino = caminoA(arbol, categoriaId);
   // ROP-60: solo los grupos de la categoría elegida (y los que ya tienen algo tildado).
   const { visibles, otros } = gruposDeCategoria(listas.caracteristicas.data, arbol, categoriaId, caracteristicas);
@@ -104,7 +103,9 @@ function Formulario({ prenda, listas }) {
 
   function cambiarGrupo(nuevo) {
     setGrupoId(nuevo);
-    setHay(colorId ? todosHay(grupos.find((g) => g.id === nuevo)?.talles ?? []) : new Set());
+    // Se arranca sin marcar; un grupo de un solo talle (Talle único) ya viene marcado.
+    const nuevos = grupos.find((g) => g.id === nuevo)?.talles ?? [];
+    setHay(new Set(nuevos.length === 1 ? [nuevos[0].id] : []));
   }
 
   function elegirCategoria(id) {
@@ -116,7 +117,6 @@ function Formulario({ prenda, listas }) {
   }
 
   function elegirColor(id) {
-    if (colorId === null) setHay(todosHay(talles));
     setColorId(id);
   }
 
@@ -130,6 +130,7 @@ function Formulario({ prenda, listas }) {
 
   async function enviar(valores) {
     if (!variantes.length) { setErrorTalles("Elegí el color de la prenda."); return; }
+    if (!prenda && !tallesQueHay) { setErrorTalles("Marcá al menos un talle que haya."); return; }
     setErrorTalles("");
     try {
       const r = await guardar.mutateAsync({
@@ -239,9 +240,7 @@ function Formulario({ prenda, listas }) {
               <GrupoDeTalles grupos={grupos} aMano={gruposAMano(grupos, grupoSugerido(arbol, categoriaId))} valor={grupoId} onElegir={cambiarGrupo} />
             </div>
             <div className="mt-3">
-              {colorId
-                ? <TallesDelColor talles={talles} hay={hay} onCambiar={(ids, siHay) => setHay((actual) => { const nuevo = new Set(actual); ids.forEach((id) => (siHay ? nuevo.add(id) : nuevo.delete(id))); return nuevo; })} />
-                : <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-500">Elegí el color para marcar qué talles hay.</p>}
+              <TallesDelColor talles={talles} hay={hay} onCambiar={(ids, siHay) => setHay((actual) => { const nuevo = new Set(actual); ids.forEach((id) => (siHay ? nuevo.add(id) : nuevo.delete(id))); return nuevo; })} />
             </div>
             {errorTalles && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorTalles}</p>}
           </Paso>
@@ -258,7 +257,7 @@ function Formulario({ prenda, listas }) {
       <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-2xl sm:border sm:shadow-lg">
         <p className="min-w-0 truncate text-sm text-slate-600">
           {camino.length
-            ? <><span className="font-semibold text-slate-900">{camino.map((c) => c.nombre).join(" › ")}</span> · {variantes.length ? `hay ${tallesQueHay} de ${plural(variantes.length, "talle", "talles")}` : plural(0, "talle", "talles")} · {plural(caracteristicas.size, "característica", "características")} · {fotos.length}/{MAX_FOTOS} fotos</>
+            ? <><span className="font-semibold text-slate-900">{camino.map((c) => c.nombre).join(" › ")}</span> · {`hay ${tallesQueHay} de ${plural(talles.length, "talle", "talles")}`} · {plural(caracteristicas.size, "característica", "características")} · {fotos.length}/{MAX_FOTOS} fotos</>
             : "Elegí qué vas a cargar."}
         </p>
         <div className="flex shrink-0 gap-2">

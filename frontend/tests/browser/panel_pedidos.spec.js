@@ -110,7 +110,7 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await boton("Cargo").click();
   await expect(page.getByRole("status").filter({ hasText: "Vas a cargar en" })).toContainText("Hombre");
   // ROP-83: a la vista, el grupo de la categoría y Talle único; los demás, en "Usar otro grupo".
-  const grupoTalles = (nombre) => page.getByRole("group", { name: "Grupo de talles" }).getByRole("button", { name: new RegExp(`^${nombre}`) });
+  const grupoTalles = (nombre) => page.getByRole("group", { name: "Grupo de talles" }).getByRole("button", { name: nombre, exact: true });
   await expect(grupoTalles("Jeans"), "ROP-36: Cargo usa los talles de Pantalones").toHaveAttribute("aria-pressed", "true");
   await expect(grupoTalles("Talle único")).toHaveAttribute("aria-pressed", "false");
   await expect(grupoTalles("Ropa")).toHaveCount(0);
@@ -139,9 +139,15 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await expect(page.getByRole("group", { name: "Bitonos" }).getByRole("button")).toHaveText(["Negro y blanco"]);
   await expect(page.getByRole("group", { name: "Estampados" }).getByRole("button")).toHaveText(["Animal print"]);
   await boton("Negro").click();
-  // ROP-84: cada talle se toca para pasar de Hay a No hay; se guardan todos los del grupo.
-  await page.getByRole("button", { name: "Talle L: hay" }).click();
-  await expect(page.getByRole("button", { name: "Talle L: no hay" })).toHaveAttribute("aria-pressed", "false");
+  // ROP-84: se marcan los que hay (arrancan sin marcar); los demás se guardan como "no hay".
+  const talle = (nombre) => page.getByRole("group", { name: "Talles que hay" }).getByRole("button", { name: nombre, exact: true });
+  await expect(talle("S")).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Guardar prenda" }).click();
+  await expect(page.getByText("Marcá al menos un talle que haya.")).toBeVisible();
+  await talle("S").click();
+  await talle("M").click();
+  await expect(talle("M")).toHaveAttribute("aria-pressed", "true");
+  await expect(talle("L")).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Guardar prenda" }).click();
   await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo).toMatchObject({
     categoria_id: 11, grupo_talle_id: 1, caracteristicas: [31], codigo_lince: "TV-777",

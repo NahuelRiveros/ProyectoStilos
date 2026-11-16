@@ -18,7 +18,7 @@
 | Código | Requisito | Estado |
 | --- | --- | --- |
 | ROP-83 | **Grupo de talles automático.** En el formulario, los talles son los del grupo de la categoría (ROP-36), con "Talle único" siempre como segunda opción. Los demás grupos quedan en "Usar otro grupo", por si una prenda no encaja. Al editar, la prenda sigue con su grupo. | ✅ |
-| ROP-84 | **Hay / No hay.** Cada talle se toca para pasar de "Hay" a "No hay" y al revés; botones "Todos: hay" y "Todos: no hay". Se guardan todos los talles del grupo ("No hay" = agotado, no se puede pedir). Reemplaza "Hay → Agotado → No se vende" (ROP-60) y ajusta ROP-08. | ✅ |
+| ROP-84 | **Marcar los talles que hay.** Los talles del grupo se muestran uno por uno, sin marcar: se tocan los que hay ("Marcar todos" / "Desmarcar todos"); los que quedan sin marcar son "No hay" (agotado, no se puede pedir). Un grupo de un solo talle (Talle único) ya viene marcado. Una prenda nueva necesita al menos uno marcado. Se guardan todos los talles del grupo. Reemplaza "Hay → Agotado → No se vende" (ROP-60) y ajusta ROP-08. | ✅ |
 | ROP-85 | **Ficha con todos los talles.** La tienda muestra todos los talles del grupo de la prenda; los que no hay, tachados. Vale también para las prendas ya cargadas (un talle que antes era "No se vende" se ve tachado). Ajusta ROP-12. | ✅ |
 | ROP-86 | **Colores liso, bitono o estampado.** Liso: un tono. Bitono: dos tonos (la muestra es un círculo partido). Estampado: un dibujo (Animal print, Camuflado o Multicolor) con sus dos tonos. Se ven así en el panel, en el formulario, en la tienda (tarjeta, ficha y filtro). En el formulario de prenda, los colores van separados en Básicos, Bitonos y Estampados. Ajusta ROP-03. | ✅ |
 | ROP-87 | **Sugeridos.** "Cargar sugeridos" de colores suma los bitonos y estampados de la lista. "Animal print" y "Camuflado" pasan a ser colores: "Cargar características sugeridas" los saca de Estampa si ninguna prenda los usa (si alguna los usa, quedan). | ✅ |
@@ -65,3 +65,4 @@ stock con cantidades (sigue siendo hay / no hay).
 | 2026-11-16 | ROP-84 y ROP-85 | Solo "Hay / No hay"; "No hay" se ve tachado en la tienda. Lo que antes era "No se vende" pasa a "No hay". | Dueño del proyecto |
 | 2026-11-16 | ROP-86 | Colores liso, bitono y estampado, separados en el formulario. | Dueño del proyecto |
 | 2026-11-16 | ROP-87 | Animal print y Camuflado salen de Estampa (si nadie los usa) y quedan como colores. | Dueño del proyecto |
+| 2026-11-16 | ROP-84 | Mejor marcar solo los talles que hay (arrancan sin marcar) que tocar cada uno entre Hay y No hay. Sin el rango "S a XXXL" en el botón del grupo. | Dueño del proyecto |
