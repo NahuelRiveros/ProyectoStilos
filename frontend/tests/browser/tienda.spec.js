@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { abrirFiltros, simularApi, sinDesborde } from "./api_simulada.js";
+import { PRENDAS, abrirFiltros, simularApi, sinDesborde } from "./api_simulada.js";
 
 // Tienda sin cuenta (ROP-11 a ROP-30): catálogo, ficha y pedido por WhatsApp.
 
@@ -34,7 +34,8 @@ test("catálogo: filtros de la categoría, talles agrupados, características, o
   await page.getByRole("button", { name: "Quitar filtros" }).click();
   await expect(page).toHaveURL(/orden=menor_precio/);
   await expect(page).not.toHaveURL(/ofertas=1/);
-  await expect(page.getByText("Oferta", { exact: true }).first()).toBeVisible();
+  // ROP-73: la etiqueta de oferta muestra el descuento.
+  await expect(page.getByText("-29%", { exact: true }).first()).toBeVisible();
   await sinDesborde(page);
 });
 
@@ -121,12 +122,21 @@ test("seguimiento sin cuenta: estado, qué sigue y prendas, sin datos personales
   await expect(page.getByRole("heading", { name: "No encontramos ese pedido" })).toBeVisible();
 });
 
-test("inicio: la cinta de marcas usa los logos de la configuración y lleva al catálogo de cada marca", async ({ page }) => {
+test("inicio: portada, beneficios, cinta de marcas con logos, categorías y marca destacada (ROP-69 a ROP-72)", async ({ page }) => {
   const api = await simularApi(page);
   const marcas = ["Taverniti", "MAYCLA", "Bando", "Mistral", "Raiders", "Marca Nueva"].map((nombre, i) => ({ id: i + 1, nombre, logo_url: null }));
   api.responder("GET", "/ropa/catalogo/marcas", () => ({ json: { ok: true, data: marcas } }));
+  // Muchas ofertas: la fila se desliza por dentro y no puede ensanchar la página.
+  const muchas = Array.from({ length: 12 }, (_, i) => ({ ...PRENDAS[0], id: 100 + i, slug: `oferta-${i}` }));
+  api.responder("GET", "/ropa/catalogo/prendas", () => ({ json: { ok: true, data: { items: muchas, paginacion: { page: 1, limit: 24, total: 12, totalPages: 1 } } } }));
   await page.goto("/");
-  const cinta = page.getByRole("heading", { name: "Nuestras marcas" }).locator("..");
+  // Sin banners en el panel: portada propia, beneficios de la configuración y marca destacada.
+  await expect(page.getByRole("heading", { level: 1, name: /Vestite con las marcas/i })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Beneficios" })).toContainText("En compras desde $ 150.000");
+  await expect(page.getByRole("heading", { name: "Lo nuevo de Taverniti" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver todo Taverniti" })).toHaveAttribute("href", "/catalogo?marca=1");
+  await expect(page.getByRole("link", { name: /^Mujer/ })).toHaveAttribute("href", "/catalogo?categoria=1");
+  const cinta = page.getByRole("region", { name: "Marcas oficiales" });
   // Las de proyecto/config/marcas_config.js se ven con su logo; una sin logo, con su nombre en negrita.
   await expect(cinta.getByRole("img", { name: "Taverniti" })).toBeVisible();
   await expect(cinta.getByRole("img", { name: "MAYCLA" })).toHaveAttribute("src", /maycla/);

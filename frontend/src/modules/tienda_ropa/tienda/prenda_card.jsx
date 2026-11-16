@@ -24,7 +24,7 @@ export default function PrendaCard({ prenda }) {
         {prenda.agotada && (
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-(--kt-ink)">Agotada</span>
         )}
-        {enOferta(prenda) && <EtiquetaOferta className="absolute right-3 top-3" />}
+        {enOferta(prenda) && <EtiquetaOferta prenda={prenda} className="absolute right-3 top-3" />}
       </div>
       <div className="mt-3 px-0.5">
         <h3 className="truncate text-sm font-semibold text-(--kt-ink)">{prenda.nombre}</h3>

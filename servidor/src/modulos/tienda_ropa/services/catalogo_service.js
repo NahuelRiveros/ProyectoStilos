@@ -19,7 +19,22 @@ async function categoriasVisibles() {
 }
 
 export async function arbolCategorias() {
-  return armarArbol((await categoriasVisibles()).map(({ id, nombre, slug, padre_id }) => ({ id, nombre, slug, padre_id })));
+  const visibles = await categoriasVisibles();
+  const arbol = armarArbol(visibles.map(({ id, nombre, slug, padre_id }) => ({ id, nombre, slug, padre_id })));
+  // ROP-72: las principales llevan la foto de la prenda visible más nueva de su rama (para las tarjetas del inicio).
+  const fotos = await Promise.all(arbol.map((raiz) => fotoDeRama(conDescendientes(visibles, raiz.id))));
+  return arbol.map((raiz, i) => ({ ...raiz, foto: fotos[i] }));
+}
+
+async function fotoDeRama(categorias) {
+  const prenda = await Prenda.findOne({
+    where: { activo: true, categoria_id: categorias },
+    attributes: ["id"],
+    include: [{ model: PrendaImagen, as: "imagenes", attributes: ["url", "orden"], required: true }],
+    order: [["creado_en", "DESC"], ["id", "DESC"], [{ model: PrendaImagen, as: "imagenes" }, "orden", "ASC"]],
+    subQuery: false,
+  });
+  return prenda?.imagenes[0]?.url ?? null;
 }
 
 /** Las características de esas prendas, agrupadas y en el orden del panel (ROP-39 y ROP-58). */

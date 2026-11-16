@@ -1,5 +1,6 @@
 import { cn } from "../../../core/utils/cn.js";
 import { enOferta, formatearPrecio } from "../utils/dinero.js";
+import { porcentajeDescuento } from "../utils/home_tienda.js";
 
 /** Precio de la prenda; si está en oferta, el anterior tachado al lado. */
 export default function Precio({ prenda, grande = false, className }) {
@@ -15,6 +16,8 @@ export default function Precio({ prenda, grande = false, className }) {
   );
 }
 
-export function EtiquetaOferta({ className }) {
-  return <span className={cn("rounded-full bg-(--kt-accent-comercial) px-3 py-1 text-xs font-bold text-white", className)}>Oferta</span>;
+/** ROP-73: con la prenda, muestra el descuento ("-35%"); sin ella, "Oferta". */
+export function EtiquetaOferta({ prenda, className }) {
+  const pct = prenda ? porcentajeDescuento(prenda) : null;
+  return <span className={cn("rounded-full bg-(--kt-accent-comercial) px-3 py-1 text-xs font-bold text-white", className)}>{pct ? `-${pct}%` : "Oferta"}</span>;
 }

@@ -9,7 +9,8 @@
     "test:integration": "node --test tests/ropa.integration.mjs",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "admin:verificar": "node --env-file=.env.produccion src/core/database/seed/verificar_super_admin.js"
+    "admin:verificar": "node --env-file=.env.produccion src/core/database/seed/verificar_super_admin.js",
+    "demo:tienda": "node src/modulos/tienda_ropa/seed_tienda_demo.js"
   },
   "keywords": [],
   "author": "",

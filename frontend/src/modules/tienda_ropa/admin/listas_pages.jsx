@@ -13,7 +13,7 @@ import CategoriasDelGrupo from "./categorias_del_grupo.jsx";
 const MARCAS = {
   lista: "marcas", titulo: "Marcas", nuevo: "Nueva marca", icono: Tag, sugeridos: "Cargar marcas sugeridas",
   descripcion: "Opcional en cada prenda. Las que tienen prendas se ven en el inicio, con su logo (el que subas acá o el de la configuración del proyecto). Una marca desactivada no aparece en la tienda.",
-  vacio: "Todavía no hay marcas.", vacioDetalle: "Cargá las marcas que vende Stilos y después sumales el logo.",
+  vacio: "Todavía no hay marcas.", vacioDetalle: "Cargá las marcas que vende Stilo's y después sumales el logo.",
   valores: (item) => ({ nombre: item?.nombre ?? "", activo: item?.activo ?? true, logo_url: item?.logo_url ?? "" }),
   armar: (v) => ({ nombre: v.nombre, activo: v.activo, logo_url: v.logo_url || null }),
   campos: ({ register, errors, watch, setValue }) => (
@@ -63,7 +63,7 @@ const CARACTERISTICAS = {
 
 const COLORES = {
   lista: "colores", titulo: "Colores", nuevo: "Nuevo color", icono: Palette, sugeridos: "Cargar colores sugeridos",
-  descripcion: "Los que se pueden elegir al cargar una prenda. Los sugeridos son la paleta habitual de Stilos.",
+  descripcion: "Los que se pueden elegir al cargar una prenda. Los sugeridos son la paleta habitual de Stilo's.",
   vacio: "Todavía no hay colores.", vacioDetalle: "Empezá con la paleta sugerida y después editala.",
   valores: (item) => ({ nombre: item?.nombre ?? "", hex: item?.hex ?? "#1E2D3D", orden: item?.orden ?? 0 }),
   armar: (v) => ({ nombre: v.nombre, hex: v.hex, orden: Number(v.orden) || 0 }),

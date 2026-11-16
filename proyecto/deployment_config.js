@@ -1,6 +1,6 @@
 // Direcciones públicas de esta instalación. No incluir secretos.
 export const deploymentConfig = {
-  nombre: "Stilos",
+  nombre: "Stilo's",
   // [COMPLETAR] las dos URLs (tienen que ser válidas: el build las usa si falta VITE_API_URL).
   backendUrl: "https://completar.onrender.com",
   frontendUrl: "https://stilos.vercel.app",

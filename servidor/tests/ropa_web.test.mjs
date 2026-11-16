@@ -6,6 +6,7 @@ import {
 import { linkWhatsapp, mensajePedido } from "../../frontend/src/modules/tienda_ropa/pedido/mensaje_whatsapp.js";
 import { mensajeEstadoCliente, queSigue, urlSeguimiento } from "../../frontend/src/modules/tienda_ropa/pedido/mensajes_estado.js";
 import { textoEntrega } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
+import { beneficiosTienda, instagramDe, marcaDestacada, porcentajeDescuento } from "../../frontend/src/modules/tienda_ropa/utils/home_tienda.js";
 import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
 import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
@@ -150,11 +151,11 @@ test("ROP-31: el middleware de Vercel responde la vista previa solo a los bots",
     const pedir = (ruta, userAgent) => middleware(new Request(`https://stilos.test${ruta}`, { headers: { "user-agent": userAgent } }));
     assert.equal(await pedir("/catalogo/jean-bando-azul", "Mozilla/5.0 Chrome/120"), undefined, "a las personas les sigue la tienda");
     const respuesta = await pedir("/catalogo/jean-bando-azul", "WhatsApp/2.24");
-    assert.match(await respuesta.text(), /og:title" content="Jean Bando \| Stilos"/);
+    assert.match(await respuesta.text(), /og:title" content="Jean Bando \| Stilo&#39;s"/, "el apóstrofo del nombre va escapado");
     assert.match(respuesta.headers.get("cache-control"), /s-maxage=3600/);
     assert.match(pedidas[0], /\/api\/ropa\/catalogo\/prendas\/jean-bando-azul$/);
     const sinPrenda = await pedir("/catalogo/no-existe", "WhatsApp/2.24");
-    assert.match(await sinPrenda.text(), /og:title" content="Stilos"/);
+    assert.match(await sinPrenda.text(), /og:title" content="Stilo&#39;s"/);
     assert.match(sinPrenda.headers.get("cache-control"), /s-maxage=60/, "caché corta para reintentar cuando Render despierte");
   } finally {
     globalThis.fetch = fetchOriginal;
@@ -201,4 +202,18 @@ test("ROP-36: el grupo de talles sugerido es el de la categoría o, si no tiene,
   assert.equal(grupoSugerido(arbol, 5), null, "sin sugerencia");
   assert.equal(grupoSugerido(arbol, 99), null);
   assert.equal(grupoSugerido(undefined, 1), null);
+});
+
+test("ROP-70 a ROP-73: beneficios según la configuración, marca destacada, % de descuento e Instagram solo si está cargado", () => {
+  assert.deepEqual(beneficiosTienda({ envioGratisDesde: 150000, whatsapp: "549370" }).map((b) => b.id), ["envio", "whatsapp", "retiro"]);
+  assert.equal(beneficiosTienda({ envioGratisDesde: 150000 })[0].texto, "En compras desde $ 150.000");
+  assert.deepEqual(beneficiosTienda({ envioGratisDesde: null, whatsapp: null }).map((b) => b.id), ["retiro"]);
+  const marcas = [{ id: 1, nombre: "Bando" }, { id: 2, nombre: " raiders " }];
+  assert.equal(marcaDestacada(marcas, ["Taverniti", "Raiders", "Bando"]).id, 2, "la primera de la lista que tenga prendas");
+  assert.equal(marcaDestacada(marcas, ["Taverniti"]), null);
+  assert.equal(marcaDestacada(undefined, ["Bando"]), null);
+  assert.equal(porcentajeDescuento({ precio: 76830, precio_anterior: 118200 }), 35);
+  assert.equal(porcentajeDescuento({ precio: 100, precio_anterior: null }), null);
+  assert.equal(instagramDe([{ id: "instagram", valor: "[COMPLETAR usuario de Instagram]", href: "#" }]), null);
+  assert.deepEqual(instagramDe([{ id: "instagram", valor: "@stilos.ok", href: "#" }]), { usuario: "stilos.ok", href: "https://instagram.com/stilos.ok" });
 });

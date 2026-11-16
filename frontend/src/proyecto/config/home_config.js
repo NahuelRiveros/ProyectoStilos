@@ -16,4 +16,12 @@ export const HOME_TIENDA = {
   novedadesEtiqueta: "Recién llegado",
   novedadesTitulo: "Novedades",
   verTodo: "Ver todo",
+  // ROP-69: portada cuando no hay banners cargados en el panel.
+  portadaEtiqueta: "Nueva temporada",
+  portadaTitulo: "Vestite con las marcas que te gustan",
+  portadaBoton: "Ver colección",
+  portadaOfertas: "Ver ofertas",
+  marcasTitulo: "Marcas oficiales",
+  ofertasTitulo: "Ofertas",
+  instagramTitulo: "Seguinos en Instagram",
 };

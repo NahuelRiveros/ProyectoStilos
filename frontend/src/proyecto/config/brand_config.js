@@ -6,16 +6,17 @@ import { clientConfig } from "../../../../proyecto/client_config.js";
 
 export const clientes = {
   stilos: {
-    nombre: "Stilos",
-    nombreCorto: "Stilos",
+    nombre: "Stilo's",
+    nombreCorto: "Stilo's",
     rubro: "Indumentaria",
     tagline: "Moda y estilo",
     razonSocial: null, // [COMPLETAR] razón social para el pie de página
     // "gc-mark" muestra las imágenes de logo_config.js.
-    logo: { tipo: "gc-mark", texto: "Stilos", ariaLabel: "Stilos" },
+    logo: { tipo: "gc-mark", texto: "Stilo's", ariaLabel: "Stilo's" },
     // Tipografías del manual de marca (se cargan en index.html).
     fuentes: {
-      display: "'Cormorant Garamond', Georgia, serif",
+      // ROP-68: títulos en una sans fuerte (decidido el 2026-11-13; antes Cormorant Garamond).
+      display: "'Archivo', 'DM Sans', ui-sans-serif, system-ui, sans-serif",
       body: "'DM Sans', ui-sans-serif, system-ui, sans-serif",
     },
   },

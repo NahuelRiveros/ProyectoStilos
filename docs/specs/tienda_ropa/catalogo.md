@@ -27,7 +27,7 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-02 | Marcas: opcionales en cada prenda; nombre único; no se borra si la usa una prenda. | ✅ `ropa.integration.mjs` › "ROP-20 por HTTP…" (nombre único) |
 | ROP-03 | Colores con muestra #RRGGBB; "Cargar sugeridos" agrega la paleta de Stilos sin duplicar. | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` › "ROP-03 y ROP-04…" |
 | ROP-04 | Grupos de talles (Ropa, Jeans, Calzado, Niños 8 a 16 y Talle único sugeridos); no se saca un talle que usa una prenda. | ✅ `ropa.integration.mjs` › "ROP-03 y ROP-04…" y "ROP-04…" |
-| ROP-05 | Prenda: nombre, descripción, categoría, marca, diseño, grupo de talles, precio y si se ve; al menos un talle. | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` |
+| ROP-05 | Prenda: nombre, descripción, categoría, marca, características, grupo de talles, precio y si se ve; al menos un talle. Tablas, campos y validaciones: [prendas_datos.md](prendas_datos.md). | ✅ `ropa_reglas.test.mjs`; `ropa.integration.mjs` |
 | ROP-06 | Reemplazada por ROP-29. | — |
 | ROP-07 | Un solo precio por prenda. | ✅ `ropa_reglas.test.mjs` |
 | ROP-08 | Cada talle está "hay" o "agotado"; lo agotado no se puede pedir. Al editar, las variantes que siguen conservan su id. | ✅ `ropa.integration.mjs` › "ROP-05 a ROP-08…" y "ROP-14 y ROP-15…" |
@@ -56,6 +56,15 @@ siga su estado. Sin pagos con tarjeta dentro de la web.
 | ROP-22 | "Compartir": menú del teléfono o copiar el link. | ✅ `ropa_web.test.mjs` › "ROP-22…"; `tienda.spec.js` › "ficha…" |
 | ROP-31 | Al compartir el link de una prenda, WhatsApp y las redes muestran su nombre, marca, precio y foto (`frontend/middleware.js`, solo para esos bots). Si la API no responde, la vista previa de la tienda. | ✅ `ropa_web.test.mjs` › "ROP-31…" (2) |
 | ROP-26 | Inicio con "Ofertas" (hasta 8, si hay) y "Nuestras marcas" (con prendas a la vista, logo o nombre). | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" (marcas); pantalla: capturas |
+| ROP-68 | Títulos de la tienda en Archivo (sans fuerte); los del home en mayúsculas; texto en DM Sans ([cambio](../cambios/2026-11-home-marketing.md)). | ✅ pantalla: capturas |
+| ROP-69 | Sin banners vigentes, el home abre con una portada propia (título, marcas, "Ver colección" y "Ver ofertas", hasta 3 fotos de las últimas prendas). | ✅ `tienda.spec.js` › "inicio: portada…" |
+| ROP-70 | Franja de beneficios según `client_config.js`: envío gratis desde el mínimo, pedido por WhatsApp y retiro en el local. | ✅ `ropa_web.test.mjs` › "ROP-70 a ROP-73…"; `tienda.spec.js` › "inicio: portada…" |
+| ROP-71 | La cinta de marcas va arriba; "marca destacada" muestra la primera de `MARCAS_DESTACADAS` con prendas a la vista, con logo, hasta 4 prendas y "Ver todo {marca}". | ✅ `ropa_web.test.mjs` › "ROP-70 a ROP-73…"; `tienda.spec.js` › "inicio: portada…" |
+| ROP-72 | Las categorías principales se muestran como tarjetas con la foto de su prenda visible más nueva. | ✅ `ropa.integration.mjs` › "ROP-10 a ROP-12…"; `tienda.spec.js` › "inicio: portada…" |
+| ROP-73 | Ofertas en una fila deslizable con el % de descuento; "Seguinos en Instagram" solo con el usuario cargado. | ✅ `ropa_web.test.mjs` › "ROP-70 a ROP-73…"; `tienda.spec.js` › "catálogo…" |
+| ROP-74 | `npm --prefix servidor run demo:tienda` carga en la base local 36 prendas visibles (3 por marca) en todas las categorías, con talles (alguno agotado), ofertas y características, sin duplicar ([cambio](../cambios/2026-11-tienda-demo.md)). | ✅ revisado contra la base local (dos corridas: 36 y 0 nuevas); capturas |
+| ROP-75 | Las fotos de la demostración son siluetas propias con la marca y "Foto de muestra", en `frontend/public/catalogo-inicial/` (no va a git). | ✅ capturas |
+| ROP-76 | La demostración no corre contra producción y `-- --borrar` la saca con sus fotos; todo dice que es ficticio. | ✅ revisado a mano |
 | ROP-28 | Las opciones de filtro salen de la categoría elegida; los talles, agrupados por grupo. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…" |
 | ROP-39 | Filtro por características (`car=1,7` en la URL), un bloque por grupo con solo las que se usan en la categoría; dentro de un grupo, una u otra; entre grupos, todas. | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "catálogo…" |
 | ROP-58 | La ficha muestra las características agrupadas (Material: Cuero). | ✅ `ropa.integration.mjs` › "ROP-24 a ROP-39…"; `tienda.spec.js` › "ficha…" |

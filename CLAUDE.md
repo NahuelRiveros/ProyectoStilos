@@ -22,7 +22,9 @@ pedido y lo envía por WhatsApp. Sin pagos online ni cuentas de cliente. Hecho s
 - El navegador nunca manda precios: el pedido se calcula con los de la base (ROP-14).
 - Al editar una prenda, las variantes que siguen conservan su id (el pedido guardado en el
   navegador las usa).
-- Estética de la marca: Cormorant Garamond (títulos, clase `kt-display`) y DM Sans; paleta navy,
+- El nombre visible de la organización es **Stilo's** (`brand_config.js`, `deployment_config.js`, `index.html`);
+  "Stilos" queda solo en carpetas, ids y repositorio.
+- Estética de la marca: Archivo (títulos, clase `kt-display`, en el home en mayúsculas) y DM Sans; paleta navy,
   crema y siena en `frontend/src/proyecto/config/theme_config.js`. Botones de compra con
   `--kt-accent-comercial` (siena oscura: contraste correcto con texto blanco).
 - No inventar datos del negocio: lo que falta queda `[COMPLETAR]` (razón social, dirección, Instagram, URLs).

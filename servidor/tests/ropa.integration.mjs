@@ -214,6 +214,10 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const filtros = await catalogo.opcionesDeFiltro();
       assert.deepEqual(filtros.marcas.map((m) => m.nombre), ["Stilos"]);
 
+      // ROP-72: la categoría principal lleva la foto de su prenda visible más nueva.
+      const conFoto = (await catalogo.arbolCategorias()).find((c) => c.id === mujer.id);
+      assert.match(conFoto.foto ?? "", /^https:\/\//);
+      assert.equal("foto" in conFoto.hijas[0], false, "solo las principales");
       // Ocultar la categoría de arriba oculta todo lo de abajo.
       await listas.actualizarCategoria(mujer.id, { nombre: "Mujer", padre_id: null, orden: 0, activo: false });
       assert.equal((await catalogo.listarCatalogo({ pagina: 1 })).items.length, 0);

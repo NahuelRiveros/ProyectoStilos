@@ -24,6 +24,10 @@ import bbn from "../assets/marcas/bbn.webp";
 import aff from "../assets/marcas/aff.webp";
 import usAmerika from "../assets/marcas/us-amerika.webp";
 
+// ROP-71: marcas para el bloque "marca destacada" del inicio, en orden de preferencia: se muestra la
+// primera que tenga prendas a la vista. Cambiá el orden para destacar otra (nombres como en el panel).
+export const MARCAS_DESTACADAS = ["Taverniti", "Raiders", "Bravo", "Bando"];
+
 export const LOGOS_MARCAS = {
   Bando: { logo: bando },
   Cataleia: { logo: cataleia },
