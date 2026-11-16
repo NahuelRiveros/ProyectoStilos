@@ -15,17 +15,31 @@ export const COLORES_SUGERIDOS = [
 export const MARCAS_SUGERIDAS = ["Taverniti", "Bando", "Raiders", "Bravo", "BBN", "Panther", "AFF", "MAYCLA", "Isostasia", "Cataleia", "Mistral", "US Amerika"];
 // ROP-37: características por grupo (lista aprobada por el dueño, 2026-11-12).
 // ROP-61: `categorias`, nombres de las categorías donde se usa cada grupo (sin la clave: en todas).
-const PARTES_DE_ARRIBA = ["Remeras", "Musculosas", "Chombas", "Camisas", "Tops", "Blusas", "Bodys", "Buzos", "Sweaters", "Vestidos", "Vestidos y polleras", "Conjuntos"];
-const PARTES_DE_ABAJO = ["Jeans", "Pantalones", "Bermudas", "Shorts", "Bermudas y shorts"];
+// ROP-82 (2026-11-16): el material se separa por tipo de prenda y cada grupo va con lo que le corresponde.
+const PARTES_DE_ARRIBA = ["Remeras", "Musculosas", "Chombas", "Camisas", "Tops", "Blusas", "Bodys"];
+const ABRIGOS = ["Buzos", "Sweaters", "Camperas", "Chalecos", "Sacos"];
+const PARTES_DE_ABAJO = ["Jeans", "Pantalones", "Bermudas", "Shorts", "Bermudas y shorts", "Calzas"];
+const VESTIDOS = ["Vestidos", "Polleras", "Monos y enteritos", "Vestidos y polleras"];
+// `antes`: las categorías de la lista anterior (2026-11-12). Un grupo que solo tiene esas (o ninguna) se
+// considera sin tocar y pasa al árbol actual; si el negocio le sumó otras, se respeta.
+const ARRIBA_ANTES = ["Remeras", "Musculosas", "Chombas", "Camisas", "Tops", "Blusas", "Bodys", "Buzos", "Sweaters", "Vestidos", "Vestidos y polleras", "Conjuntos"];
+const ABAJO_ANTES = ["Jeans", "Pantalones", "Bermudas", "Shorts", "Bermudas y shorts"];
+// Los valores que tenía "Material" antes de separarlo: los que ya no le corresponden se sacan (si nadie los usa).
+export const MATERIAL_ANTES = ["Algodón", "Lino", "Denim", "Gabardina", "Satén", "Seda", "Lana", "Tejido de punto", "Frisa", "Polar", "Modal", "Viscosa", "Cuero", "Eco cuero", "Gamuza", "Lona", "Sintético", "Deportivo (dry fit)"];
+// Grupos de material: al reorganizar, cada prenda queda con el que cubre su categoría.
+export const GRUPOS_DE_MATERIAL = ["Material", "Tela", "Material del calzado", "Material del accesorio"];
 export const CARACTERISTICAS_SUGERIDAS = [
-  { nombre: "Estampa", categorias: PARTES_DE_ARRIBA, valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
-  { nombre: "Material", valores: ["Algodón", "Lino", "Denim", "Gabardina", "Satén", "Seda", "Lana", "Tejido de punto", "Frisa", "Polar", "Modal", "Viscosa", "Cuero", "Eco cuero", "Gamuza", "Lona", "Sintético", "Deportivo (dry fit)"] },
-  { nombre: "Calce", categorias: PARTES_DE_ABAJO, valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },
-  { nombre: "Tiro", categorias: PARTES_DE_ABAJO, valores: ["Alto", "Medio", "Bajo"] },
-  { nombre: "Manga", categorias: PARTES_DE_ARRIBA, valores: ["Sin mangas", "Corta", "3/4", "Larga"] },
-  { nombre: "Cuello", categorias: PARTES_DE_ARRIBA, valores: ["Redondo", "En V", "Polo", "Camisero", "Mao", "Polera", "Con capucha"] },
+  { nombre: "Estampa", categorias: [...PARTES_DE_ARRIBA, ...ABRIGOS, ...VESTIDOS], antes: ARRIBA_ANTES, valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
+  { nombre: "Tela", categorias: [...PARTES_DE_ARRIBA, ...VESTIDOS], valores: ["Algodón", "Lino", "Modal", "Viscosa", "Seda", "Satén", "Tejido de punto", "Deportivo (dry fit)"] },
+  { nombre: "Material", categorias: ABRIGOS, antes: [], valores: ["Frisa", "Polar", "Lana", "Algodón", "Tejido de punto", "Denim", "Gabardina", "Cuero", "Eco cuero", "Sintético"] },
+  { nombre: "Calce", categorias: PARTES_DE_ABAJO, antes: ABAJO_ANTES, valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },
+  { nombre: "Tiro", categorias: PARTES_DE_ABAJO, antes: ABAJO_ANTES, valores: ["Alto", "Medio", "Bajo"] },
+  { nombre: "Manga", categorias: [...PARTES_DE_ARRIBA, ...VESTIDOS], antes: ARRIBA_ANTES, valores: ["Sin mangas", "Corta", "3/4", "Larga"] },
+  { nombre: "Cuello", categorias: [...PARTES_DE_ARRIBA, ...ABRIGOS], antes: ARRIBA_ANTES, valores: ["Redondo", "En V", "Polo", "Camisero", "Mao", "Polera", "Con capucha"] },
   { nombre: "Detalles", categorias: ["Mujer", "Hombre", "Niños"], valores: ["Elastizado", "Con roturas", "Con bolsillos", "Con cierre", "Con botones", "Con brillos"] },
   { nombre: "Calzado", categorias: ["Calzado"], valores: ["Con cordones", "Con abrojo", "Sin cordones", "Caña baja", "Caña media", "Caña alta", "Plataforma"] },
+  { nombre: "Material del calzado", categorias: ["Calzado"], valores: ["Cuero", "Eco cuero", "Gamuza", "Lona", "Sintético"] },
+  { nombre: "Material del accesorio", categorias: ["Accesorios"], valores: ["Cuero", "Eco cuero", "Lona", "Sintético", "Algodón"] },
 ];
 // ROP-27 y ROP-36: árbol de una tienda de ropa. `grupo`: grupo de talles sugerido (las subcategorías
 // sin grupo propio usan el de arriba). Se puede editar todo después desde el panel.

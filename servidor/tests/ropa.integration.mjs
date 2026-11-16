@@ -270,9 +270,9 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       await listas.actualizarGrupoCaracteristica(tiro.id, { nombre: "Tiro", orden: 3, valores: valoresTiro, categorias: [hombre.id] });
       assert.deepEqual((await listas.listarCaracteristicas()).find((g) => g.id === tiro.id).categorias, [hombre.id]);
       await assert.rejects(listas.actualizarGrupoCaracteristica(tiro.id, { nombre: "Tiro", orden: 3, valores: valoresTiro, categorias: [999999] }), { codigo: "DATOS_INVALIDOS" });
-      assert.deepEqual(material.caracteristicas.slice(0, 3).map((c) => c.nombre), ["Algodón", "Bambú", "Lino"]);
+      assert.deepEqual(material.caracteristicas.slice(0, 3).map((c) => c.nombre), ["Algodón", "Bambú", "Frisa"]);
       const car = (grupo, valor) => gruposCar.find((g) => g.nombre.toLowerCase() === grupo).caracteristicas.find((c) => c.nombre === valor).id;
-      const [liso, rayado, algodon, lino] = [car("estampa", "Liso"), car("estampa", "Rayado"), car("material", "Algodón"), car("material", "Lino")];
+      const [liso, rayado, algodon, polar] = [car("estampa", "Liso"), car("estampa", "Rayado"), car("material", "Algodón"), car("material", "Polar")];
 
       // ROP-38: varias por prenda; al editar se reemplazan.
       await prendas.actualizarPrenda(remera.id, prendaValida({
@@ -282,7 +282,7 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       }));
       assert.deepEqual((await prendas.obtenerPrenda(remera.id)).caracteristicas.sort(), [liso, algodon].sort());
       const rayada = await prendas.crearPrenda(prendaValida({
-        nombre: "Remera rayada", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 17000, caracteristicas: [rayado, lino],
+        nombre: "Remera rayada", categoria_id: remeras.id, grupo_talle_id: grupoRopa.id, precio: 17000, caracteristicas: [rayado, polar],
         variantes: [{ color_id: colores.Negro, talle_id: talles.M }],
       }));
       await assert.rejects(prendas.crearPrenda(prendaValida({
@@ -304,9 +304,9 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       await assert.rejects(listas.actualizarGrupoCaracteristica(material.id, { nombre: "material", orden: 0, valores: ["Bambú"] }), { codigo: "EN_USO" });
       await assert.rejects(listas.eliminarGrupoCaracteristica(material.id), { codigo: "EN_USO" });
       await prendas.eliminarPrenda(rayada.id);
-      await listas.actualizarGrupoCaracteristica(material.id, { nombre: "Material", orden: 0, valores: ["Algodón", "Lino", "Lona"] });
+      await listas.actualizarGrupoCaracteristica(material.id, { nombre: "Material", orden: 0, valores: ["Algodón", "Lino", "Lona", "Bambú"] });
       assert.deepEqual((await listas.listarCaracteristicas()).find((g) => g.id === material.id).caracteristicas.map((c) => [c.nombre, c.id === algodon]),
-        [["Algodón", true], ["Lino", false], ["Lona", false]]);
+        [["Algodón", true], ["Lino", false], ["Lona", false], ["Bambú", false]]);
 
       // ROP-24 y ROP-25: las 12 marcas sin duplicar (sin importar mayúsculas) y logo opcional.
       await listas.crearMarca({ nombre: "taverniti", activo: true, logo_url: "https://x.test/taverniti.png" });
@@ -328,16 +328,42 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const contar = (nodos) => nodos.reduce((n, c) => n + 1 + contar(c.hijas ?? []), 0);
       assert.equal(await listas.cargarCategoriasSugeridas(), contar(CATEGORIAS_SUGERIDAS) - 3);
       assert.equal(await listas.cargarCategoriasSugeridas(), 0, "la segunda vez no agrega nada");
-      // ROP-61: con el árbol cargado, las sugeridas relacionan a los que no tenían; lo ya elegido no se toca.
-      assert.equal(await listas.cargarCaracteristicasSugeridas(), 15, "vuelven los 15 materiales que se sacaron más arriba");
+      // ROP-82: prendas con "Material" en categorías que pasan a tener otro grupo de material.
+      const enArbol = await listas.listarCategorias();
+      const hoja = (...camino) => camino.reduce((nivel, nombre) => (nivel?.hijas ?? nivel).find((c) => c.nombre === nombre), enArbol).id;
+      const valorDe = async (grupo, valor) => (await listas.listarCaracteristicas()).find((g) => g.nombre.toLowerCase() === grupo).caracteristicas.find((c) => c.nombre === valor).id;
+      const conMaterial = async (nombre, categoria_id, valor) => prendas.crearPrenda(prendaValida({
+        nombre, categoria_id, grupo_talle_id: grupoRopa.id, precio: 1000, caracteristicas: [await valorDe("material", valor)],
+        variantes: [{ color_id: colores.Negro, talle_id: talles.M }],
+      }));
+      const zapatilla = await conMaterial("Zapatilla lona", hoja("Calzado", "Zapatillas"), "Lona");
+      const campera = await conMaterial("Campera algodón", hoja("Mujer", "Camperas"), "Algodón");
+      const jean = await conMaterial("Jean lino", hoja("Mujer", "Jeans"), "Lino");
+
+      // ROP-61 y ROP-82: con el árbol cargado, los grupos sin tocar quedan con las categorías del árbol; lo elegido por el negocio no se toca.
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), 9, "vuelven los 9 materiales de abrigo que se sacaron más arriba");
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), 0, "la segunda vez no agrega ni mueve nada");
       const gruposAhora = await listas.listarCaracteristicas();
+      const valoresDe = (prenda) => prendas.obtenerPrenda(prenda.id).then((p) => p.caracteristicas.map((id) => {
+        const g = gruposAhora.find((x) => x.caracteristicas.some((c) => c.id === id));
+        return [g.nombre, g.caracteristicas.find((c) => c.id === id).nombre];
+      }).sort());
+      assert.deepEqual(await valoresDe(remera), [["Estampa", "Liso"], ["Tela", "Algodón"]], "la remera pasa a Tela");
+      assert.deepEqual(await valoresDe(zapatilla), [["Material del calzado", "Lona"]]);
+      assert.deepEqual(await valoresDe(campera), [["Material", "Algodón"]], "el abrigo sigue en Material");
+      assert.deepEqual(await valoresDe(jean), [], "ningún grupo de los jeans tiene Lino: se saca");
+      assert.deepEqual(gruposAhora.find((g) => g.nombre === "Material").caracteristicas.map((c) => c.nombre).slice(0, 3), ["Algodón", "Bambú", "Frisa"],
+        "Lino y Lona ya no son de Material y nadie los usa; Bambú lo agregó el negocio");
+      await Promise.all([zapatilla, campera, jean].map((p) => prendas.eliminarPrenda(p.id)));
       const nombresDe = async (grupo) => [...new Set((await ropa.CategoriaRopa.findAll({
         where: { id: gruposAhora.find((g) => g.nombre === grupo).categorias }, raw: true,
       })).map((c) => c.nombre))].sort();
       assert.deepEqual(await nombresDe("Calzado"), ["Calzado"]);
-      assert.deepEqual(await nombresDe("Calce"), ["Bermudas", "Bermudas y shorts", "Jeans", "Pantalones", "Shorts"]);
-      assert.deepEqual(await nombresDe("Estampa"), ["Remeras"]);
-      assert.deepEqual(gruposAhora.find((g) => g.nombre === "Estampa").categorias, [remeras.id], "ya tenía: no se le suman las Remeras nuevas");
+      assert.deepEqual(await nombresDe("Calce"), ["Bermudas", "Bermudas y shorts", "Calzas", "Jeans", "Pantalones", "Shorts"]);
+      assert.deepEqual(await nombresDe("Material"), ["Buzos", "Camperas", "Chalecos", "Sacos", "Sweaters"]);
+      assert.ok((await nombresDe("Estampa")).includes("Buzos"), "solo tenía Remeras (de la lista): pasa al árbol");
+      assert.ok(!(await nombresDe("Tela")).includes("Jeans"));
+      assert.deepEqual(await nombresDe("Material del accesorio"), ["Accesorios"]);
       assert.deepEqual(gruposAhora.find((g) => g.nombre === "Tiro").categorias, [hombre.id], "elegida por el negocio");
       const arbol = await listas.listarCategorias();
       const buscar = (nodos, ...camino) => camino.reduce((nivel, nombre) => (nivel?.hijas ?? nivel).find((c) => c.nombre === nombre), nodos);
@@ -357,7 +383,7 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const deMujer = await catalogo.opcionesDeFiltro({ categoria: mujer.id });
       assert.deepEqual(deMujer.grupos_talle.map((g) => [g.nombre, g.talles.map((x) => x.nombre)]), [["Ropa", ["S", "M", "L"]]]);
       assert.deepEqual(deMujer.colores.map((c) => c.nombre), ["Negro", "Rojo"]);
-      assert.deepEqual(agrupadas(deMujer.caracteristicas), [["Estampa", ["Liso"]], ["Material", ["Algodón"]]], "ROP-39: solo las que se usan");
+      assert.deepEqual(agrupadas(deMujer.caracteristicas), [["Estampa", ["Liso"]], ["Tela", ["Algodón"]]], "ROP-39: solo las que se usan");
       const deHombre = await catalogo.opcionesDeFiltro({ categoria: hombre.id });
       assert.deepEqual([deHombre.colores, deHombre.grupos_talle, deHombre.marcas, deHombre.caracteristicas], [[], [], [], []]);
     });

@@ -62,20 +62,20 @@ const PRENDAS = [
 
 // Características que se tildan según la forma (grupo → valor de la lista sugerida).
 const CARACTERISTICAS = {
-  remera: { Estampa: "Liso", Material: "Algodón", Manga: "Corta", Cuello: "Redondo" },
-  musculosa: { Estampa: "Liso", Material: "Algodón", Manga: "Sin mangas" },
-  camisa: { Estampa: "Liso", Material: "Lino", Manga: "Larga", Cuello: "Camisero" },
-  buzo: { Material: "Frisa", Manga: "Larga", Cuello: "Con capucha" },
-  campera: { Material: "Sintético", Manga: "Larga", Detalles: "Con cierre" },
-  pantalon: { Material: "Denim", Calce: "Regular", Tiro: "Medio", Detalles: "Con bolsillos" },
-  short: { Material: "Gabardina", Calce: "Regular", Detalles: "Con bolsillos" },
-  vestido: { Estampa: "Floreado", Material: "Viscosa", Manga: "Corta" },
-  pollera: { Estampa: "Liso", Material: "Satén" },
-  zapatilla: { Material: "Cuero", Calzado: "Con cordones" },
-  bota: { Material: "Cuero", Calzado: "Caña alta" },
-  gorra: { Material: "Algodón", Estampa: "Con logo" },
-  mochila: { Material: "Lona", Detalles: "Con cierre" },
-  cinturon: { Material: "Cuero" },
+  remera: { Estampa: "Liso", Tela: "Algodón", Manga: "Corta", Cuello: "Redondo" },
+  musculosa: { Estampa: "Liso", Tela: "Algodón", Manga: "Sin mangas" },
+  camisa: { Estampa: "Liso", Tela: "Lino", Manga: "Larga", Cuello: "Camisero" },
+  buzo: { Material: "Frisa", Cuello: "Con capucha" },
+  campera: { Material: "Sintético", Detalles: "Con cierre" },
+  pantalon: { Calce: "Regular", Tiro: "Medio", Detalles: "Con bolsillos" },
+  short: { Calce: "Regular", Detalles: "Con bolsillos" },
+  vestido: { Estampa: "Floreado", Tela: "Viscosa", Manga: "Corta" },
+  pollera: { Estampa: "Liso", Tela: "Satén" },
+  zapatilla: { "Material del calzado": "Cuero", Calzado: "Con cordones" },
+  bota: { "Material del calzado": "Cuero", Calzado: "Caña alta" },
+  gorra: { "Material del accesorio": "Algodón" },
+  mochila: { "Material del accesorio": "Lona" },
+  cinturon: { "Material del accesorio": "Cuero" },
 };
 
 // Siluetas (viewBox 0 0 200 260). Dibujos simples propios: no son fotos de nadie.

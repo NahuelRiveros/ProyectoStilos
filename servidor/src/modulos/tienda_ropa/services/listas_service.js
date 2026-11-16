@@ -3,7 +3,7 @@ import { sequelize } from "../../../core/database/sequelize.js";
 import { ErrorApp, noExiste } from "../../../core/services/common/errores.js";
 import { CategoriaRopa, MarcaRopa, ColorRopa, GrupoTalle, Talle, GrupoCaracteristica, Caracteristica, GrupoCaracteristicaCategoria, Prenda, PrendaCaracteristica, PrendaVariante } from "../models/index.js";
 import { armarArbol, creaCiclo, slug } from "../reglas.js";
-import { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS } from "../sugeridos.js";
+import { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS, GRUPOS_DE_MATERIAL, GRUPOS_TALLE_SUGERIDOS, MARCAS_SUGERIDAS, MATERIAL_ANTES } from "../sugeridos.js";
 
 // Listas del panel (ROP-01 a ROP-04). Reciben datos validados por reglas.js y lanzan ErrorApp.
 
@@ -216,6 +216,7 @@ export async function eliminarGrupoCaracteristica(id) {
  */
 export async function cargarCaracteristicasSugeridas() {
   const categorias = await CategoriaRopa.findAll({ attributes: ["id", "nombre"], raw: true });
+  const nombreDe = new Map(categorias.map((c) => [c.id, c.nombre.toLowerCase()]));
   const idsLlamadas = (nombres = []) => {
     const buscados = new Set(nombres.map((n) => n.toLowerCase()));
     return categorias.filter((c) => buscados.has(c.nombre.toLowerCase())).map((c) => c.id);
@@ -228,18 +229,69 @@ export async function cargarCaracteristicasSugeridas() {
       agregados += sugerido.valores.length;
       continue;
     }
-    const sinCategorias = !await GrupoCaracteristicaCategoria.count({ where: { grupo_caracteristica_id: grupo.id } });
+    // ROP-61 y ROP-82: un grupo sin categorías, o solo con las de la lista (actual o anterior), no lo tocó el
+    // negocio: queda con las del árbol actual. Si le sumaron otras, se respeta lo que eligieron.
+    const actuales = (await GrupoCaracteristicaCategoria.findAll({ where: { grupo_caracteristica_id: grupo.id }, attributes: ["categoria_id"], raw: true }))
+      .map((f) => nombreDe.get(f.categoria_id));
+    const deLaLista = new Set([...(sugerido.antes ?? []), ...(sugerido.categorias ?? [])].map((n) => n.toLowerCase()));
     const sugeridas = idsLlamadas(sugerido.categorias);
-    if (sinCategorias && sugeridas.length) {
-      await GrupoCaracteristicaCategoria.bulkCreate(sugeridas.map((categoria_id) => ({ grupo_caracteristica_id: grupo.id, categoria_id })));
-    }
+    if (sugeridas.length && actuales.every((n) => deLaLista.has(n))) await guardarCategoriasDelGrupo(grupo.id, sugeridas);
     const nuevos = await faltantes(Caracteristica, sugerido.valores, { grupo_caracteristica_id: grupo.id });
     // Los nuevos van al final: no se desordena lo que el negocio ya acomodó.
     const desde = await Caracteristica.count({ where: { grupo_caracteristica_id: grupo.id } });
     if (nuevos.length) await Caracteristica.bulkCreate(nuevos.map((nombre, i) => ({ grupo_caracteristica_id: grupo.id, nombre, orden: desde + i })));
     agregados += nuevos.length;
   }
+  await reubicarMateriales();
   return agregados;
+}
+
+/**
+ * ROP-82: cada prenda queda con el material del grupo que corresponde a su categoría ("Algodón" de una remera
+ * pasa de "Material" a "Tela"; "Cuero" de una zapatilla, a "Material del calzado"). Si ningún grupo de su
+ * categoría tiene ese valor, la prenda lo pierde. Después se sacan de "Material" los valores de la lista
+ * anterior que ya no le corresponden y nadie usa (los que agregó el negocio quedan). Idempotente.
+ */
+async function reubicarMateriales() {
+  const nombres = GRUPOS_DE_MATERIAL.map((n) => n.toLowerCase());
+  const grupos = (await GrupoCaracteristica.findAll({
+    include: [
+      { model: Caracteristica, as: "caracteristicas", attributes: ["id", "nombre"] },
+      { model: GrupoCaracteristicaCategoria, as: "en_categorias", attributes: ["categoria_id"] },
+    ],
+  })).filter((g) => nombres.includes(g.nombre.toLowerCase()));
+  const material = grupos.find((g) => g.nombre.toLowerCase() === "material");
+  if (!material || grupos.length < 2) return;
+  const todas = await CategoriaRopa.findAll({ attributes: ["id", "padre_id"], raw: true });
+  const padreDe = new Map(todas.map((c) => [c.id, c.padre_id]));
+  const camino = (id) => { const ids = new Set(); for (let c = id; c && !ids.has(c); c = padreDe.get(c)) ids.add(c); return ids; };
+  const cubre = (grupo, categoriaId) => {
+    const propias = grupo.en_categorias.map((e) => e.categoria_id);
+    const ids = camino(categoriaId);
+    return propias.length === 0 || propias.some((id) => ids.has(id));
+  };
+  const otros = grupos.filter((g) => g !== material);
+  await sequelize.transaction(async (transaction) => {
+    const enlaces = await PrendaCaracteristica.findAll({ where: { caracteristica_id: material.caracteristicas.map((c) => c.id) }, transaction });
+    const prendas = await Prenda.findAll({ where: { id: [...new Set(enlaces.map((e) => e.prenda_id))] }, attributes: ["id", "categoria_id"], raw: true, transaction });
+    const categoriaDe = new Map(prendas.map((p) => [p.id, p.categoria_id]));
+    for (const enlace of enlaces) {
+      const categoriaId = categoriaDe.get(enlace.prenda_id);
+      if (!categoriaId || cubre(material, categoriaId)) continue;
+      const valor = material.caracteristicas.find((c) => c.id === enlace.caracteristica_id).nombre.toLowerCase();
+      const destino = otros.filter((g) => cubre(g, categoriaId)).map((g) => g.caracteristicas.find((c) => c.nombre.toLowerCase() === valor)).find(Boolean);
+      const yaLaTiene = destino && await PrendaCaracteristica.count({ where: { prenda_id: enlace.prenda_id, caracteristica_id: destino.id }, transaction });
+      if (destino && !yaLaTiene) await enlace.update({ caracteristica_id: destino.id }, { transaction });
+      else await enlace.destroy({ transaction });
+    }
+    const propiosDeMaterial = new Set(CARACTERISTICAS_SUGERIDAS.find((s) => s.nombre === "Material").valores.map((v) => v.toLowerCase()));
+    const anteriores = new Set(MATERIAL_ANTES.map((v) => v.toLowerCase()));
+    for (const c of material.caracteristicas) {
+      const nombre = c.nombre.toLowerCase();
+      if (!anteriores.has(nombre) || propiosDeMaterial.has(nombre)) continue;
+      if (!await PrendaCaracteristica.count({ where: { caracteristica_id: c.id }, transaction })) await Caracteristica.destroy({ where: { id: c.id }, transaction });
+    }
+  });
 }
 
 // ── Colores (ROP-03) ────────────────────────────────────────────────────────────
