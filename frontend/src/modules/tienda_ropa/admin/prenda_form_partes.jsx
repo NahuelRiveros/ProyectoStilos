@@ -6,6 +6,8 @@ import { cn } from "../../../core/utils/cn.js";
 import { BOTON_SECUNDARIO } from "./comunes.jsx";
 import { chip } from "./chip.js";
 import { caminoA } from "../utils/camino_categoria.js";
+import { agruparColores } from "../utils/muestra_color.js";
+import MuestraColor from "../tienda/muestra_color.jsx";
 
 // Piezas del formulario de prenda (prenda_form_page.jsx): pasos, categoría, talles y fotos.
 
@@ -57,33 +59,81 @@ export function SelectorCategoria({ arbol, valor, onElegir }) {
   );
 }
 
-const ESTADOS = {
-  hay: { texto: "Hay", clase: "border-emerald-300 bg-emerald-50 text-emerald-900" },
-  agotado: { texto: "Agotado", clase: "border-amber-300 bg-amber-50 text-amber-900" },
-  "": { texto: "No se vende", clase: "border-dashed border-slate-300 bg-white text-slate-400" },
-};
-const SIGUIENTE = { hay: "agotado", agotado: "", "": "hay" };
+/** Paso 4 (ROP-86): colores en Básicos, Bitonos y Estampados. */
+export function ColoresDeLaPrenda({ colores, valor, onElegir }) {
+  return (
+    <fieldset>
+      <legend className="mb-2 text-sm font-semibold text-gray-700">Color</legend>
+      <div className="space-y-3">
+        {agruparColores(colores).map((seccion) => (
+          <div key={seccion.tipo} role="group" aria-label={seccion.titulo}>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">{seccion.titulo}</p>
+            <div className="grid grid-cols-4 gap-1 sm:grid-cols-8 lg:grid-cols-10">
+              {seccion.colores.map((c) => (
+                <button key={c.id} type="button" onClick={() => onElegir(c.id)} aria-pressed={valor === c.id}
+                  className={cn("flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 px-1 py-1.5 text-center text-[11px] font-semibold leading-tight", valor === c.id ? "border-slate-900 bg-slate-50 text-slate-900" : "border-transparent text-slate-600 hover:border-slate-200")}>
+                  <MuestraColor color={c} className="h-7 w-7" />{c.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
-/** Paso 3: cada talle es un botón que pasa de Hay → Agotado → No se vende. */
-export function TallesDelColor({ talles, estados, onCambiar }) {
+/** Paso 4 (ROP-83): el grupo de la categoría y "Talle único" a la vista; los demás, en "Usar otro grupo". */
+export function GrupoDeTalles({ grupos, aMano, valor, onElegir }) {
+  const [verOtros, setVerOtros] = useState(false);
+  const conOtros = verOtros || !aMano.includes(valor);
   return (
     <div>
-      <p className="mb-2 text-xs text-slate-500">Tocá un talle para cambiarlo: Hay → Agotado → No se vende.</p>
+      <p className="mb-2 text-sm font-semibold text-gray-700">Talles</p>
+      <div role="group" aria-label="Grupo de talles" className="flex flex-wrap gap-2">
+        {aMano.map((id) => {
+          const g = grupos.find((x) => x.id === id);
+          return (
+            <button key={id} type="button" onClick={() => onElegir(id)} aria-pressed={valor === id} className={chip(valor === id)}>
+              {g.nombre} <span className="font-normal opacity-70">{g.talles.length > 1 ? `${g.talles[0].nombre} a ${g.talles.at(-1).nombre}` : g.talles[0]?.nombre}</span>
+            </button>
+          );
+        })}
+        {!conOtros && (
+          <button type="button" onClick={() => setVerOtros(true)} className="min-h-11 px-2 text-sm font-semibold text-slate-600 underline">Usar otro grupo</button>
+        )}
+      </div>
+      {conOtros && (
+        <label className="mt-2 block text-xs font-semibold text-slate-500">Otro grupo de talles
+          <select value={valor} onChange={(e) => onElegir(Number(e.target.value))} className="ml-2 min-h-10 rounded-lg border border-gray-300 bg-white px-2 text-sm text-slate-700">
+            {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+          </select>
+        </label>
+      )}
+    </div>
+  );
+}
+
+/** Paso 4 (ROP-84): cada talle se toca para pasar de Hay a No hay. "No hay" se ve tachado en la tienda. */
+export function TallesDelColor({ talles, hay, onCambiar }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs text-slate-500">Tocá un talle para marcar si hay o no hay. Los que no hay se ven tachados en la tienda.</p>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {talles.map((t) => {
-          const valor = estados[t.id] ?? "";
+          const siHay = hay.has(t.id);
           return (
-            <button key={t.id} type="button" onClick={() => onCambiar(t.id, SIGUIENTE[valor])} aria-label={`Talle ${t.nombre}: ${ESTADOS[valor].texto.toLowerCase()}`}
-              className={cn("flex min-h-16 flex-col items-center justify-center rounded-xl border-2 px-2 transition", ESTADOS[valor].clase)}>
-              <span className={cn("text-lg font-extrabold", !valor && "line-through")}>{t.nombre}</span>
-              <span className="text-xs font-semibold">{ESTADOS[valor].texto}</span>
+            <button key={t.id} type="button" onClick={() => onCambiar([t.id], !siHay)} aria-pressed={siHay} aria-label={`Talle ${t.nombre}: ${siHay ? "hay" : "no hay"}`}
+              className={cn("flex min-h-16 flex-col items-center justify-center rounded-xl border-2 px-2 transition", siHay ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-dashed border-slate-300 bg-white text-slate-400")}>
+              <span className={cn("text-lg font-extrabold", !siHay && "line-through")}>{t.nombre}</span>
+              <span className="text-xs font-semibold">{siHay ? "Hay" : "No hay"}</span>
             </button>
           );
         })}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={() => talles.forEach((t) => onCambiar(t.id, "hay"))} className={BOTON_SECUNDARIO}>Todos: hay</button>
-        <button type="button" onClick={() => talles.forEach((t) => onCambiar(t.id, ""))} className={BOTON_SECUNDARIO}>Ninguno</button>
+        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), true)} className={BOTON_SECUNDARIO}>Todos: hay</button>
+        <button type="button" onClick={() => onCambiar(talles.map((t) => t.id), false)} className={BOTON_SECUNDARIO}>Todos: no hay</button>
       </div>
     </div>
   );

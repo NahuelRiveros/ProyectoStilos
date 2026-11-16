@@ -12,3 +12,14 @@ export function grupoSugerido(arbol, categoriaId) {
   }
   return null;
 }
+
+const sinAcentos = (texto) => texto.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+
+/**
+ * ROP-83: los grupos que el formulario ofrece a la vista: el de la categoría y "Talle único" (si existen,
+ * sin repetir). Los demás quedan en "Usar otro grupo". Devuelve ids.
+ */
+export function gruposAMano(grupos = [], sugeridoId = null) {
+  const unico = grupos.find((g) => sinAcentos(g.nombre) === "talle unico");
+  return [...new Set([sugeridoId, unico?.id])].filter((id) => id && grupos.some((g) => g.id === id));
+}

@@ -6,14 +6,14 @@ import InputField from "../../../core/controls/ui/input_field.jsx";
 import TextareaField from "../../../core/controls/ui/textarea_field.jsx";
 import FormError from "../../../core/controls/ui/form_error.jsx";
 import { useToast } from "../../../core/controls/toast/use_toast.js";
-import { cn } from "../../../core/utils/cn.js";
 import { useCodigoLinceModelo, useGestionPrendas, useLista, usePrendaPanel, mensajeError } from "../hooks/use_ropa.js";
 import { BOTON_PRIMARIO, BOTON_SECUNDARIO, Pantalla, SegunConsulta } from "./comunes.jsx";
 import { chip } from "./chip.js";
-import { FotosDelColor, Paso, SelectorCategoria, TallesDelColor } from "./prenda_form_partes.jsx";
-import { grupoSugerido } from "../utils/grupo_sugerido.js";
+import { ColoresDeLaPrenda, FotosDelColor, GrupoDeTalles, Paso, SelectorCategoria, TallesDelColor } from "./prenda_form_partes.jsx";
+import { grupoSugerido, gruposAMano } from "../utils/grupo_sugerido.js";
 import { gruposDeCategoria } from "../utils/grupos_de_categoria.js";
 import { caminoA } from "../utils/camino_categoria.js";
+import MuestraColor from "../tienda/muestra_color.jsx";
 
 // Mismo límite que el servidor (servidor/src/modulos/tienda_ropa/reglas.js, ROP-29).
 const MAX_FOTOS = 3;
@@ -82,8 +82,8 @@ function Formulario({ prenda, listas }) {
   // ROP-29: un solo color. Una prenda vieja con varios se queda con el primero (los otros, como prendas nuevas).
   const coloresAntes = [...new Set((prenda?.variantes ?? []).map((v) => v.color_id))];
   const [colorId, setColorId] = useState(coloresAntes[0] ?? null);
-  // talle → "hay" | "agotado"; sin clave = no se vende.
-  const [estados, setEstados] = useState(() => Object.fromEntries((prenda?.variantes ?? []).filter((v) => v.color_id === coloresAntes[0]).map((v) => [v.talle_id, v.disponible ? "hay" : "agotado"])));
+  // ROP-84: los talles que hay; el resto del grupo se guarda como "no hay" (antes "agotado" o "no se vende").
+  const [hay, setHay] = useState(() => new Set((prenda?.variantes ?? []).filter((v) => v.color_id === coloresAntes[0] && v.disponible).map((v) => v.talle_id)));
   // Las fotos son de la prenda (de su color): las generales de antes pasan a su color.
   const [fotos, setFotos] = useState(() => (prenda?.imagenes ?? []).filter((i) => i.color_id === null || i.color_id === coloresAntes[0]).map((i) => i.url));
   const [caracteristicas, setCaracteristicas] = useState(() => new Set(prenda?.caracteristicas ?? []));
@@ -93,8 +93,9 @@ function Formulario({ prenda, listas }) {
 
   const grupo = grupos.find((g) => g.id === grupoId);
   const talles = grupo?.talles ?? [];
-  const todosHay = (lista) => Object.fromEntries(lista.map((t) => [t.id, "hay"]));
-  const variantes = colorId ? talles.filter((t) => estados[t.id]).map((t) => ({ color_id: colorId, talle_id: t.id, disponible: estados[t.id] === "hay" })) : [];
+  const todosHay = (lista) => new Set(lista.map((t) => t.id));
+  const variantes = colorId ? talles.map((t) => ({ color_id: colorId, talle_id: t.id, disponible: hay.has(t.id) })) : [];
+  const tallesQueHay = variantes.filter((v) => v.disponible).length;
   const camino = caminoA(arbol, categoriaId);
   // ROP-60: solo los grupos de la categoría elegida (y los que ya tienen algo tildado).
   const { visibles, otros } = gruposDeCategoria(listas.caracteristicas.data, arbol, categoriaId, caracteristicas);
@@ -103,7 +104,7 @@ function Formulario({ prenda, listas }) {
 
   function cambiarGrupo(nuevo) {
     setGrupoId(nuevo);
-    setEstados(colorId ? todosHay(grupos.find((g) => g.id === nuevo)?.talles ?? []) : {});
+    setHay(colorId ? todosHay(grupos.find((g) => g.id === nuevo)?.talles ?? []) : new Set());
   }
 
   function elegirCategoria(id) {
@@ -115,7 +116,7 @@ function Formulario({ prenda, listas }) {
   }
 
   function elegirColor(id) {
-    if (colorId === null) setEstados(todosHay(talles));
+    if (colorId === null) setHay(todosHay(talles));
     setColorId(id);
   }
 
@@ -128,7 +129,7 @@ function Formulario({ prenda, listas }) {
   }
 
   async function enviar(valores) {
-    if (!variantes.length) { setErrorTalles("Elegí el color y al menos un talle que se venda."); return; }
+    if (!variantes.length) { setErrorTalles("Elegí el color de la prenda."); return; }
     setErrorTalles("");
     try {
       const r = await guardar.mutateAsync({
@@ -211,7 +212,7 @@ function Formulario({ prenda, listas }) {
               <InputField name="precio_anterior" type="number" min={1} step="0.01" inputMode="decimal" label="Precio anterior ($)" helperText="Solo si está en oferta: se ve tachado." register={register} error={errors.precio_anterior?.message} />
               <InputField name="codigo_lince" label="Código Lince (opcional)" placeholder="Ej. el código del artículo en Lince" maxLength={40} register={register} error={errors.codigo_lince?.message}
                 helperText={codigoPropuesto ? "Propuesto: es el código de otro color de este modelo. Cambialo si no corresponde." : "Para encontrarla en Lince Indumentaria. No se muestra en la tienda."} />
-              <label className="flex min-h-11 items-center gap-2 self-center text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
+              <label className="flex min-h-11 items-center gap-2 self-center text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5 shrink-0" /> <span>Se ve en la tienda <span className="font-normal text-gray-500">(si la destildás, queda guardada en el panel pero los clientes no la ven; sirve para esconderla sin borrarla)</span></span></label>
               <div className="sm:col-span-2"><TextareaField name="descripcion" label="Descripción (opcional)" rows={3} placeholder="Tela, calce, cuidados…" register={register} error={errors.descripcion?.message} /></div>
             </div>
           </Paso>
@@ -227,34 +228,19 @@ function Formulario({ prenda, listas }) {
                 También está en:
                 {prenda.otros_colores.map((o) => (
                   <Link key={o.id} to={`/admin/ropa/prendas/${o.id}`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 px-2.5 font-semibold text-slate-800 hover:border-slate-400">
-                    <span className="h-3.5 w-3.5 rounded-full border border-black/20" style={{ backgroundColor: o.color.hex }} aria-hidden="true" />
+                    <MuestraColor color={o.color} className="h-3.5 w-3.5" />
                     {o.color.nombre}{!o.activo && <span className="font-normal text-slate-400">(oculta)</span>}
                   </Link>
                 ))}
               </p>
             )}
-            <fieldset>
-              <legend className="mb-2 text-sm font-semibold text-gray-700">Color</legend>
-              <div className="grid grid-cols-4 gap-1 sm:grid-cols-8 lg:grid-cols-10">
-                {colores.map((c) => (
-                  <button key={c.id} type="button" onClick={() => elegirColor(c.id)} aria-pressed={colorId === c.id}
-                    className={cn("flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 px-1 py-1.5 text-center text-[11px] font-semibold leading-tight", colorId === c.id ? "border-slate-900 bg-slate-50 text-slate-900" : "border-transparent text-slate-600 hover:border-slate-200")}>
-                    <span className="h-7 w-7 rounded-full border border-black/20" style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.nombre}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-            <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
-              <p className="text-sm font-semibold text-gray-700">Talles {grupo && <span className="font-normal text-slate-500">· {grupo.nombre}</span>}</p>
-              <label className="text-xs font-semibold text-slate-500">Grupo de talles
-                <select value={grupoId} onChange={(e) => cambiarGrupo(Number(e.target.value))} className="ml-2 min-h-10 rounded-lg border border-gray-300 bg-white px-2 text-sm text-slate-700">
-                  {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
-                </select>
-              </label>
+            <ColoresDeLaPrenda colores={colores} valor={colorId} onElegir={elegirColor} />
+            <div className="mt-6">
+              <GrupoDeTalles grupos={grupos} aMano={gruposAMano(grupos, grupoSugerido(arbol, categoriaId))} valor={grupoId} onElegir={cambiarGrupo} />
             </div>
-            <div className="mt-2">
+            <div className="mt-3">
               {colorId
-                ? <TallesDelColor talles={talles} estados={estados} onCambiar={(talleId, valor) => setEstados((actual) => { const nuevo = { ...actual }; if (valor) nuevo[talleId] = valor; else delete nuevo[talleId]; return nuevo; })} />
+                ? <TallesDelColor talles={talles} hay={hay} onCambiar={(ids, siHay) => setHay((actual) => { const nuevo = new Set(actual); ids.forEach((id) => (siHay ? nuevo.add(id) : nuevo.delete(id))); return nuevo; })} />
                 : <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-500">Elegí el color para marcar qué talles hay.</p>}
             </div>
             {errorTalles && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorTalles}</p>}
@@ -272,7 +258,7 @@ function Formulario({ prenda, listas }) {
       <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-2xl sm:border sm:shadow-lg">
         <p className="min-w-0 truncate text-sm text-slate-600">
           {camino.length
-            ? <><span className="font-semibold text-slate-900">{camino.map((c) => c.nombre).join(" › ")}</span> · {plural(variantes.length, "talle", "talles")} · {plural(caracteristicas.size, "característica", "características")} · {fotos.length}/{MAX_FOTOS} fotos</>
+            ? <><span className="font-semibold text-slate-900">{camino.map((c) => c.nombre).join(" › ")}</span> · {variantes.length ? `hay ${tallesQueHay} de ${plural(variantes.length, "talle", "talles")}` : plural(0, "talle", "talles")} · {plural(caracteristicas.size, "característica", "características")} · {fotos.length}/{MAX_FOTOS} fotos</>
             : "Elegí qué vas a cargar."}
         </p>
         <div className="flex shrink-0 gap-2">

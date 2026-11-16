@@ -158,11 +158,16 @@ const urlOpcional = (mensaje) => z.preprocess(
   urlImagen(mensaje).nullable(),
 ).default(null);
 export const esquemaMarca = z.object({ nombre: nombre(), activo: z.boolean().default(true), logo_url: urlOpcional("El logo tiene que ser una URL https o una imagen local del catálogo inicial.") });
+const hexColor = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "El color tiene que ser como #1E2D3D.").transform((v) => v.toUpperCase());
+// ROP-86: dibujos de los estampados. Multicolor no usa los tonos; los otros se dibujan con los dos.
+export const PATRONES_COLOR = ["animal_print", "camuflado", "multicolor"];
 export const esquemaColor = z.object({
   nombre: nombre(40),
-  hex: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "El color tiene que ser como #1E2D3D.").transform((v) => v.toUpperCase()),
+  hex: hexColor,
+  hex2: hexColor.nullable().default(null),
+  patron: z.enum(PATRONES_COLOR, { error: "Elegí un dibujo de la lista." }).nullable().default(null),
   orden,
-});
+}).refine((c) => c.hex2 || !c.patron || c.patron === "multicolor", { path: ["hex2"], message: "Elegí el segundo tono del dibujo." });
 export const esquemaGrupoTalle = z.object({
   nombre: nombre(40),
   orden,

@@ -68,12 +68,13 @@ test("vendedor: ve el comprobante pero no mueve dinero; cancelar pide motivo", a
   await expect.poll(() => api.ultimo("PATCH", "/ropa/pedidos/13/estado")?.cuerpo).toEqual({ estado: "cancelado", motivo: "Sin stock del talle", version: 2 });
 });
 
-test("prenda nueva: primero la categoría, que propone talles y características (ROP-36, ROP-60)", async ({ page }) => {
+test("prenda nueva: primero la categoría, que propone talles y características (ROP-36, ROP-60, ROP-83, ROP-84, ROP-86)", async ({ page }) => {
   const api = await simularApi(page, { rol: "encargado" });
   const talles = (...nombres) => nombres.map((nombre, orden) => ({ id: 100 + orden + nombres.length * 10, nombre, orden }));
   const grupos = [
     { id: 1, nombre: "Ropa", orden: 0, talles: talles("S", "M", "L") },
     { id: 2, nombre: "Jeans", orden: 1, talles: talles("38", "40", "42") },
+    { id: 3, nombre: "Talle único", orden: 2, talles: [{ id: 200, nombre: "Único", orden: 0 }] },
   ];
   const categorias = [{ id: 10, nombre: "Hombre", padre_id: null, grupo_talle_id: 1, orden: 0, activo: true, hijas: [
     { id: 11, nombre: "Remeras", padre_id: 10, grupo_talle_id: null, orden: 0, activo: true, hijas: [] },
@@ -84,7 +85,11 @@ test("prenda nueva: primero la categoría, que propone talles y características
   const lista = (datos) => () => ({ json: { ok: true, data: datos } });
   api.responder("GET", "/ropa/panel/categorias", lista(categorias));
   api.responder("GET", "/ropa/panel/talles", lista(grupos));
-  api.responder("GET", "/ropa/panel/colores", lista([{ id: 1, nombre: "Negro", hex: "#111111", orden: 0 }]));
+  api.responder("GET", "/ropa/panel/colores", lista([
+    { id: 1, nombre: "Negro", hex: "#111111", hex2: null, patron: null, orden: 0 },
+    { id: 2, nombre: "Negro y blanco", hex: "#111111", hex2: "#FFFFFF", patron: null, orden: 1 },
+    { id: 3, nombre: "Animal print", hex: "#C19A6B", hex2: "#3F2A1D", patron: "animal_print", orden: 2 },
+  ]));
   api.responder("GET", "/ropa/panel/marcas", lista([]));
   api.responder("GET", "/ropa/panel/caracteristicas", lista([
     { id: 3, nombre: "Material", orden: 0, categorias: [], caracteristicas: [{ id: 31, nombre: "Cuero", orden: 0 }, { id: 32, nombre: "Lona", orden: 1 }] },
@@ -104,14 +109,20 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await boton("Pantalones").click();
   await boton("Cargo").click();
   await expect(page.getByRole("status").filter({ hasText: "Vas a cargar en" })).toContainText("Hombre");
-  const grupo = page.getByLabel("Grupo de talles");
-  await expect(grupo, "ROP-36: Cargo usa los talles de Pantalones").toHaveValue("2");
+  // ROP-83: a la vista, el grupo de la categoría y Talle único; los demás, en "Usar otro grupo".
+  const grupoTalles = (nombre) => page.getByRole("group", { name: "Grupo de talles" }).getByRole("button", { name: new RegExp(`^${nombre}`) });
+  await expect(grupoTalles("Jeans"), "ROP-36: Cargo usa los talles de Pantalones").toHaveAttribute("aria-pressed", "true");
+  await expect(grupoTalles("Talle único")).toHaveAttribute("aria-pressed", "false");
+  await expect(grupoTalles("Ropa")).toHaveCount(0);
+  await expect(page.getByLabel("Otro grupo de talles")).toHaveCount(0);
+  await boton("Usar otro grupo").click();
+  await expect(page.getByLabel("Otro grupo de talles")).toHaveValue("2");
   // ROP-60: solo los grupos de la categoría; Cargo hereda los de Pantalones.
   await expect(boton("Alto")).toBeVisible();
   await expect(boton("Corta")).toHaveCount(0);
 
   await boton("Remeras").click();
-  await expect(grupo, "Remeras usa los de Hombre").toHaveValue("1");
+  await expect(grupoTalles("Ropa"), "Remeras usa los de Hombre").toHaveAttribute("aria-pressed", "true");
   await expect(boton("Corta")).toBeVisible();
   await expect(boton("Alto")).toHaveCount(0);
   await page.getByRole("button", { name: /Ver todas las características/ }).click();
@@ -124,15 +135,16 @@ test("prenda nueva: primero la categoría, que propone talles y características
   await expect(page.getByLabel(/Código Lince/)).toHaveValue("TV-777");
   await expect(page.getByText("Propuesto: es el código de otro color de este modelo.", { exact: false })).toBeVisible();
   await page.getByLabel("Precio ($)").fill("50000");
+  // ROP-86: colores en Básicos, Bitonos y Estampados.
+  await expect(page.getByRole("group", { name: "Bitonos" }).getByRole("button")).toHaveText(["Negro y blanco"]);
+  await expect(page.getByRole("group", { name: "Estampados" }).getByRole("button")).toHaveText(["Animal print"]);
   await boton("Negro").click();
-  // Cada talle se toca para pasar de Hay a Agotado y a No se vende.
-  await page.getByRole("button", { name: "Talle M: hay" }).click();
+  // ROP-84: cada talle se toca para pasar de Hay a No hay; se guardan todos los del grupo.
   await page.getByRole("button", { name: "Talle L: hay" }).click();
-  await page.getByRole("button", { name: "Talle L: agotado" }).click();
-  await expect(page.getByRole("button", { name: "Talle L: no se vende" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Talle L: no hay" })).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Guardar prenda" }).click();
   await expect.poll(() => api.ultimo("POST", "/ropa/panel/prendas")?.cuerpo).toMatchObject({
     categoria_id: 11, grupo_talle_id: 1, caracteristicas: [31], codigo_lince: "TV-777",
-    variantes: [{ color_id: 1, talle_id: 130, disponible: true }, { color_id: 1, talle_id: 131, disponible: false }],
+    variantes: [{ color_id: 1, talle_id: 130, disponible: true }, { color_id: 1, talle_id: 131, disponible: true }, { color_id: 1, talle_id: 132, disponible: false }],
   });
 });

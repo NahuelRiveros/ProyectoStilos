@@ -67,7 +67,7 @@ export async function opcionesDeFiltro({ categoria } = {}) {
   const dePrenda = (campo) => [...new Set(variantes.map((v) => v.prenda[campo]).filter(Boolean))];
   const [marcas, colores, grupos, caracteristicas] = await Promise.all([
     MarcaRopa.findAll({ where: { id: dePrenda("marca_id"), activo: true }, attributes: ["id", "nombre"], order: [["nombre", "ASC"]] }),
-    ColorRopa.findAll({ where: { id: ids("color_id") }, attributes: ["id", "nombre", "hex"], order: [["orden", "ASC"], ["nombre", "ASC"]] }),
+    ColorRopa.findAll({ where: { id: ids("color_id") }, attributes: ["id", "nombre", "hex", "hex2", "patron"], order: [["orden", "ASC"], ["nombre", "ASC"]] }),
     GrupoTalle.findAll({
       attributes: ["id", "nombre"],
       include: [{ model: Talle, as: "talles", attributes: ["id", "nombre", "orden"], where: { id: ids("talle_id") } }],
@@ -118,7 +118,7 @@ async function tarjetas(rows) {
     PrendaImagen.findAll({ where: { prenda_id: ids }, order: [["orden", "ASC"]], raw: true }),
     PrendaVariante.findAll({
       where: { prenda_id: ids, disponible: true },
-      include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex"] }],
+      include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "hex2", "patron"] }],
       attributes: ["prenda_id", "color_id"],
     }),
   ]);
@@ -152,7 +152,7 @@ export async function detallePrenda(slug) {
     include: [
       { model: MarcaRopa, as: "marca", attributes: ["id", "nombre"] },
       { model: GrupoTalle, as: "grupo_talle", attributes: ["id", "nombre"], include: [{ model: Talle, as: "talles", attributes: ["id", "nombre", "orden"] }] },
-      { model: PrendaVariante, as: "variantes", attributes: ["id", "color_id", "talle_id", "disponible"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "orden"] }] },
+      { model: PrendaVariante, as: "variantes", attributes: ["id", "color_id", "talle_id", "disponible"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "hex2", "patron", "orden"] }] },
       { model: PrendaImagen, as: "imagenes", attributes: ["id", "color_id", "url", "orden"] },
     ],
     order: [
@@ -170,13 +170,13 @@ export async function detallePrenda(slug) {
   // ROP-30: solo los que el visitante puede abrir.
   const otros = await otrosColores(datos, { activo: true, categoria_id: [...porId.keys()] });
   const colores = new Map(datos.variantes.map((v) => [v.color.id, v.color]));
-  const tallesUsados = new Set(datos.variantes.map((v) => v.talle_id));
   return {
     id: datos.id, slug: datos.slug, nombre: datos.nombre, descripcion: datos.descripcion,
     precio: Number(datos.precio), precio_anterior: aNumero(datos.precio_anterior), marca: datos.marca, migas,
     caracteristicas: await caracteristicasDe([datos.id]),
     colores: [...colores.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre)),
-    talles: (datos.grupo_talle?.talles ?? []).filter((t) => tallesUsados.has(t.id)),
+    // ROP-85: todos los talles del grupo; los que no hay (o no se cargaron) salen tachados.
+    talles: datos.grupo_talle?.talles ?? [],
     variantes: datos.variantes.map(({ id, color_id, talle_id, disponible }) => ({ id, color_id, talle_id, disponible })),
     imagenes: datos.imagenes.map(({ id, color_id, url }) => ({ id, color_id, url })),
     otros_colores: otros.map(({ slug: s, color }) => ({ slug: s, color })),

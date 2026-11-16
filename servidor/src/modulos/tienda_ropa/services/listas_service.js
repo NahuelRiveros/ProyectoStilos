@@ -241,9 +241,21 @@ export async function cargarCaracteristicasSugeridas() {
     const desde = await Caracteristica.count({ where: { grupo_caracteristica_id: grupo.id } });
     if (nuevos.length) await Caracteristica.bulkCreate(nuevos.map((nombre, i) => ({ grupo_caracteristica_id: grupo.id, nombre, orden: desde + i })));
     agregados += nuevos.length;
+    await quitarSinUso(grupo.id, sugerido.quitar);
   }
   await reubicarMateriales();
   return agregados;
+}
+
+/** ROP-87: saca del grupo los valores que dejaron de sugerirse, solo si ninguna prenda los usa. */
+async function quitarSinUso(grupoId, nombres = []) {
+  if (!nombres.length) return;
+  const buscados = new Set(nombres.map((n) => n.toLowerCase()));
+  const valores = (await Caracteristica.findAll({ where: { grupo_caracteristica_id: grupoId }, attributes: ["id", "nombre"], raw: true }))
+    .filter((c) => buscados.has(c.nombre.toLowerCase()));
+  for (const c of valores) {
+    if (!await PrendaCaracteristica.count({ where: { caracteristica_id: c.id } })) await Caracteristica.destroy({ where: { id: c.id } });
+  }
 }
 
 /**

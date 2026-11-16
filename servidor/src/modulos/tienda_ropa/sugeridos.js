@@ -9,7 +9,11 @@ export const COLORES_SUGERIDOS = [
   ["Bordó", "#6D1A2B"], ["Rojo", "#C62828"], ["Rosa", "#F4A6B8"], ["Fucsia", "#D6247B"],
   ["Lila", "#B9A3D6"], ["Violeta", "#6B3FA0"], ["Amarillo", "#F2C94C"], ["Mostaza", "#C99A2E"],
   ["Naranja", "#EA7A2A"], ["Terracota", "#B5573A"],
-].map(([nombre, hex], orden) => ({ nombre, hex, orden }));
+  // ROP-86 y ROP-87: bitonos (dos tonos) y estampados (dibujo con sus dos tonos).
+  ["Negro y blanco", "#111111", "#FFFFFF"], ["Azul marino y blanco", "#1F2A44", "#FFFFFF"], ["Gris y negro", "#A7A9AC", "#111111"],
+  ["Rojo y negro", "#C62828", "#111111"], ["Celeste y blanco", "#93C5FD", "#FFFFFF"], ["Beige y marrón", "#D8C3A5", "#6B4226"],
+  ["Animal print", "#C19A6B", "#3F2A1D", "animal_print"], ["Camuflado", "#4B5320", "#6B4226", "camuflado"], ["Multicolor", "#D6247B", null, "multicolor"],
+].map(([nombre, hex, hex2 = null, patron = null], orden) => ({ nombre, hex, hex2, patron, orden }));
 
 // ROP-24: marcas que vende Stilos (decididas por el dueño, 2026-11-11).
 export const MARCAS_SUGERIDAS = ["Taverniti", "Bando", "Raiders", "Bravo", "BBN", "Panther", "AFF", "MAYCLA", "Isostasia", "Cataleia", "Mistral", "US Amerika"];
@@ -29,7 +33,8 @@ export const MATERIAL_ANTES = ["Algodón", "Lino", "Denim", "Gabardina", "Satén
 // Grupos de material: al reorganizar, cada prenda queda con el que cubre su categoría.
 export const GRUPOS_DE_MATERIAL = ["Material", "Tela", "Material del calzado", "Material del accesorio"];
 export const CARACTERISTICAS_SUGERIDAS = [
-  { nombre: "Estampa", categorias: [...PARTES_DE_ARRIBA, ...ABRIGOS, ...VESTIDOS], antes: ARRIBA_ANTES, valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Animal print", "Camuflado", "Batik / tie-dye", "Con logo", "Bordado"] },
+  // ROP-87: `quitar`, valores que dejaron de sugerirse (Animal print y Camuflado ahora son colores): se sacan si nadie los usa.
+  { nombre: "Estampa", categorias: [...PARTES_DE_ARRIBA, ...ABRIGOS, ...VESTIDOS], antes: ARRIBA_ANTES, quitar: ["Animal print", "Camuflado"], valores: ["Liso", "Rayado", "A cuadros", "Estampado", "Floreado", "Batik / tie-dye", "Con logo", "Bordado"] },
   { nombre: "Tela", categorias: [...PARTES_DE_ARRIBA, ...VESTIDOS], valores: ["Algodón", "Lino", "Modal", "Viscosa", "Seda", "Satén", "Tejido de punto", "Deportivo (dry fit)"] },
   { nombre: "Material", categorias: ABRIGOS, antes: [], valores: ["Frisa", "Polar", "Lana", "Algodón", "Tejido de punto", "Denim", "Gabardina", "Cuero", "Eco cuero", "Sintético"] },
   { nombre: "Calce", categorias: PARTES_DE_ABAJO, antes: ABAJO_ANTES, valores: ["Slim", "Regular", "Oversize", "Chupín", "Recto", "Mom", "Wide leg", "Oxford", "Baggy"] },

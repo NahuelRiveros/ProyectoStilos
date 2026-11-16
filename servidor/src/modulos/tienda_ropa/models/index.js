@@ -43,10 +43,12 @@ export const Caracteristica = defineModel("Caracteristica", {
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
 }, { tableName: "caracteristica", indexes: [{ unique: true, fields: ["grupo_caracteristica_id", "nombre"] }] });
 
-/** ROP-03 */
+/** ROP-03 y ROP-86: liso (solo hex), bitono (hex y hex2) o estampado (patron, dibujado con los dos tonos). */
 export const ColorRopa = defineModel("ColorRopa", {
   nombre: { type: DataTypes.STRING(40), allowNull: false },
   hex:    { type: DataTypes.STRING(7), allowNull: false },
+  hex2:   { type: DataTypes.STRING(7), allowNull: true },
+  patron: { type: DataTypes.STRING(20), allowNull: true },
   orden:  { type: DataTypes.SMALLINT, allowNull: false, defaultValue: 0 },
   ...fechas,
 }, { tableName: "color_ropa", indexes: [{ name: "color_ropa_nombre_key", unique: true, fields: ["nombre"] }] });

@@ -7,6 +7,8 @@ import { LOGOS_MARCAS } from "../../../proyecto/config/marcas_config.js";
 import { logoDeMarca } from "../utils/logo_marca.js";
 import ListaSimplePage from "./lista_simple_page.jsx";
 import CategoriasDelGrupo from "./categorias_del_grupo.jsx";
+import MuestraColor from "../tienda/muestra_color.jsx";
+import { PATRONES, tipoDeColor } from "../utils/muestra_color.js";
 
 // Marcas (ROP-02, ROP-24, ROP-25), características (ROP-37), colores (ROP-03) y grupos de talles (ROP-04) sobre el mismo molde.
 
@@ -65,25 +67,60 @@ const COLORES = {
   lista: "colores", titulo: "Colores", nuevo: "Nuevo color", icono: Palette, sugeridos: "Cargar colores sugeridos",
   descripcion: "Los que se pueden elegir al cargar una prenda. Los sugeridos son la paleta habitual de Stilo's.",
   vacio: "Todavía no hay colores.", vacioDetalle: "Empezá con la paleta sugerida y después editala.",
-  valores: (item) => ({ nombre: item?.nombre ?? "", hex: item?.hex ?? "#1E2D3D", orden: item?.orden ?? 0 }),
-  armar: (v) => ({ nombre: v.nombre, hex: v.hex, orden: Number(v.orden) || 0 }),
-  campos: ({ register, errors, watch }) => (
-    <>
-      <InputField name="nombre" label="Nombre" register={register} required requiredMessage="Escribí el nombre." maxLength={40} error={errors.nombre?.message} />
-      <div className="flex items-end gap-3">
-        <label className="text-sm font-semibold text-gray-700">Muestra
-          <input type="color" {...register("hex")} className="mt-1 block h-11 w-16 cursor-pointer rounded-xl border border-gray-300" />
-        </label>
-        <p className="pb-3 font-mono text-sm text-slate-500">{watch("hex")}</p>
-      </div>
-      {errors.hex && <p className="text-sm text-red-600">{errors.hex.message}</p>}
-      <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
-    </>
-  ),
+  valores: (item) => ({
+    nombre: item?.nombre ?? "", tipo: tipoDeColor(item), hex: item?.hex ?? "#1E2D3D", hex2: item?.hex2 ?? "#FFFFFF",
+    patron: item?.patron ?? "animal_print", orden: item?.orden ?? 0,
+  }),
+  // ROP-86: liso (un tono), bitono (dos) o estampado (dibujo; multicolor no usa tonos propios).
+  armar: (v) => ({
+    nombre: v.nombre, hex: v.hex, orden: Number(v.orden) || 0,
+    hex2: v.tipo === "liso" || (v.tipo === "estampado" && v.patron === "multicolor") ? null : v.hex2,
+    patron: v.tipo === "estampado" ? v.patron : null,
+  }),
+  campos: ({ register, errors, watch }) => {
+    const [tipo, hex, hex2, patron] = watch(["tipo", "hex", "hex2", "patron"]);
+    const conSegundo = tipo === "bitono" || (tipo === "estampado" && patron !== "multicolor");
+    const tono = (nombre, texto) => (
+      <label className="text-sm font-semibold text-gray-700">{texto}
+        <input type="color" {...register(nombre)} className="mt-1 block h-11 w-16 cursor-pointer rounded-xl border border-gray-300" />
+      </label>
+    );
+    return (
+      <>
+        <InputField name="nombre" label="Nombre" register={register} required requiredMessage="Escribí el nombre." maxLength={40} error={errors.nombre?.message} />
+        <fieldset>
+          <legend className="text-sm font-semibold text-gray-700">Tipo</legend>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {[["liso", "Liso (un tono)"], ["bitono", "Bitono (dos tonos)"], ["estampado", "Estampado"]].map(([valor, texto]) => (
+              <label key={valor} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-gray-300 px-3 text-sm font-semibold text-slate-700 has-checked:border-slate-900 has-checked:bg-slate-50">
+                <input type="radio" value={valor} {...register("tipo")} className="h-4 w-4" />{texto}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {tipo === "estampado" && (
+          <label className="block text-sm font-semibold text-gray-700">Dibujo
+            <select {...register("patron")} className="mt-1 block min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm">
+              {PATRONES.map((p) => <option key={p.valor} value={p.valor}>{p.texto}</option>)}
+            </select>
+          </label>
+        )}
+        <div className="flex flex-wrap items-end gap-4">
+          {!(tipo === "estampado" && patron === "multicolor") && tono("hex", conSegundo ? (tipo === "estampado" ? "Fondo" : "Primer tono") : "Tono")}
+          {conSegundo && tono("hex2", tipo === "estampado" ? "Dibujo" : "Segundo tono")}
+          <div className="text-sm font-semibold text-gray-700">Así se ve
+            <MuestraColor color={{ hex, hex2: conSegundo ? hex2 : null, patron: tipo === "estampado" ? patron : null }} className="mt-1 h-11 w-11" />
+          </div>
+        </div>
+        {(errors.hex || errors.hex2) && <p className="text-sm text-red-600">{errors.hex?.message ?? errors.hex2?.message}</p>}
+        <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
+      </>
+    );
+  },
   fila: (c) => (
     <p className="flex items-center gap-3 font-semibold text-slate-900">
-      <span className="h-7 w-7 shrink-0 rounded-full border border-black/15" style={{ backgroundColor: c.hex }} aria-hidden="true" />
-      {c.nombre} <span className="font-mono text-xs font-normal text-slate-400">{c.hex}</span>
+      <MuestraColor color={c} className="h-7 w-7" />
+      {c.nombre} <span className="text-xs font-normal text-slate-400">{tipoDeColor(c) === "estampado" ? PATRONES.find((p) => p.valor === c.patron)?.texto : tipoDeColor(c) === "bitono" ? "Bitono" : c.hex}</span>
     </p>
   ),
 };

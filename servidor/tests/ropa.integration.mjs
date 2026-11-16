@@ -30,7 +30,7 @@ const cuenta = await import("../src/modulos/tienda_ropa/services/cuenta_service.
 const { clientConfig } = await import("../../proyecto/client_config.js");
 const { moduloTiendaRopa } = await import("../src/modulos/tienda_ropa/modulo.js");
 const { esquemaPrenda } = await import("../src/modulos/tienda_ropa/reglas.js");
-const { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS } = await import("../src/modulos/tienda_ropa/sugeridos.js");
+const { CARACTERISTICAS_SUGERIDAS, CATEGORIAS_SUGERIDAS, COLORES_SUGERIDOS } = await import("../src/modulos/tienda_ropa/sugeridos.js");
 const { sincronizarPermisos } = await import("../src/core/services/usuarios/permisos_service.js");
 const { sembrarRolesDelSistema } = await import("../src/core/database/seed/seed_rbac.js");
 const { seed_super_admin } = await import("../src/core/database/seed/seed_super_admin.js");
@@ -161,8 +161,12 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
     });
 
     await t.test("ROP-03 y ROP-04: sugeridos sin duplicar y nombres únicos", async () => {
-      assert.equal(await listas.cargarColoresSugeridos(), 30);
+      assert.equal(await listas.cargarColoresSugeridos(), COLORES_SUGERIDOS.length);
       assert.equal(await listas.cargarColoresSugeridos(), 0, "la segunda vez no agrega nada");
+      // ROP-86 y ROP-87: lisos, bitonos y estampados.
+      const muestra = (await listas.listarColores()).map((c) => c.toJSON()).filter((c) => ["Negro", "Negro y blanco", "Animal print"].includes(c.nombre))
+        .map(({ nombre, hex, hex2, patron }) => [nombre, hex, hex2, patron]);
+      assert.deepEqual(muestra, [["Negro", "#111111", null, null], ["Negro y blanco", "#111111", "#FFFFFF", null], ["Animal print", "#C19A6B", "#3F2A1D", "animal_print"]]);
       assert.equal(await listas.cargarGruposSugeridos(), 5, "Ropa, Jeans, Calzado, Niños y Talle único");
       const ninos = (await listas.listarGruposTalle()).find((g) => g.nombre === "Niños");
       assert.deepEqual(ninos.talles.map((x) => x.nombre), ["8", "10", "12", "14", "16"]);
@@ -228,10 +232,13 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       const ficha = await catalogo.detallePrenda(remera.slug);
       assert.deepEqual(ficha.migas.map((m) => m.nombre), ["Mujer", "Remeras"]);
       assert.deepEqual(ficha.talles.map((x) => x.nombre), ["S", "M", "L"]);
+      // ROP-85: todos los talles del grupo, aunque la prenda no tenga uno cargado (L de la roja: se ve tachado).
+      const roja = await catalogo.detallePrenda(remeraRoja.slug);
+      assert.deepEqual([roja.talles.map((x) => x.nombre), roja.variantes.map((v) => v.talle_id).sort()], [["S", "M", "L"], [talles.S, talles.M].sort()]);
       assert.equal(ficha.precio, 16000);
       assert.equal(ficha.precio_anterior, null);
       // ROP-30: "También en:" con el rojo; desde el rojo, el negro.
-      assert.deepEqual(ficha.otros_colores, [{ slug: "remera-lisa-rojo", color: { id: colores.Rojo, nombre: "Rojo", hex: "#C62828", orden: 21 } }]);
+      assert.deepEqual(ficha.otros_colores, [{ slug: "remera-lisa-rojo", color: { id: colores.Rojo, nombre: "Rojo", hex: "#C62828", hex2: null, patron: null, orden: 21 } }]);
       assert.deepEqual((await catalogo.detallePrenda(remeraRoja.slug)).otros_colores.map((o) => o.slug), ["remera-lisa-negro"]);
       await prendas.cambiarEstadoPrenda(remeraRoja.id, false);
       assert.deepEqual((await catalogo.detallePrenda(remera.slug)).otros_colores, [], "la tienda no muestra colores ocultos");
@@ -386,6 +393,18 @@ test("PostgreSQL: catálogo de ropa, tienda y pedidos por WhatsApp", async (t) =
       assert.deepEqual(agrupadas(deMujer.caracteristicas), [["Estampa", ["Liso"]], ["Tela", ["Algodón"]]], "ROP-39: solo las que se usan");
       const deHombre = await catalogo.opcionesDeFiltro({ categoria: hombre.id });
       assert.deepEqual([deHombre.colores, deHombre.grupos_talle, deHombre.marcas, deHombre.caracteristicas], [[], [], [], []]);
+
+      // ROP-87: Animal print y Camuflado salen de Estampa, salvo que una prenda los use.
+      const estampa = (await listas.listarCaracteristicas()).find((g) => g.nombre === "Estampa");
+      await listas.actualizarGrupoCaracteristica(estampa.id, {
+        nombre: "Estampa", orden: estampa.orden, categorias: estampa.categorias, valores: [...estampa.caracteristicas.map((c) => c.nombre), "Animal print", "Camuflado"],
+      });
+      const camuflado = (await listas.listarCaracteristicas()).find((g) => g.id === estampa.id).caracteristicas.find((c) => c.nombre === "Camuflado");
+      await ropa.PrendaCaracteristica.create({ prenda_id: remera.id, caracteristica_id: camuflado.id });
+      assert.equal(await listas.cargarCaracteristicasSugeridas(), 0);
+      const valoresEstampa = (await listas.listarCaracteristicas()).find((g) => g.id === estampa.id).caracteristicas.map((c) => c.nombre);
+      assert.deepEqual([valoresEstampa.includes("Animal print"), valoresEstampa.includes("Camuflado")], [false, true], "Camuflado lo usa la remera");
+      await ropa.PrendaCaracteristica.destroy({ where: { prenda_id: remera.id, caracteristica_id: camuflado.id } });
     });
 
     await t.test("ROP-17: el precio anterior se guarda y se muestra, pero el pedido cobra el precio", async () => {

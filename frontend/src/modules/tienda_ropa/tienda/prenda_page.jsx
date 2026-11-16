@@ -12,6 +12,7 @@ import PrendaCard from "./prenda_card.jsx";
 import { compartir } from "./compartir.js";
 import { brandConfig } from "../../../proyecto/config/brand_config.js";
 import { enOferta } from "../utils/dinero.js";
+import MuestraColor from "./muestra_color.jsx";
 
 /** Ficha (ROP-12, ROP-19, ROP-22, ROP-58): fotos, color, talle (agotados tachados), "Agregar al pedido", compartir y relacionadas. */
 export default function PrendaPage() {
@@ -117,7 +118,7 @@ function Ficha({ prenda }) {
               {prenda.colores.map((c) => (
                 <button key={c.id} type="button" onClick={() => elegirColor(c.id)} aria-pressed={c.id === colorId} aria-label={`${c.nombre}${hayEn(c.id) ? "" : " (agotado)"}`} title={c.nombre}
                   className={cn("relative h-11 w-11 rounded-full border-2 p-1", c.id === colorId ? "border-(--kt-petrol)" : "border-transparent hover:border-(--kt-border)", !hayEn(c.id) && "opacity-40")}>
-                  <span className="block h-full w-full rounded-full border border-black/15" style={{ backgroundColor: c.hex }} />
+                  <MuestraColor color={c} className="h-full w-full" />
                 </button>
               ))}
             </div>
@@ -128,7 +129,7 @@ function Ficha({ prenda }) {
                   {prenda.otros_colores.map((o) => (
                     <Link key={o.slug} to={`/catalogo/${o.slug}`} aria-label={`Ver en ${o.color.nombre}`} title={o.color.nombre}
                       className="h-11 w-11 rounded-full border-2 border-transparent p-1 hover:border-(--kt-border)">
-                      <span className="block h-full w-full rounded-full border border-black/15" style={{ backgroundColor: o.color.hex }} />
+                      <MuestraColor color={o.color} className="h-full w-full" />
                     </Link>
                   ))}
                 </div>

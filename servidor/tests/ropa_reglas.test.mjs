@@ -39,6 +39,15 @@ test("ROP-03 y ROP-04: color en formato #RRGGBB y talles sin repetir", () => {
   assert.equal(esquemaGrupoTalle.safeParse({ nombre: "Ropa", talles: [] }).success, false);
 });
 
+test("ROP-86: color liso, bitono o estampado", () => {
+  assert.deepEqual(esquemaColor.parse({ nombre: "Rojo", hex: "#c62828" }), { nombre: "Rojo", hex: "#C62828", hex2: null, patron: null, orden: 0 });
+  assert.equal(esquemaColor.parse({ nombre: "Negro y blanco", hex: "#111111", hex2: "#ffffff" }).hex2, "#FFFFFF");
+  assert.equal(esquemaColor.parse({ nombre: "Multicolor", hex: "#D6247B", patron: "multicolor" }).patron, "multicolor", "multicolor no usa el segundo tono");
+  assert.equal(esquemaColor.safeParse({ nombre: "Animal print", hex: "#C19A6B", patron: "animal_print" }).error.issues[0].message, "Elegí el segundo tono del dibujo.");
+  assert.equal(esquemaColor.safeParse({ nombre: "X", hex: "#C19A6B", hex2: "#111111", patron: "lunares" }).error.issues[0].message, "Elegí un dibujo de la lista.");
+  assert.equal(esquemaColor.safeParse({ nombre: "X", hex: "#C19A6B", hex2: "gris" }).success, false);
+});
+
 test("ROP-05 y ROP-07: prenda con un precio y al menos un talle × color, sin repetidos", () => {
   const ok = esquemaPrenda.safeParse(prenda());
   assert.equal(ok.success, true);

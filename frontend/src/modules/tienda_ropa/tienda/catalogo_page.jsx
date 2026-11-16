@@ -7,6 +7,7 @@ import { useCatalogo, useCategoriasTienda, useFiltrosTienda } from "../hooks/use
 import { cn } from "../../../core/utils/cn.js";
 import PrendaCard from "./prenda_card.jsx";
 import { ErrorReintentar, GrillaCargando, Vacio } from "./estados.jsx";
+import MuestraColor from "./muestra_color.jsx";
 
 const CAMPOS = ["q", "categoria", "marca", "color", "talle", "car", "ofertas", "orden", "pagina"];
 const ORDENES = [["novedades", "Novedades"], ["menor_precio", "Menor precio"], ["mayor_precio", "Mayor precio"]];
@@ -104,7 +105,7 @@ export default function CatalogoPage() {
                   {opciones.data.colores.map((c) => (
                     <button key={c.id} type="button" title={c.nombre} aria-label={c.nombre} aria-pressed={numero("color") === c.id} onClick={() => alternar("color", c.id)}
                       className={cn("h-11 w-11 rounded-full border-2 p-1 transition", numero("color") === c.id ? "border-(--kt-petrol)" : "border-transparent hover:border-(--kt-border)")}>
-                      <span className="block h-full w-full rounded-full border border-black/15" style={{ backgroundColor: c.hex }} />
+                      <MuestraColor color={c} className="h-full w-full" />
                     </button>
                   ))}
                 </div>

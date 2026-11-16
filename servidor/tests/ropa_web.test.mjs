@@ -10,7 +10,8 @@ import { beneficiosTienda, instagramDe, marcaDestacada, porcentajeDescuento } fr
 import { avisoEnvioGratis } from "../../frontend/src/modules/tienda_ropa/pedido/entrega.js";
 import { compartir } from "../../frontend/src/modules/tienda_ropa/tienda/compartir.js";
 import { logoDeMarca } from "../../frontend/src/modules/tienda_ropa/utils/logo_marca.js";
-import { grupoSugerido } from "../../frontend/src/modules/tienda_ropa/utils/grupo_sugerido.js";
+import { grupoSugerido, gruposAMano } from "../../frontend/src/modules/tienda_ropa/utils/grupo_sugerido.js";
+import { agruparColores, fondoDeColor, tipoDeColor } from "../../frontend/src/modules/tienda_ropa/utils/muestra_color.js";
 import { gruposDeCategoria } from "../../frontend/src/modules/tienda_ropa/utils/grupos_de_categoria.js";
 import { cambiosPosibles, formasDePago, pasosDelPedido, pideMotivo as pideMotivoWeb, puedeSubirComprobante } from "../../frontend/src/modules/tienda_ropa/pedido/pago.js";
 import { ESTADOS_PEDIDO, pideMotivo, problemaTransicion } from "../src/modulos/tienda_ropa/reglas.js";
@@ -212,6 +213,31 @@ test("ROP-36: el grupo de talles sugerido es el de la categoría o, si no tiene,
   assert.equal(grupoSugerido(arbol, 5), null, "sin sugerencia");
   assert.equal(grupoSugerido(arbol, 99), null);
   assert.equal(grupoSugerido(undefined, 1), null);
+});
+
+test("ROP-83: a mano, el grupo de la categoría y Talle único (sin repetir ni inventar)", () => {
+  const grupos = [{ id: 1, nombre: "Ropa" }, { id: 2, nombre: "Jeans" }, { id: 3, nombre: " Talle Unico " }];
+  assert.deepEqual(gruposAMano(grupos, 1), [1, 3]);
+  assert.deepEqual(gruposAMano(grupos, 3), [3], "Accesorios ya usa Talle único");
+  assert.deepEqual(gruposAMano(grupos, null), [3], "categoría sin grupo sugerido");
+  assert.deepEqual(gruposAMano(grupos, 99), [3], "un grupo que no existe no se ofrece");
+  assert.deepEqual(gruposAMano(grupos.slice(0, 2), 2), [2], "sin Talle único cargado");
+});
+
+test("ROP-86: muestra del color liso, bitono o estampado y secciones del formulario", () => {
+  const negro = { id: 1, hex: "#111111", hex2: null, patron: null };
+  const bitono = { id: 2, hex: "#111111", hex2: "#FFFFFF", patron: null };
+  const animal = { id: 3, hex: "#C19A6B", hex2: "#3F2A1D", patron: "animal_print" };
+  const multi = { id: 4, hex: "#D6247B", hex2: null, patron: "multicolor" };
+  assert.deepEqual([negro, bitono, animal, multi].map(tipoDeColor), ["liso", "bitono", "estampado", "estampado"]);
+  assert.equal(fondoDeColor(negro), "#111111");
+  assert.equal(fondoDeColor(bitono), "linear-gradient(135deg, #111111 50%, #FFFFFF 50%)");
+  assert.ok(fondoDeColor(animal).includes("#3F2A1D") && fondoDeColor(animal).endsWith("#C19A6B"), "manchas del segundo tono sobre el fondo");
+  assert.ok(fondoDeColor({ ...animal, patron: "camuflado" }).endsWith("#C19A6B"));
+  assert.ok(fondoDeColor(multi).startsWith("conic-gradient("));
+  assert.equal(fondoDeColor(undefined), "#FFFFFF");
+  assert.deepEqual(agruparColores([animal, negro, bitono, multi]).map((s) => [s.titulo, s.colores.map((c) => c.id)]), [["Básicos", [1]], ["Bitonos", [2]], ["Estampados", [3, 4]]]);
+  assert.deepEqual(agruparColores([negro]).map((s) => s.titulo), ["Básicos"], "sin secciones vacías");
 });
 
 test("ROP-70 a ROP-73: beneficios según la configuración, marca destacada, % de descuento e Instagram solo si está cargado", () => {

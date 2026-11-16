@@ -3,6 +3,7 @@ import { Shirt } from "lucide-react";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
 import Precio, { EtiquetaOferta } from "./precio.jsx";
 import { enOferta } from "../utils/dinero.js";
+import MuestraColor from "./muestra_color.jsx";
 
 const MAX_PUNTOS = 5;
 
@@ -32,7 +33,7 @@ export default function PrendaCard({ prenda }) {
         {prenda.colores.length > 0 && (
           <div className="mt-2 flex items-center gap-1.5" aria-label={`Colores: ${prenda.colores.map((c) => c.nombre).join(", ")}`}>
             {prenda.colores.slice(0, MAX_PUNTOS).map((c) => (
-              <span key={c.id} title={c.nombre} className="h-3.5 w-3.5 rounded-full border border-black/15" style={{ backgroundColor: c.hex }} />
+              <MuestraColor key={c.id} color={c} title={c.nombre} className="h-3.5 w-3.5" />
             ))}
             {extra > 0 && <span className="text-xs text-(--kt-ink-soft)">+{extra}</span>}
           </div>

@@ -99,7 +99,7 @@ export async function otrosColores({ id, nombre, marca_id }, filtro = {}) {
   const mismas = await Prenda.findAll({
     where: { [Op.and]: [{ id: { [Op.ne]: id }, marca_id: marca_id ?? null, ...filtro }, sequelize.where(nombreNormalizado, claveModelo(nombre))] },
     attributes: ["id", "slug", "activo"],
-    include: [{ model: PrendaVariante, as: "variantes", attributes: ["color_id"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "orden"] }] }],
+    include: [{ model: PrendaVariante, as: "variantes", attributes: ["color_id"], include: [{ model: ColorRopa, as: "color", attributes: ["id", "nombre", "hex", "hex2", "patron", "orden"] }] }],
   });
   return mismas
     .filter((p) => p.variantes.length)
