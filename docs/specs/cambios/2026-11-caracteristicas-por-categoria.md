@@ -15,7 +15,7 @@ mostrar solo lo que corresponde a la categoría elegida.
 | Código | Requisito | Estado |
 | --- | --- | --- |
 | ROP-59 | **Grupo en sus categorías.** Cada grupo de características puede elegir en qué categorías se usa; vale también para las de adentro (Remeras incluye Hombre › Remeras › lo que haya debajo). Sin categorías elegidas, se usa en todas. | ✅ |
-| ROP-60 | **Formulario de prenda por pasos.** 1) ¿Qué vas a cargar? (categoría con botones, bajando por el árbol; hasta elegirla no aparece el resto), 2) Datos, 3) Color y talles (talles del grupo de la categoría; cada talle se toca: Hay → Agotado → No se vende), 4) Características, 5) Fotos; abajo, barra fija con el resumen y Guardar. Características: muestra solo los grupos de la categoría elegida, más los que ya tengan algo tildado (no se esconde lo cargado). Sin categoría, pide elegirla. "Ver todas las características" muestra el resto. | ✅ |
+| ROP-60 | **Formulario de prenda por pasos.** 1) ¿Qué vas a cargar? (categoría con botones, bajando por el árbol; hasta elegirla no aparece el resto), 2) Características (las de esa categoría, justo debajo; cambio de orden del 2026-11-16), 3) Datos, 4) Color y talles (talles del grupo de la categoría; cada talle se toca: Hay → Agotado → No se vende), 5) Fotos; abajo, barra fija con el resumen y Guardar. Características: muestra solo los grupos de la categoría elegida, más los que ya tengan algo tildado (no se esconde lo cargado). Sin categoría, pide elegirla. "Ver todas las características" muestra el resto. | ✅ |
 | ROP-61 | **Relación sugerida.** "Cargar características sugeridas" deja relacionados los grupos que todavía no tienen categorías, con las categorías del panel que se llamen como la lista (sin importar mayúsculas). No cambia lo que el negocio ya eligió. | ✅ |
 
 ### Relación sugerida (aprobada)
@@ -53,4 +53,5 @@ tienda no cambia: ya muestra solo lo que tienen las prendas de la categoría (RO
 | Fecha | Regla | Decisión | Quién |
 | --- | --- | --- | --- |
 | 2026-11-12 | ROP-60 | Rediseño del formulario: primero la categoría y de ahí talles y características, en una sola pantalla por pasos (sin "Siguiente"). | Dueño del proyecto |
+| 2026-11-16 | ROP-60 | Características pasa al paso 2, justo debajo de la categoría (antes era el 4). Sin cambios en cómo funcionan. | Dueño del proyecto |
 | 2026-11-12 | ROP-59 a ROP-61 | Relacionar grupos con categorías (en vez de solo acortar la lista), con "Ver todas" y la relación sugerida de arriba. | Dueño del proyecto |

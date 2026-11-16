@@ -172,7 +172,33 @@ function Formulario({ prenda, listas }) {
         </div>
       ) : (
         <>
-          <Paso numero={2} titulo="Datos" listo={Boolean(nombre && precio)}>
+          <Paso numero={2} titulo="Características" opcional descripcion="Tildá las que tiene: se muestran en la ficha y sirven para filtrar en la tienda." listo={caracteristicas.size > 0}>
+            {listas.caracteristicas.data.length === 0
+              ? <p className="text-sm text-slate-500">Todavía no hay características. <Link to="/admin/ropa/caracteristicas" className="font-semibold text-slate-900 underline">Cargalas acá</Link>.</p>
+              : (
+                <div className="space-y-5">
+                  {gruposAVer.length === 0 && <p className="text-sm text-slate-500">Esta categoría no tiene características propias.</p>}
+                  {gruposAVer.map((g) => (
+                    <fieldset key={g.id}>
+                      <legend className="mb-2 text-sm font-semibold text-gray-700">{g.nombre}</legend>
+                      <div className="flex flex-wrap gap-2">
+                        {g.caracteristicas.map((c) => (
+                          <button key={c.id} type="button" onClick={() => alternarCaracteristica(c.id)} aria-pressed={caracteristicas.has(c.id)} className={chip(caracteristicas.has(c.id))}>{c.nombre}</button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ))}
+                  {otros.length > 0 && (
+                    <button type="button" onClick={() => setVerTodas((v) => !v)} aria-expanded={verTodas} className="min-h-11 text-sm font-semibold text-slate-700 underline">
+                      {verTodas ? "Ver solo las de la categoría" : `Ver todas las características (${plural(otros.length, "grupo más", "grupos más")})`}
+                    </button>
+                  )}
+                </div>
+              )}
+            {errorCaracteristicas && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorCaracteristicas}</p>}
+          </Paso>
+
+          <Paso numero={3} titulo="Datos" listo={Boolean(nombre && precio)}>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2"><InputField name="nombre" label="Nombre" placeholder={`Ej. ${camino.at(-1)?.nombre ?? "Remera"} Taverniti`} register={register} required requiredMessage="Escribí el nombre." maxLength={120} error={errors.nombre?.message} /></div>
               <label className="block text-sm font-semibold text-gray-700">Marca
@@ -190,7 +216,7 @@ function Formulario({ prenda, listas }) {
             </div>
           </Paso>
 
-          <Paso numero={3} titulo="Color y talles" descripcion="Una prenda es de un solo color: los otros colores del mismo modelo se cargan aparte, con el mismo nombre y marca." listo={variantes.length > 0}>
+          <Paso numero={4} titulo="Color y talles" descripcion="Una prenda es de un solo color: los otros colores del mismo modelo se cargan aparte, con el mismo nombre y marca." listo={variantes.length > 0}>
             {coloresAntes.length > 1 && (
               <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                 Esta prenda tenía varios colores. Al guardarla queda solo {colores.find((c) => c.id === coloresAntes[0])?.nombre}: cargá los otros como prendas nuevas.
@@ -234,36 +260,10 @@ function Formulario({ prenda, listas }) {
             {errorTalles && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorTalles}</p>}
           </Paso>
 
-          <Paso numero={4} titulo="Características" opcional descripcion="Tildá las que tiene: se muestran en la ficha y sirven para filtrar en la tienda." listo={caracteristicas.size > 0}>
-            {listas.caracteristicas.data.length === 0
-              ? <p className="text-sm text-slate-500">Todavía no hay características. <Link to="/admin/ropa/caracteristicas" className="font-semibold text-slate-900 underline">Cargalas acá</Link>.</p>
-              : (
-                <div className="space-y-5">
-                  {gruposAVer.length === 0 && <p className="text-sm text-slate-500">Esta categoría no tiene características propias.</p>}
-                  {gruposAVer.map((g) => (
-                    <fieldset key={g.id}>
-                      <legend className="mb-2 text-sm font-semibold text-gray-700">{g.nombre}</legend>
-                      <div className="flex flex-wrap gap-2">
-                        {g.caracteristicas.map((c) => (
-                          <button key={c.id} type="button" onClick={() => alternarCaracteristica(c.id)} aria-pressed={caracteristicas.has(c.id)} className={chip(caracteristicas.has(c.id))}>{c.nombre}</button>
-                        ))}
-                      </div>
-                    </fieldset>
-                  ))}
-                  {otros.length > 0 && (
-                    <button type="button" onClick={() => setVerTodas((v) => !v)} aria-expanded={verTodas} className="min-h-11 text-sm font-semibold text-slate-700 underline">
-                      {verTodas ? "Ver solo las de la categoría" : `Ver todas las características (${plural(otros.length, "grupo más", "grupos más")})`}
-                    </button>
-                  )}
-                </div>
-              )}
-            {errorCaracteristicas && <p role="alert" className="mt-3 text-sm font-semibold text-red-600">{errorCaracteristicas}</p>}
-          </Paso>
-
           <Paso numero={5} titulo="Fotos" descripcion={`Hasta ${MAX_FOTOS}. La primera es la portada de la tarjeta.`} listo={fotos.length > 0}>
             {colorId
               ? <FotosDelColor titulo={color?.nombre} fotos={fotos} setFotos={setFotos} max={MAX_FOTOS} />
-              : <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-500">Elegí el color en el paso 3 para cargar las fotos.</p>}
+              : <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-500">Elegí el color en el paso 4 para cargar las fotos.</p>}
           </Paso>
         </>
       )}
