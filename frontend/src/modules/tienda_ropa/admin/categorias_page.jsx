@@ -128,7 +128,7 @@ function FormCategoria({ categoria, padreInicial, planas, grupos, guardar, onClo
         </label>
         {errors.grupo_talle_id && <p className="text-sm text-red-600">{errors.grupo_talle_id.message}</p>}
         <InputField name="orden" type="number" min={0} label="Orden" helperText="Menor número, aparece antes." register={register} error={errors.orden?.message} />
-        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5" /> Se ve en la tienda</label>
+        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold text-gray-700"><input type="checkbox" {...register("activo")} className="h-5 w-5 shrink-0" /> <span>Se ve en la tienda <span className="font-normal text-gray-500">(si la destildás, queda guardada en el panel pero no aparece en la tienda)</span></span></label>
         <FormError message={errors.root?.message} />
         <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} disabled={guardar.isPending} className={BOTON_SECUNDARIO}>Cancelar</button>
