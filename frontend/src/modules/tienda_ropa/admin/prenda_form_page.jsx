@@ -16,7 +16,7 @@ import { caminoA } from "../utils/camino_categoria.js";
 import MuestraColor from "../tienda/muestra_color.jsx";
 
 // Mismo límite que el servidor (servidor/src/modulos/tienda_ropa/reglas.js, ROP-29).
-const MAX_FOTOS = 3;
+const MAX_FOTOS = 5;
 const SELECT = "mt-1 min-h-11 w-full rounded-xl border border-gray-300 bg-white px-3";
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 

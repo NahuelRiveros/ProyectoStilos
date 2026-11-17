@@ -81,16 +81,16 @@ test("ROP-11: el catálogo se ordena por novedades por defecto y 'Solo ofertas' 
   assert.equal("orden" in esquemaFiltrosPanel.parse({}), false, "el panel no usa el orden de la tienda");
 });
 
-test("ROP-29: un solo color por prenda y hasta 3 fotos, solo de su color", () => {
+test("ROP-29: un solo color por prenda y hasta 5 fotos, solo de su color", () => {
   const fotos = (color_id, n) => Array.from({ length: n }, () => ({ url: "https://x.test/f.jpg", color_id }));
-  assert.equal(problemaFotos(fotos(1, 3), [1]), null);
-  assert.equal(problemaFotos([...fotos(1, 2), ...fotos(null, 1)], [1]), null, "una general cuenta dentro de las 3");
-  assert.equal(problemaFotos([...fotos(1, 3), ...fotos(null, 1)], [1]), "Hasta 3 fotos por prenda.");
+  assert.equal(problemaFotos(fotos(1, 5), [1]), null);
+  assert.equal(problemaFotos([...fotos(1, 4), ...fotos(null, 1)], [1]), null, "una general cuenta dentro de las 5");
+  assert.equal(problemaFotos([...fotos(1, 5), ...fotos(null, 1)], [1]), "Hasta 5 fotos por prenda.");
   assert.equal(problemaFotos(fotos(9, 1), [1]), "Hay fotos de un color que la prenda no tiene.");
   const dosColores = esquemaPrenda.safeParse(prenda({ variantes: [{ color_id: 1, talle_id: 1 }, { color_id: 2, talle_id: 1 }] }));
   assert.equal(dosColores.error.issues[0].message, "Cada prenda es de un solo color. Cargá los otros colores como prendas nuevas.");
   assert.equal(claveModelo("  Remera   TAVERNITI "), "remera taverniti", "ROP-30: mismo modelo sin importar mayúsculas ni espacios");
-  assert.equal(esquemaPrenda.safeParse(prenda({ imagenes: fotos(1, 4) })).error.issues[0].path[0], "imagenes");
+  assert.equal(esquemaPrenda.safeParse(prenda({ imagenes: fotos(1, 6) })).error.issues[0].path[0], "imagenes");
   assert.equal(esquemaPrenda.safeParse(prenda({ imagenes: [{ url: "http://inseguro.test/a.jpg", color_id: null }] })).success, false);
 });
 

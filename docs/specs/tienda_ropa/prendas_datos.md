@@ -28,7 +28,7 @@ erDiagram
   prenda ||--|{ prenda_variante : "talles (al menos 1)"
   color_ropa ||--o{ prenda_variante : "color_id"
   talle ||--o{ prenda_variante : "talle_id"
-  prenda ||--o{ prenda_imagen : "fotos (hasta 3)"
+  prenda ||--o{ prenda_imagen : "fotos (hasta 5)"
   color_ropa |o--o{ prenda_imagen : "color_id"
   prenda ||--o{ prenda_caracteristica : "características"
   caracteristica ||--o{ prenda_caracteristica : "caracteristica_id"
@@ -144,7 +144,7 @@ slug ni las fechas.
 | `precio_anterior` | Opcional; si viene, **mayor que el precio**. | "El precio anterior tiene que ser mayor que el precio actual." |
 | `activo` | Sí/no (por defecto sí). | |
 | `variantes` | Entre 1 y 400; cada una con `color_id`, `talle_id` y `disponible`. **Un solo color** en toda la prenda. Sin talle repetido. | "Tildá al menos un talle y un color." / "Cada prenda es de un solo color…" / "Hay talles y colores repetidos." |
-| `imagenes` | Hasta **3**; cada `url` https o `/catalogo-inicial/<archivo>.jpg/png/webp`; solo del color de la prenda. | "Hasta 3 fotos por prenda." / "Hay fotos de un color que la prenda no tiene." |
+| `imagenes` | Hasta **5**; cada `url` https o `/catalogo-inicial/<archivo>.jpg/png/webp`; solo del color de la prenda. | "Hasta 5 fotos por prenda." / "Hay fotos de un color que la prenda no tiene." |
 | `caracteristicas` | Hasta 60 ids; los repetidos se ignoran. | |
 | `codigo_lince` | Opcional; sin espacios a los costados, hasta 40 caracteres; vacío = sin código. | "El código Lince tiene hasta 40 caracteres." |
 

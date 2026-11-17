@@ -3,7 +3,7 @@ import { z } from "zod";
 // Reglas del rubro sin acceso a la base, para probarlas solas (tests/ropa_reglas.test.mjs).
 // Spec: docs/specs/cambios/2026-11-catalogo-ropa.md.
 
-export const MAX_FOTOS = 3; // ROP-29 (reemplaza ROP-06): fotos por prenda
+export const MAX_FOTOS = 5; // ROP-29 (reemplaza ROP-06): fotos por prenda; 3 → 5 el 2026-11-17
 export const MAX_LINEAS_PEDIDO = 50;
 export const MAX_CANTIDAD_LINEA = 99;
 // ── Pedidos: estados, pago y comprobantes (spec 2026-11-cuentas-y-transferencias.md) ──
