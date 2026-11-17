@@ -19,3 +19,6 @@ const TIENDA_ROPA = {
 };
 
 export const PERMISOS_DE_RUBROS = [TIENDA_ROPA];
+
+// PER-37: sin roles propios; quien se registra es cliente.
+export const ROLES_DE_RUBROS = {};
