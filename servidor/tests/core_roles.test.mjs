@@ -9,7 +9,8 @@ import { nombreRol, permisosConfig } from "../../core/permisos_config.js";
 test("PER-14: los roles del sistema se muestran con nombres profesionales, sin 'admin' a la vista", () => {
   assert.equal(nombreRol("super_admin"), "Administrador del sistema");
   assert.equal(nombreRol("admin"), "Gerente general");
-  assert.equal(nombreRol("supervisor"), "Encargado");
+  // supervisor existe solo si el proyecto no eligió otros roles de equipo (PER-38).
+  if (permisosConfig.rolesEquipo.includes("supervisor")) assert.equal(nombreRol("supervisor"), "Encargado");
   for (const nombre of Object.values(permisosConfig.nombresRol)) assert.doesNotMatch(nombre, /\b(super ?)?admin\b/i);
 });
 
@@ -59,4 +60,17 @@ test("SIS-56: la suscripción del software se apaga solo si el proyecto lo pide"
   const config = (extra) => ({ "client_config.js": `export const clientConfig = { id: "x"${extra} };` });
   assert.equal((await conProyecto("suscripcion_software_config.js", config(", suscripcionDelSoftware: false"))).suscripcionDelSoftwareActiva, false);
   assert.equal((await conProyecto("suscripcion_software_config.js", config(""))).suscripcionDelSoftwareActiva, true, "sin el dato, prendida");
+});
+
+test("PER-38: un proyecto elige sus roles de equipo; si no, el core siembra supervisor y vendedor", async () => {
+  const { permisosConfig: propio } = await conProyecto("permisos_config.js", {
+    "permisos_rubros.js": `export const PERMISOS_DE_RUBROS = [];
+      export const ROLES_DE_RUBROS = { equipo: { soporte: "Soporte" } };`,
+  });
+  assert.deepEqual(propio.rolesEquipo, ["soporte"]);
+  assert.equal(propio.rolPersonalPorDefecto, "soporte");
+  assert.equal(propio.nombresRol.supervisor, undefined, "no se siembra un rol que el proyecto no usa");
+  assert.equal(propio.nombresRol.soporte, "Soporte");
+  const { permisosConfig: base } = await conProyecto("permisos_config.js", { "permisos_rubros.js": "export const PERMISOS_DE_RUBROS = [];" });
+  assert.deepEqual([base.rolesEquipo, base.rolPersonalPorDefecto], [["supervisor", "vendedor"], "supervisor"]);
 });
