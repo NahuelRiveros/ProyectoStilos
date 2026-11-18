@@ -1,4 +1,4 @@
-﻿import { useRef } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Instagram, MessageCircle, Store, Truck } from "lucide-react";
 import { imagenCloudinary } from "../../../core/utils/imagen_cloudinary.js";
@@ -54,7 +54,7 @@ export function MarcaDestacada({ marca, prendas }) {
 export function FilaOfertas({ items, textos }) {
   const pista = useRef(null);
   const mover = (direccion) => pista.current?.scrollBy({ left: direccion * Math.max(pista.current.clientWidth * .78, 240), behavior: "smooth" });
-  return <section aria-labelledby="ofertas" className="home-offers mt-14 px-4 py-11 sm:px-6 sm:py-14"><div className="mx-auto max-w-7xl"><div className="flex items-end justify-between gap-4"><TituloSeccion id="ofertas" etiqueta="Precios especiales" titulo={textos.ofertasTitulo} link="/catalogo?ofertas=1" textoLink="Ver todas" /><div className="mb-6 hidden gap-2 sm:flex"><button type="button" onClick={() => mover(-1)} aria-label="Desplazar ofertas a la izquierda" className="home-scroll-button"><ChevronLeft size={19} /></button><button type="button" onClick={() => mover(1)} aria-label="Desplazar ofertas a la derecha" className="home-scroll-button"><ChevronRight size={19} /></button></div></div><ul ref={pista} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:gap-5 sm:px-0">{items.map((p) => <li key={p.id} className="w-[42vw] max-w-64 shrink-0 snap-start sm:w-56"><PrendaCard prenda={p} /></li>)}</ul></div></section>;
+  return <section aria-labelledby="ofertas" className="home-offers mt-14 px-4 py-11 sm:px-6 sm:py-14"><div className="mx-auto max-w-7xl"><div className="flex items-end justify-between gap-4"><TituloSeccion id="ofertas" etiqueta="Precios especiales" titulo={textos.ofertasTitulo} link="/catalogo?ofertas=1" textoLink="Ver todas" /><div className="mb-6 hidden gap-2 sm:flex"><button type="button" onClick={() => mover(-1)} aria-label="Desplazar ofertas a la izquierda" className="home-scroll-button"><ChevronLeft size={19} /></button><button type="button" onClick={() => mover(1)} aria-label="Desplazar ofertas a la derecha" className="home-scroll-button"><ChevronRight size={19} /></button></div></div><ul ref={pista} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:gap-5 sm:px-0">{items.map((p) => <li key={p.id} className="relative w-[42vw] max-w-64 shrink-0 snap-start sm:w-56"><PrendaCard prenda={p} /></li>)}</ul></div></section>;
 }
 
 export function SeguinosInstagram({ instagram, textos }) {
