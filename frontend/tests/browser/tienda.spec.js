@@ -134,7 +134,7 @@ test("inicio: portada, beneficios, cinta de marcas con logos, categorías y marc
   await expect(page.getByRole("heading", { level: 1, name: /Vestite con las marcas/i })).toBeVisible();
   await expect(page.getByRole("region", { name: "Beneficios" })).toContainText("En compras desde $ 150.000");
   await expect(page.getByRole("heading", { name: "Lo nuevo de Taverniti" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Ver todo Taverniti" })).toHaveAttribute("href", "/catalogo?marca=1");
+  await expect(page.getByRole("link", { name: "Ver colección" })).toHaveAttribute("href", "/catalogo?marca=1");
   await expect(page.getByRole("link", { name: /^Mujer/ })).toHaveAttribute("href", "/catalogo?categoria=1");
   const cinta = page.getByRole("region", { name: "Marcas oficiales" });
   // Las de proyecto/config/marcas_config.js se ven con su logo; una sin logo, con su nombre en negrita.

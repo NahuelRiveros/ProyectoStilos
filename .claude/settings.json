@@ -1,4 +1,5 @@
 {
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "PowerShell(Get-Command pg_dump -ErrorAction SilentlyContinue)",

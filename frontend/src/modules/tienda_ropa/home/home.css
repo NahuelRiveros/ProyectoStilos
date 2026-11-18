@@ -1,0 +1,15 @@
+﻿.stilos-home { --home-delay: 0ms; }
+.home-kicker { color: var(--kt-accent-comercial); font-size: 10px; font-weight: 800; letter-spacing: .22em; line-height: 1.4; text-transform: uppercase; }
+.home-hero { background-image: radial-gradient(ellipse at 78% 44%, rgb(255 255 255 / 5%), transparent 42%); }
+.home-hero-glow { border: 1px solid rgb(237 218 199 / 12%); box-shadow: 0 0 0 2.5rem rgb(237 218 199 / 3%), 0 0 0 5rem rgb(237 218 199 / 2%); }
+.home-photo-main, .home-photo-side { box-shadow: 0 24px 70px rgb(0 0 0 / 24%); }
+.home-photo-side img { transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+.home-photo-side:hover img { transform: scale(1.045); }
+.home-category { box-shadow: 0 10px 28px rgb(30 45 61 / 8%); }
+.home-offers { background: linear-gradient(135deg, var(--kt-bg-soft), #fff 74%); }
+.home-scroll-button { display: inline-flex; height: 42px; width: 42px; align-items: center; justify-content: center; border: 1px solid var(--kt-border); border-radius: 999px; color: var(--kt-petrol); background: #fff; transition: color .2s, background .2s, transform .2s; }
+.home-scroll-button:hover { color: #fff; background: var(--kt-petrol); transform: translateY(-2px); }
+.home-instagram { background: radial-gradient(ellipse at 50% 0%, #fff, var(--kt-bg-soft) 78%); }
+.home-reveal { animation: stilos-home-enter .55s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--home-delay); }
+@keyframes stilos-home-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .home-reveal { animation: none; } .home-photo-side img { transition: none; } .home-scroll-button, .home-category * { transition-duration: .01ms !important; } }

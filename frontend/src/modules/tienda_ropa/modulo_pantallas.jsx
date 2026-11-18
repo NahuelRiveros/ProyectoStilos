@@ -11,5 +11,5 @@ export const pantallasTiendaRopa = {
   Proveedor: PedidoProvider,
   extrasNavbar: [PedidoIcono],
   ResumenPanel: lazy(() => import("./admin/resumen_panel.jsx")),
-  InicioTienda: lazy(() => import("./tienda/inicio_tienda.jsx")),
+  InicioTienda: lazy(() => import("./home/inicio_tienda.jsx")),
 };
